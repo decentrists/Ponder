@@ -14,6 +14,7 @@ export default createGlobalStyle`
   }
 
   body {
+    padding-bottom: 4.25rem;
     background-color: var(--color-body);
   }
 

@@ -15,18 +15,16 @@ const Footer = styled.footer`
     /* box-shadow: 1, 1, 1, rgba(6, 6, 6, .4); */
 
     background-color: rgba(24, 24, 24, 1);
-    overflow-x: hidden;
-    padding-top: 0.625rem;
-    padding-bottom: 0.625rem;
-    padding-left: 1.25rem;
-    padding-right: 1.25rem;
+    padding: 0.625rem 1.25rem;
     border-top-left-radius: 1rem;
     border-top-right-radius: 1rem;
     justify-content: space-between;
     align-items: center;
     display: flex;
-    /* position: fixed; */
-
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    left: 0;
 `;
 
 const NavList = styled.ul`

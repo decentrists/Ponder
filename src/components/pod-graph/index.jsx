@@ -18,11 +18,27 @@ const Wrapper = styled.div`
 function PodGraph({ subscriptions }) {
   const el = useRef();
   const [cy, setCy] = useState(null);
-  const [selectedPodcast, setSelectedPodcast] = useState(null);
+  const [selectedPodcastId, setSelectedPodcastId] = useState(null);
+  // const [selectedPodcast, setSelectedPodcast] = useState(null);
+
+  const selectedPodcast = subscriptions
+    .find(subscription => subscription.subscribeUrl === selectedPodcastId);
+
+  if (selectedPodcastId && !selectedPodcast) {
+    console.warn('Could not find a podcast with the selected ID. You should not be seeing this :)');
+  }
+
+  useEffect(() => {
+    el.current.addEventListener('click', event => {
+      const cardEl = Array.from(document.querySelectorAll('.pod-graph-card'))
+        .find(card => card.contains(event.target));
+      if (cardEl) setSelectedPodcastId(cardEl.dataset.id);
+    });
+  }, []);
 
   useEffect(() => {
     const cyto = createCytoscape(el.current, getElementsFromSubscriptions(subscriptions), {
-      setSelectedPodcast,
+      setSelectedPodcast: () => {},
     });
     setCy(cyto);
     if (process.env.NODE_ENV !== 'production') window.cy = cyto;
@@ -37,7 +53,7 @@ function PodGraph({ subscriptions }) {
       <PodcastDetails
         {...selectedPodcast}
         isOpen={!!selectedPodcast}
-        close={() => setSelectedPodcast(null)}
+        close={() => setSelectedPodcastId(null)}
       />
     </div>
   );
