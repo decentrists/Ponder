@@ -7,6 +7,7 @@ const FAKE_DATA = [
   {
     subscribeUrl: 'https://www.omnycontent.com/d/playlist/885ace83-027a-47ad-ad67-aca7002f1df8/7bdc2f7e-cc52-4dd7-b327-aca8005d16cb/4a6219e8-f1d3-4cf7-bd93-aca8005d16e7/podcast.rss',
     title: 'TigerBelly',
+    classes: 'wtf',
     description: 'A no-holds-barred arena for half truths, social no-nos, and animal behavior-featuring comedian Bobby Lee and his best friend Khalyla.\r\n\r\nEvery Wednesday.',
     imageUrl: 'https://www.omnycontent.com/d/playlist/885ace83-027a-47ad-ad67-aca7002f1df8/7bdc2f7e-cc52-4dd7-b327-aca8005d16cb/4a6219e8-f1d3-4cf7-bd93-aca8005d16e7/image.jpg?t=1609911537&size=Large',
     imageTitle: 'TigerBelly',
@@ -2760,6 +2761,7 @@ const FAKE_DATA = [
   {
     subscribeUrl: 'https://degolfpodcast.libsyn.com/rss',
     title: 'De Golfpodcast',
+    classes: 'wtf',
     description: 'De Golfpodcast is een wekelijkse, half uur durende, podcast over Golf. Hierin wordt aandacht besteed aan alle aspecten van het golf, zoals wedstrijden op de PGA Tour en European Tour, equipment, golftips en de Nederlandse spelers. De podcast wordt gepresenteerd door Martijn Paehlig (hoofdredacteur Golfers Magazine) en Jeroen van Leeuwen (freelance golfjournalist). Regelmatig zullen ook gasten aanschuiven en is er aantal vaste columnisten.',
     imageUrl: 'https://ssl-static.libsyn.com/p/assets/3/d/7/2/3d726e74dd792fb5/DGP_logo.jpg',
     imageTitle: 'De Golfpodcast',
@@ -3764,6 +3766,7 @@ const FAKE_DATA = [
   {
     subscribeUrl: 'https://feeds.megaphone.fm/fface',
     title: 'F**kface',
+    classes: 'wtf',
     description: "F**kface is shooting yourself in the foot for a laugh. Host Geoff Ramsey is joined every week by long time friend Gavin Free to talk with Andrew Panton, a guy with no social boundaries and too much time on his hands. Together they break down Andrew's endless exploits, their own stupid realizations, and confess to things they probably shouldn't. New episodes release Wednesdays at 2 AM Central.",
     imageUrl: 'https://megaphone.imgix.net/podcasts/8f49d8ba-9de6-11ea-8184-d33047a704dc/image/In-housePodcasts-5.jpg?ixlib=rails-2.1.2&max-w=3000&max-h=3000&fit=crop&auto=format,compress',
     imageTitle: 'F**kface',
@@ -4353,6 +4356,7 @@ const FAKE_DATA = [
   {
     subscribeUrl: 'https://wrestlebread.libsyn.com/rss',
     title: 'Wrestlebread Podcast',
+    classes: 'wtf',
     description: 'Wrestlebread is a weekly pro wrestling podcast that will bring you news, recaps and analysis of AEW and WWE.  Join Jaydee each week as she gives her perspective as a wrestling fan of over 25 years. \r\n\r\nFollow Jaydee on Twitter @JaydeeTalks\r\n\r\nFollow Wrestlebread on Twitter @Wrestlebread\r\n\r\nListen to us on Spotify, Itunes, Stitcher, Soundcloud and Google Play Music',
     imageUrl: 'https://ssl-static.libsyn.com/p/assets/1/4/4/1/1441170f924e6766/Cover_Art.png',
     imageTitle: 'Wrestlebread Podcast',
@@ -5175,6 +5179,7 @@ const FAKE_DATA = [
   {
     subscribeUrl: 'https://footballfourcast.libsyn.com/rss',
     title: 'Football Fourcast',
+    classes: 'wtf',
     description: 'Four football fanatics chatting all things footie',
     imageUrl: 'https://ssl-static.libsyn.com/p/assets/a/7/d/2/a7d2f9ef26bfe06a/FF_Logo.jpg',
     imageTitle: 'Football Fourcast',
@@ -5290,6 +5295,7 @@ const FAKE_DATA = [
     description: '“ Jimmy Dore is outrageous and outraged, bothersome and bothered, a crucial, profane, passionate voice for progressives and freethinkers in 21st century America.” -Patton Oswalt',
     imageUrl: 'https://ssl-static.libsyn.com/p/assets/a/7/5/6/a756a3fe5cfb3d10/JDPodLogo.jpg',
     imageTitle: 'The Jimmy Dore Show',
+    classes: 'wtf',
     language: 'en',
     episodes: [
       {

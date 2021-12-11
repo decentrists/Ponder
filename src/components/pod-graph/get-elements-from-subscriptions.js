@@ -11,6 +11,8 @@ function normalizeElements(elements) {
 
 export default function getElementsFromSubscriptions(subscriptions) {
   const nodes = subscriptions.map(podcast => ({
+    group: 'nodes',
+    classes: 'wtf',
     data: {
       id: podcast.subscribeUrl,
       label: podcast.title,

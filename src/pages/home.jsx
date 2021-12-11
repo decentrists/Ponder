@@ -4,10 +4,12 @@ import { ToastContext } from '../providers/toast';
 import PodGraph from '../components/pod-graph';
 import HeaderComponent from '../components/header-component';
 import PodcastList from '../components/podcast-list';
+import getCustomStuff from '../components/pod-graph/data';
 
 function HomePage() {
   const toast = useContext(ToastContext);
-  const { subscriptions, subscribe, unsubscribe } = useContext(SubscriptionsContext);
+  const subscriptions = getCustomStuff();
+  const { subscribe, unsubscribe } = useContext(SubscriptionsContext);
 
   async function search({ query }) {
     return subscribe(query).catch(ex => {

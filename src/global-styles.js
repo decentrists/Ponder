@@ -106,4 +106,122 @@ export default createGlobalStyle`
 .modal-footer {
   border-top: 1px solid #2c2c2c;
 }
+
+
+
+
+/* Headings */
+
+/* Main heading for card's front cover */
+.card-front__heading {
+  background: black;
+  text-align: center;
+  font-size: 10px;
+  color: #fafbfa !important;
+  -webkit-text-stroke-width: 1px;
+  -webkit-text-stroke-color: rgba(185, 181, 181, 0.719);
+}
+
+/* Front cover */
+.card-front__tp {
+  border-radius: 0.5rem;
+  color: #fafbfa;
+  height: 80%;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Container to hold all cards in one place */
+.card-area {
+  align-items: center;
+  display: flex;
+  flex-wrap: nowrap;
+  height: 100%;
+  justify-content: space-evenly;
+  padding: 1rem;
+}
+
+/* Card ============================================*/
+
+/* Area to hold an individual card */
+.card-section {
+  align-items: center;
+  display: flex;
+  height: 100%;
+  justify-content: center;
+  width: 100%;
+  background-color: #cccccc;
+}
+
+/* A container to hold the flip card and the inside page */
+
+/* container for the front side */
+.card-front {
+  background-color: #000000d4;
+  height: 19rem;
+  width: 19rem;
+  padding: 5px;
+  border-radius: 0.5rem;
+}
+
+/* Front card's bottom section */
+.card-front-btn {
+  align-items: center;
+  /*   align-items: end; */
+  display: flex;
+  justify-content: center;
+  padding-top: 0.2rem;
+  height: 20%;
+}
+
+.card-front__stuff {
+  color: #00b97d;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  overflow: hidden;
+  /*   padding: 0.5rem 0.75rem;
+  width: 90%;
+  z-index: 10; */
+}
+
+.cardStats {
+  /*   font-size: 0.9em; */
+
+  font-size: 0.7em;
+  text-align: center;
+  width: 100%;
+}
+
+.cardStats_stat {
+  display: inline-block;
+  white-space: nowrap;
+  margin-top: 5px;
+}
+
+/* //bgg img */
+.demo-bg {
+  /*
+  border-radius: 0.3rem; */
+  opacity: 0.6;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  object-fit: cover;
+  border-radius: 0.75rem;
+  /*     width: 3rem;
+    height: 3rem; */
+}
+
+.cardStats_stat-likes {
+  color: #b2d9a6;
+  margin: 1px;
+}
+
+.cardStats_stat-comments {
+  color: #ffd433;
+  margin: 1px;
+}
+
 `;
