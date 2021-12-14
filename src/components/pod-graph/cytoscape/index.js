@@ -29,8 +29,5 @@ applyEvents(cy, deps);
 applyNodeGroups(cy, deps);
 applyHtmlLabel(cy, deps);
 cy.fit();
-// cy.on('click', 'edge', function (e) {
-//   console.log(`clicked:${this.id()}`);
-// });
     return cy;
 }
