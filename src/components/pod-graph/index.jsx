@@ -19,7 +19,6 @@ function PodGraph({ subscriptions }) {
   const el = useRef();
   const [cy, setCy] = useState(null);
   const [selectedPodcastId, setSelectedPodcastId] = useState(null);
-  // const [selectedPodcast, setSelectedPodcast] = useState(null);
 
   const selectedPodcast = subscriptions
     .find(subscription => subscription.subscribeUrl === selectedPodcastId);

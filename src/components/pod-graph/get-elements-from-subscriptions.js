@@ -1,5 +1,3 @@
-import styles from './cytoscape/styles';
-
 function normalizeElements(elements) {
   const isArray = elements.length != null;
   if (isArray) return elements;
@@ -12,12 +10,11 @@ function normalizeElements(elements) {
 export default function getElementsFromSubscriptions(subscriptions) {
   const nodes = subscriptions.map(podcast => ({
     group: 'nodes',
-    classes: 'wtf',
+    classes: 'customNodes',
     data: {
       id: podcast.subscribeUrl,
       label: podcast.title,
       categories: podcast.categories,
-      NodesBg: 'green', // TODO: Make 'grey' if not subscribed podcast
       episodes: podcast.episodes,
       description: podcast.description,
       title: podcast.title,

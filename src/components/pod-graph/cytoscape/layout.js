@@ -1,7 +1,7 @@
 /* eslint-disable max-len */
 const layout = {
   fit: true, // whether to fit the viewport to the graph
-  padding: 30, // the padding on fit
+  padding: 80, // the padding on fit
   name: 'dagre',
   nodeSep: 300,
   edgeSep: 200,

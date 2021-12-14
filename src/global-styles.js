@@ -18,9 +18,9 @@ export default createGlobalStyle`
     background-color: var(--color-body);
   }
 
-// bootstrap override
+/* =================== global boot strap =========================*/
 .form-control{
-  outline: 2px solid transparent;
+    outline: 2px solid transparent;
     outline-offset: 2px;
     color: #fff;
     font-size: 0.75rem;
@@ -46,32 +46,31 @@ export default createGlobalStyle`
     }
 }
 
-  // panzoom controller
+/* =================== panzoom  =========================*/
 .cy-panzoom{
     top: 1rem;
-      /* left: 1rem; */
-      color: #666;
-      z-index: 100;
+     color: #666;
+     z-index: 100;
 }
 .cy-panzoom-panner {
-    background: #121213;
-    border: 1px solid #23476d;
+    background: #030303;
+    border: 1px solid #262626;
 }
 .cy-panzoom-slider-background {
-    background: #121213;
-    border-left: 1px solid #23476d;
-    border-right: 1px solid #23476d;
+    background: #030303;
+    border-left: 1px solid #262626;
+    border-right: 1px solid #262626;
 }
 .cy-panzoom-slider-handle {
-    background: #121213;
-    border: 1px solid #23476d;
+    background: #030303;
+    border: 1px solid #262626;
 }
 .cy-panzoom-zoom-button {
-    background: #121213;
-    border: 1px solid #23476d;
+    background: #030303;
+    border: 1px solid #262626;
 }
 
-// scroll bars
+/* =================== scroll bar =========================*/
 /* width */
 ::-webkit-scrollbar {
   width: 1px;
@@ -94,7 +93,7 @@ export default createGlobalStyle`
   background:#2b2c2b;
 }
 
-// styling the modal
+/* =================== Modal =========================*/
 .modal-content {
     background-color: #16181a;
     color: #868686;
@@ -108,22 +107,18 @@ export default createGlobalStyle`
   border-top: 1px solid #2c2c2c;
 }
 
+/* =================== Card =========================*/
 
-
-
-/* Headings */
-
-/* Main heading for card's front cover */
 .card-front__heading {
   background: black;
   text-align: center;
-  font-size: 10px;
+  font-size: 27px;
+  margin: 0;
   color: #fafbfa !important;
   -webkit-text-stroke-width: 1px;
-  -webkit-text-stroke-color: rgba(185, 181, 181, 0.719);
+  -webkit-text-stroke-color: rgba(185,181,181,0.719);
 }
 
-/* Front cover */
 .card-front__tp {
   border-radius: 0.5rem;
   color: #fafbfa;
@@ -132,7 +127,6 @@ export default createGlobalStyle`
   position: relative;
 }
 
-/* Container to hold all cards in one place */
 .card-area {
   align-items: center;
   display: flex;
@@ -142,9 +136,6 @@ export default createGlobalStyle`
   padding: 1rem;
 }
 
-/* Card ============================================*/
-
-/* Area to hold an individual card */
 .card-section {
   align-items: center;
   display: flex;
@@ -154,9 +145,6 @@ export default createGlobalStyle`
   background-color: #cccccc;
 }
 
-/* A container to hold the flip card and the inside page */
-
-/* container for the front side */
 .card-front {
   background-color: #000000d4;
   height: 19rem;
@@ -165,29 +153,22 @@ export default createGlobalStyle`
   border-radius: 0.5rem;
 }
 
-/* Front card's bottom section */
 .card-front-btn {
   align-items: center;
-  /*   align-items: end; */
   display: flex;
   justify-content: center;
   padding-top: 0.2rem;
   height: 20%;
 }
 
-.card-front__stuff {
+.card-front__details {
   color: #00b97d;
   border-radius: 0.5rem;
   font-weight: 600;
   overflow: hidden;
-  /*   padding: 0.5rem 0.75rem;
-  width: 90%;
-  z-index: 10; */
 }
 
 .cardStats {
-  /*   font-size: 0.9em; */
-
   font-size: 0.7em;
   text-align: center;
   width: 100%;
@@ -199,10 +180,7 @@ export default createGlobalStyle`
   margin-top: 5px;
 }
 
-/* //bgg img */
-.demo-bg {
-  /*
-  border-radius: 0.3rem; */
+.image-bg {
   opacity: 0.6;
   left: 0;
   top: 0;
@@ -211,8 +189,6 @@ export default createGlobalStyle`
   position: absolute;
   object-fit: cover;
   border-radius: 0.75rem;
-  /*     width: 3rem;
-    height: 3rem; */
 }
 
 .cardStats_stat-likes {
@@ -224,5 +200,4 @@ export default createGlobalStyle`
   color: #ffd433;
   margin: 1px;
 }
-
 `;
