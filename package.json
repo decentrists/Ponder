@@ -37,6 +37,7 @@
     "fake-tag": "^3.0.0",
     "formik": "^2.2.9",
     "history": "^5.0.1",
+    "html-entities": "^2.3.2",
     "luxon": "^2.1.1",
     "process": "^0.11.10",
     "prop-types": "^15.7.2",

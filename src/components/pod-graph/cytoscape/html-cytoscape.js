@@ -1,9 +1,9 @@
 import cytoscape from 'cytoscape';
 import nodeHtmlLabel from 'cytoscape-node-html-label';
+import { encode } from 'html-entities';
 
 nodeHtmlLabel(cytoscape);
 
-// TODO: Sanatize data to prevent XSS exploits
 export default function applyHtmlLabel(cy) {
   cy.nodeHtmlLabel([
     {
@@ -14,7 +14,7 @@ export default function applyHtmlLabel(cy) {
       valignBox: 'center',
       tpl(data) {
         return `
-          <div class="pod-graph-card card-front" data-id="${data.id}">
+          <div class="pod-graph-card card-front" data-id="${encode(data.id, { scope: 'attribute' })}">
             <div class="card-front__tp">
               <img class="image-bg" src="${data.imageUrl}" alt="" />
               <h2 class="card-front__heading">
