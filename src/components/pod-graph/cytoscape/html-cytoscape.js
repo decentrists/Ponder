@@ -16,9 +16,9 @@ export default function applyHtmlLabel(cy) {
         return `
           <div class="pod-graph-card card-front" data-id="${encode(data.id, { scope: 'attribute' })}">
             <div class="card-front__tp">
-              <img class="image-bg" src="${data.imageUrl}" alt="" />
+              <img class="image-bg" src="${encode(data.imageUrl, { scope: 'attribute' })}" alt="" />
               <h2 class="card-front__heading">
-                ${data.title}
+                ${encode(data.title, { scope: 'attribute' })}
               </h2>
             </div>
             <div class="card-front-btn">
