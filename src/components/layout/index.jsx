@@ -18,7 +18,6 @@ const CenterComponents = styled(Container)`
 `;
 
 const MainContent = styled.div`
-    /* border: solid yellow 2px; */
     flex-grow: 1;
     max-width: 72rem;
     padding-top: 1rem;
@@ -30,12 +29,10 @@ function Layout({ children }) {
   return (
     <Page>
       <CenterComponents>
-
         <MainContent>
           {children}
         </MainContent>
       </CenterComponents>
-
       <Footer />
     </Page>
   );

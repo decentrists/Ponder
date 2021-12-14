@@ -11,10 +11,7 @@ import {
 import NavButton from './nav-button';
 
 const Footer = styled.footer`
-  /* background-color: #545454; */
-    /* box-shadow: 1, 1, 1, rgba(6, 6, 6, .4); */
-
-    background-color: rgba(24, 24, 24, 1);
+    background-color: #0d0d0d;
     padding: 0.625rem 1.25rem;
     border-top-left-radius: 1rem;
     border-top-right-radius: 1rem;
@@ -28,7 +25,6 @@ const Footer = styled.footer`
 `;
 
 const NavList = styled.ul`
- /* border: solid 1px red; */
     align-items: center;
     justify-content: center;
     width: 100%;

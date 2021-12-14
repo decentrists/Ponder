@@ -22,7 +22,6 @@ const NavBtn = styled(Button)`
         background: transparent;
           border: 1px solid transparent !important;
     }
-
 `;
 
 function NavButton({ children, ...props }) {
@@ -31,7 +30,6 @@ function NavButton({ children, ...props }) {
       <NavBtn
         as={NavLink}
         {...props}
-
       >
         {children}
       </NavBtn>
