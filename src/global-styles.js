@@ -46,8 +46,6 @@ export default createGlobalStyle`
   }
 }
 
-/* =================== graph canvas  =========================*/
-
 /* =================== panzoom  =========================*/
 .cy-panzoom {
   top: 1rem;
@@ -156,6 +154,12 @@ export default createGlobalStyle`
   z-index: 6666;
 }
 
+.card-front.selected {
+  box-shadow: 0 0 0px 2px #5da4ef;
+  border: 2px solid #5682a3;
+
+}
+
 .card-front-btn {
   align-items: center;
   display: flex;
@@ -218,10 +222,13 @@ export default createGlobalStyle`
   padding: 10px;
   box-shadow: 11px 11px 11px  rgba(0, 0, 0, 0.3);
 }
+
 .group-header {
   margin-bottom: 0;
   font-size: smaller;
+  text-transform: capitalize;
 }
+
 .group.hide {
   display: none;
 }

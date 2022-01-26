@@ -8,6 +8,7 @@ function normalizeElements(elements) {
 }
 
 export default function getElementsFromSubscriptions(subscriptions) {
+  // nodes
   const nodes = subscriptions.map(podcast => ({
     group: 'nodes',
     classes: 'customNodes',
@@ -21,9 +22,11 @@ export default function getElementsFromSubscriptions(subscriptions) {
       title: podcast.title,
       imageUrl: podcast.imageUrl,
       imageTitle: podcast.title,
-      parent: 'comedy',
+      parent: podcast.categories.includes('comedy') ? 'comedy' : 'sports',
     },
   }));
+
+  // parents nodes
   const group = {
     group: 'nodes',
     data: {
@@ -32,8 +35,16 @@ export default function getElementsFromSubscriptions(subscriptions) {
     },
     classes: 'customGroup',
   };
-  // ;
-  nodes.push(group);
+  const group2 = {
+    group: 'nodes',
+    data: {
+      id: 'sports',
+      name: 'sports',
+    },
+    classes: 'customGroup',
+  };
+  nodes.push(group, group2);
+  // edges
   const edges = subscriptions
     .reduce((acc, podcast, _, xs) => {
       // A match is any other podcast that has one same category or keyword

@@ -28,18 +28,15 @@ export default function applyExpandColapse(cy) {
       ready() {}, // on layoutready
       stop() {}, // on layoutstop
     },
-    fisheye: false,
-    animate: false,
+    fisheye: true,
+    animate: true,
     undoable: false,
     expandCollapseCuePosition: 'top-left',
-    expandCollapseCueSize: 12,
+    expandCollapseCueSize: 30,
     expandCollapseCueLineSize: 20,
-    expandCueImage: '../assets/img/ic_expand_more.svg',
-    collapseCueImage: '../assets/img/ic_expand_less.svg',
-    expandCollapseCueSensitivity: 1,
-    edgeTypeInfo: 'edgeType',
-    groupEdgesOfSameTypeOnCollapse: false,
-    allowNestedEdgeCollapse: false,
+    expandCueImage: undefined, // image of expand icon if undefined draw regular expand cue
+    collapseCueImage: undefined, // image of collapse icon if undefined draw regular collapse cue
+    expandCollapseCueSensitivity: 2, // sensitivity of expand-collapse cues
     zIndex: 999,
   });
 }

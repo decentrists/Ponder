@@ -5,7 +5,6 @@ import { podcastPropType } from '../../prop-types';
 import createCytoscape from './cytoscape';
 import getElementsFromSubscriptions from './get-elements-from-subscriptions';
 import PodcastDetails from '../podcast-details';
-import ToggleBtn from '../toggle-button';
 
 const PodGraphContainer = styled.div`
   position: relative;
@@ -27,7 +26,6 @@ function PodGraph({ subscriptions }) {
   const el = useRef();
   const [cy, setCy] = useState(null);
   const [selectedPodcastId, setSelectedPodcastId] = useState(null);
-  const [toggle, setToggle] = useState(false);
   const selectedPodcast = subscriptions
     .find(subscription => subscription.subscribeUrl === selectedPodcastId);
 
@@ -37,7 +35,7 @@ function PodGraph({ subscriptions }) {
 
   useEffect(() => {
     el.current.addEventListener('click', event => {
-      const cardEl = Array.from(document.querySelectorAll('.pod-graph-card'))
+      const cardEl = Array.from(document.querySelectorAll('.card-front'))
         .find(card => card.contains(event.target));
       if (cardEl) setSelectedPodcastId(cardEl.dataset.id);
     });
@@ -54,35 +52,9 @@ function PodGraph({ subscriptions }) {
     };
   }, [subscriptions]);
 
-  // toggle btn ONLY  USED FOR DEBUGGING TODO:REMOVE
-  const collapseGroups = () => {
-    setToggle(!toggle);
-    const api = cy.expandCollapse();
-    api.collapseAll();
-    cy.fit();
-    cy.zoom({
-      level: 1.0, // the zoom level
-      position: { x: 0, y: 0 },
-    });
-  };
-  const expandGroups = () => {
-    setToggle(!toggle);
-    const api = cy.expandCollapse();
-    api.expandAll();
-    cy.fit();
-    cy.zoom({
-      level: 1.0, // the zoom level
-      position: { x: 0, y: 0 },
-    });
-  };
   return (
     <PodGraphContainer>
       <PodGraphInnerContainer ref={el} />
-      <ToggleBtn
-        collapseGroups={collapseGroups}
-        expandGroups={expandGroups}
-        toggle={toggle}
-      />
       <PodcastDetails
         {...selectedPodcast}
         isOpen={!!selectedPodcast}
