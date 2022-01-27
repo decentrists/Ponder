@@ -5,10 +5,12 @@ import { podcastPropType } from '../../prop-types';
 import createCytoscape from './cytoscape';
 import getElementsFromSubscriptions from './get-elements-from-subscriptions';
 import PodcastDetails from '../podcast-details';
+import ToggleBtn from '../toggle-button'; // This button can be used for another fn
 
 const PodGraphContainer = styled.div`
   position: relative;
 `;
+
 const PodGraphInnerContainer = styled.div`
   max-height: 600px;
   min-height: 600px;
@@ -60,6 +62,7 @@ function PodGraph({ subscriptions }) {
         isOpen={!!selectedPodcast}
         close={() => setSelectedPodcastId(null)}
       />
+      <ToggleBtn />  {/* this btn has no fn yet,it can be added later */}
     </PodGraphContainer>
   );
 }

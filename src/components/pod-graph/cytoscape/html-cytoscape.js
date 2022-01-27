@@ -6,6 +6,7 @@ nodeHtmlLabel(cytoscape);
 
 export default function applyHtmlLabel(cy) {
   cy.nodeHtmlLabel([
+    // TODO:dynamic styling when the node is selected...remove repetition
     {
       query: '.customNodes',
       halign: 'center',

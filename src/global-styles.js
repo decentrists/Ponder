@@ -157,7 +157,6 @@ export default createGlobalStyle`
 .card-front.selected {
   box-shadow: 0 0 0px 2px #5da4ef;
   border: 2px solid #5682a3;
-
 }
 
 .card-front-btn {

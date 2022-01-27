@@ -2,9 +2,9 @@ const layout = {
   fit: true, // whether to fit the viewport to the graph
   padding: 80, // the padding on fit
   name: 'dagre',
-  nodeSep: 300,
-  edgeSep: 200,
-  rankSep: 400,
+  nodeSep: 50,
+  edgeSep: 80,
+  rankSep: 300,
   rankDir: 'LR', // 'TB' for top to bottom flow, 'LR' for left to right,
   ranker: 'tight-tree', // Type of algorithm to assign a rank to each node in the input graph. Possible values: 'network-simplex', 'tight-tree' or 'longest-path'
   minLen(edge) { return 1; }, // number of ranks to keep between the source and target of the edge
