@@ -1,29 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import styled from 'styled-components';
-import { Container } from 'react-bootstrap';
 import Footer from './footer';
-
-const Page = styled.div`
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-`;
-
-const CenterComponents = styled(Container)`
-  display: flex;
-  justify-content: center;
-  margin-left: auto;
-	margin-right: auto;
-	max-width: 1140px;
-`;
-
-const MainContent = styled.div`
-  flex-grow: 1;
-  max-width: 72rem;
-  padding-top: 1rem;
-  padding-bottom: 1rem;
-`;
+import { Page, CenterComponents, MainContent } from './index.elements';
 
 function Layout({ children }) {
   return (

@@ -1,89 +1,16 @@
 import React, { useState, useContext } from 'react';
 import PropTypes from 'prop-types';
-import styled from 'styled-components';
-import {
-  InputGroup, Form, Image, Container,
-} from 'react-bootstrap';
+import { InputGroup, Form } from 'react-bootstrap';
 import { ToastContext } from '../../providers/toast';
-import RssButton from '../rss-button';
+import RssButton from '../buttons/rss-button';
 import Logo from '../assets/img/pot.svg';
-import SyncButton from '../sync-button';
-import RefreshButton from '../refresh-button';
-
-const HeaderContainer = styled(Container)`
-  display: flex;
-  color: white;
-  align-items: center;
-  justify-content: space-between;
-  padding-top: 0.75rem;
-  position: fixed;
-  top: 0;
-  right: 0;
-  left: 0;
-  z-index: 10001;
-  background-color: #030303;
-  margin-left: auto;
-  margin-right: auto;
-  max-width: 1140px;
-  padding-right: 15px;
-  padding-left: 15px;
-`;
-
-const ImageWrapper = styled.div`
-  padding-right: 0.625rem;
-`;
-
-const FormLayer = styled.div`
-  padding: 0.375rem;
-  padding-right: 2rem;
-  padding-left: 1.25rem;
-  border-radius: 9999px;
-  overflow: hidden;
-  align-items: center;
-  background-color: #1a1a1a;
-  border: rgba(38, 38, 38, 1) solid 2px;
-  width: 100%;
-  height: 2.5rem;
-  display: flex;
-  margin-right: 0.625rem;
-`;
-
-const ImageLogo = styled(Image)`
-  box-sizing: border-box;
-  padding: 0;
-  border: none;
-  margin: auto;
-  object-fit: contain;
-  vertical-align: middle;
-`;
-
-const PodAlert = styled.div`
-  border: 2px solid gray;
-  border-radius: 9999px;
-  flex-shrink: 0;
-  width: 1rem;
-  height: 1rem;
-`;
-
-const FormWrapper = styled.div`
-  width: 100%;
-`;
-
-const CallToActions = styled.div`
-  border: rgba(38, 38, 38, 1) solid 2px;
-  padding-top: 0.75rem;
-  padding-bottom: 0.75rem;
-  padding-left: 1rem;
-  padding-right: 1rem;
-  border-radius: 9999px;
-  display: flex;
-  align-items: center;
-  height: 2.5rem;
-  @media only screen and (max-width: 960px) {
-    padding: 0;
-    border: none;
-  }
-`;
+import SyncButton from '../buttons/sync-button';
+import RefreshButton from '../buttons/refresh-button';
+import {
+  HeaderContainer, ImageWrapper, ImageLogo,
+  FormLayer, PodAlert, FormWrapper,
+  CallToActions,
+} from './index.elements';
 
 function HeaderComponent({ onSubmit }) {
   const toast = useContext(ToastContext);

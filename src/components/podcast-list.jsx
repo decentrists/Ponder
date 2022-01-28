@@ -13,7 +13,7 @@ import {
   TitleHeader, MetaDetail, LatestRelease,
   TimeRelease, CallToAction, ActionBtn,
 } from './podcast-list-elements';
-import RemoveBtn from './remove-button';
+import RemoveBtn from './buttons/remove-button';
 
 dayjs.extend(relativeTime);
 

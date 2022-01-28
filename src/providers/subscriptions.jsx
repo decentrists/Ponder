@@ -3,11 +3,12 @@ import PropTypes from 'prop-types';
 import { ToastContext } from './toast';
 import useRerenderEffect from '../hooks/use-rerender-effect';
 import { getPodcast, getAllPodcasts } from '../client';
+import getCustomStuff from '../components/pod-graph/data'; // TODO: remove this static data and use the subsription context
 
 export const SubscriptionsContext = createContext();
 
 function readCachedPodcasts() {
-  const podcasts = JSON.parse(localStorage.getItem('subscriptions')) || [];
+  const podcasts = JSON.parse(localStorage.getItem('subscriptions')) || getCustomStuff(); // TODO: remove this static data
   return podcasts.map(podcast => ({
     ...podcast,
     episodes: podcast.episodes.map(episode => ({

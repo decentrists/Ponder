@@ -1,6 +1,6 @@
 import React, { useContext } from 'react';
 import { FaSync } from 'react-icons/fa';
-import { SubscriptionsContext } from '../providers/subscriptions';
+import { SubscriptionsContext } from '../../providers/subscriptions';
 import SpinButton from './spin-button';
 
 function RefreshButton() {

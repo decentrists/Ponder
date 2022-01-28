@@ -3,10 +3,31 @@ import nodeHtmlLabel from 'cy-node-html-label';
 import sanitizeHtml from 'sanitize-html';
 
 nodeHtmlLabel(cytoscape);
+function cardElements(data, selected = '') {
+  return `
+    <div class="card-front ${selected}" data-id="${sanitizeHtml(data.id)}">
+      <div class="card-front__tp">
+        <img class="image-bg" src="${sanitizeHtml(data.imageUrl)}" alt="" />
+        <h2 class="card-front__heading">
+          ${sanitizeHtml(data.title)}
+        </h2>
+      </div>
+      <div class="card-front-btn">
+        <div class="card-front__details">
+          <span class="cardStats_stat cardStats_stat-likes">
+          <i class="fas fa-headset"></i> 5
+          </span>
+          <span class='cardStats_stat cardStats_stat-comments'>
+          <i class='far fa-comment fa-fw'></i>  54
+          </span>
+        </div>
+      </div>
+    </div>
+  `;
+}
 
 export default function applyHtmlLabel(cy) {
   cy.nodeHtmlLabel([
-    // TODO:dynamic styling when the node is selected...remove repetition
     {
       query: '.customNodes',
       halign: 'center',
@@ -14,26 +35,7 @@ export default function applyHtmlLabel(cy) {
       halignBox: 'center',
       valignBox: 'center',
       tpl(data) {
-        return `
-          <div class="card-front" data-id="${sanitizeHtml(data.id)}">
-            <div class="card-front__tp">
-              <img class="image-bg" src="${sanitizeHtml(data.imageUrl)}" alt="" />
-              <h2 class="card-front__heading">
-                ${sanitizeHtml(data.title)}
-              </h2>
-            </div>
-            <div class="card-front-btn">
-              <div class="card-front__details">
-                <span class="cardStats_stat cardStats_stat-likes">
-                <i class="fas fa-headset"></i> 5
-                </span>
-                <span class='cardStats_stat cardStats_stat-comments'>
-               <i class='far fa-comment fa-fw'></i>  54
-                </span>
-              </div>
-            </div>
-          </div>
-        `;
+        return cardElements(data);
       },
     },
     {
@@ -43,29 +45,9 @@ export default function applyHtmlLabel(cy) {
       halignBox: 'center',
       valignBox: 'center',
       tpl(data) {
-        return `
-          <div class="card-front selected" data-id="${sanitizeHtml(data.id)}">
-            <div class="card-front__tp">
-              <img class="image-bg" src="${sanitizeHtml(data.imageUrl)}" alt="" />
-              <h2 class="card-front__heading">
-                ${sanitizeHtml(data.title)}
-              </h2>
-            </div>
-            <div class="card-front-btn">
-              <div class="card-front__details">
-                <span class="cardStats_stat cardStats_stat-likes">
-                <i class="fas fa-headset"></i> 5
-                </span>
-                <span class='cardStats_stat cardStats_stat-comments'>
-                <i class='far fa-comment fa-fw'></i>  54
-                </span>
-              </div>
-            </div>
-          </div>
-        `;
+        return cardElements(data, 'selected');
       },
     },
-
     {
       query: '.customGroup',
       halign: 'center',
