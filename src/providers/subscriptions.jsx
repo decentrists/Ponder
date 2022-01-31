@@ -8,7 +8,7 @@ import getCustomStuff from '../components/pod-graph/data'; // TODO: remove this 
 export const SubscriptionsContext = createContext();
 
 function readCachedPodcasts() {
-  const podcasts = JSON.parse(localStorage.getItem('subscriptions')) || getCustomStuff(); // TODO: remove this static data
+  const podcasts = JSON.parse(localStorage.getItem('subscriptions')) || []; // TODO: remove this static data
   return podcasts.map(podcast => ({
     ...podcast,
     episodes: podcast.episodes.map(episode => ({

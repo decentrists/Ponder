@@ -40,7 +40,6 @@ function PodcastDetails({
         {imageUrl && (
           <PodImage src={imageUrl} alt={imageTitle} fluid />
         )}
-
         <EpisodeList>
           {episodes.slice()
             .sort((a, b) => b.publishedAt - a.publishedAt)
@@ -48,7 +47,6 @@ function PodcastDetails({
               <EpisodeDetails key={episode.title} {...episode} />
             ))}
         </EpisodeList>
-
       </Modal.Body>
       <Modal.Footer>
         <Button type="button" variant="warning" onClick={close}>Close</Button>

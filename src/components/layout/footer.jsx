@@ -8,7 +8,7 @@ import {
   FaCog,
 } from 'react-icons/fa';
 import NavButton from '../buttons/nav-button';
-import { Footer, NavList } from './index.elements';
+import { Footer, NavList } from './index-elements';
 
 function LayoutFooter() {
   return (

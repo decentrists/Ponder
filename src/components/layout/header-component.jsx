@@ -10,7 +10,7 @@ import {
   HeaderContainer, ImageWrapper, ImageLogo,
   FormLayer, PodAlert, FormWrapper,
   CallToActions,
-} from './index.elements';
+} from './index-elements';
 
 function HeaderComponent({ onSubmit }) {
   const toast = useContext(ToastContext);

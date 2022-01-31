@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import Footer from './footer';
-import { Page, CenterComponents, MainContent } from './index.elements';
+import { Page, CenterComponents, MainContent } from './index-elements';
 
 function Layout({ children }) {
   return (

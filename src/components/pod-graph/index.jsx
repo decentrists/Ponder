@@ -28,6 +28,7 @@ function PodGraph({ subscriptions }) {
   const el = useRef();
   const [cy, setCy] = useState(null);
   const [selectedPodcastId, setSelectedPodcastId] = useState(null);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);// advised to remove by matt
   const selectedPodcast = subscriptions
     .find(subscription => subscription.subscribeUrl === selectedPodcastId);
 
@@ -36,7 +37,7 @@ function PodGraph({ subscriptions }) {
   }
 
   useEffect(() => {
-    el.current.addEventListener('click', event => {
+    el.current.addEventListener('tap', event => {
       const cardEl = Array.from(document.querySelectorAll('.card-front'))
         .find(card => card.contains(event.target));
       if (cardEl) setSelectedPodcastId(cardEl.dataset.id);
@@ -53,14 +54,20 @@ function PodGraph({ subscriptions }) {
       cyto.destroy();
     };
   }, [subscriptions]);
+  // advised to remove this fn by Matt
+  function toggleModal() {
+    setIsDetailsOpen(!isDetailsOpen);
+  }
 
   return (
     <PodGraphContainer>
       <PodGraphInnerContainer ref={el} />
       <PodcastDetails
         {...selectedPodcast}
-        isOpen={!!selectedPodcast}
-        close={() => setSelectedPodcastId(null)}
+        // isOpen={!!selectedPodcast}
+        // close={() => setSelectedPodcastId(null)}
+        isOpen={isDetailsOpen}
+        close={toggleModal}
       />
       <ToggleBtn />  {/* this btn has no fn yet,it can be added later */}
     </PodGraphContainer>
