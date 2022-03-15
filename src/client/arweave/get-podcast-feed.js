@@ -23,7 +23,7 @@ export default async function getPodcastFeed(subscribeUrl) {
       tags: [
         {
           name: toTag('subscribeUrl'),
-          values: subscribeUrl,
+          values: [subscribeUrl],
         },
       ],
     },
