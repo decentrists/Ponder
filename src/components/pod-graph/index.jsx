@@ -26,6 +26,7 @@ const PodGraphInnerContainer = styled.div`
 
 function PodGraph({ subscriptions }) {
   const el = useRef();
+  const [cy, setCy] = useState(null);
   const [selectedPodcastId, setSelectedPodcastId] = useState(null);
   const selectedPodcast = subscriptions
     .find(subscription => subscription.subscribeUrl === selectedPodcastId);
@@ -38,6 +39,7 @@ function PodGraph({ subscriptions }) {
     const cyto = createCytoscape(el.current, getElementsFromSubscriptions(subscriptions), {
       setSelectedPodcast: () => {},
     });
+    setCy(cyto);
     cyto.on('tap', 'node', evt => {
       const data = evt.target.children()[0].data();
       setSelectedPodcastId(data.id);
