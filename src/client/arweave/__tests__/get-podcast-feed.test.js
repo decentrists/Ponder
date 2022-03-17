@@ -15,11 +15,11 @@ function baseGqlResponse() {
                 { name: 'Content-Type', value: 'application/json' },
                 { name: 'Unix-Time', value: '1620172800' },
                 { name: 'version', value: 'bestVersion' },
-                { name: 'subscribeUrl', value: 'https://nudecelebsforfree.net/rss' },
-                { name: 'title', value: 'Nude Celebs for Free' },
-                { name: 'description', value: 'The best in nude celebs for FREE' },
-                { name: 'keyword', value: 'CElebs' },
-                { name: 'keyword', value: 'frEe' },
+                { name: 'subscribeUrl', value: 'https://server.dummy/rss' },
+                { name: 'title', value: 'That Podcast' },
+                { name: 'description', value: 'The best of That Podcast' },
+                { name: 'keyword', value: 'comedY' },
+                { name: 'keyword', value: 'Comedy' },
                 { name: 'category', value: 'PoLitics' },
                 { name: 'category', value: 'CaTs' },
               ]
@@ -38,11 +38,11 @@ function baseGqlResponse() {
 const BASE_TRANSACTION_RESPONSE = {
   episodes: [
     {
-      imageUrl: 'https://nudecelebsforfree.com/img/steve-hoffman.jpg',
+      imageUrl: 'https://server.dummy/img/steve-hoffman.jpg',
       publishedAt: new Date('2002-06-22'),
     },
     {
-      imageUrl: 'https://nudecelebsforfree.com/img/steve-buchemi.bmp',
+      imageUrl: 'https://server.dummy/img/steve-buchemi.bmp',
       publishedAt: new Date('1999-05-05'),
     },
   ],
@@ -61,19 +61,19 @@ test('Successful fetch', async () => {
   api.post.mockResolvedValue(baseGqlResponse());
   transactions.getData.mockResolvedValue(JSON.stringify(BASE_TRANSACTION_RESPONSE));
   expect(transactions.getData).not.toHaveBeenCalled();
-  await expect(getPodcastFeed('https://nudecelebsforfree.net/rss')).resolves.toEqual({
-    subscribeUrl: 'https://nudecelebsforfree.net/rss',
-    title: 'Nude Celebs for Free',
-    description: 'The best in nude celebs for FREE',
+  await expect(getPodcastFeed('https://server.dummy/rss')).resolves.toEqual({
+    subscribeUrl: 'https://server.dummy/rss',
+    title: 'That Podcast',
+    description: 'The best of That Podcast',
     categories: ['PoLitics', 'CaTs'],
-    keywords: ['CElebs', 'frEe'],
+    keywords: ['comedY', 'Comedy'],
     episodes: [
       {
-        imageUrl: 'https://nudecelebsforfree.com/img/steve-hoffman.jpg',
+        imageUrl: 'https://server.dummy/img/steve-hoffman.jpg',
         publishedAt: new Date('2002-06-22'),
       },
       {
-        imageUrl: 'https://nudecelebsforfree.com/img/steve-buchemi.bmp',
+        imageUrl: 'https://server.dummy/img/steve-buchemi.bmp',
         publishedAt: new Date('1999-05-05'),
       },
     ],
@@ -85,19 +85,19 @@ test('Successful fetch', async () => {
 });
 
 test('Fails on GraphQL request', async () => {
-  const mockError = new Error('GraphQL goofed');
+  const mockError = new Error('GraphQL Error');
   api.post.mockRejectedValue(mockError);
   transactions.getData.mockResolvedValue(JSON.stringify(BASE_TRANSACTION_RESPONSE));
-  await expect(getPodcastFeed('https://nudecelebsforfree.net/rss')).rejects.toBe(mockError);
+  await expect(getPodcastFeed('https://server.dummy/rss')).rejects.toBe(mockError);
   expect(api.post).toHaveBeenCalled();
   expect(transactions.getData).not.toHaveBeenCalled();
 });
 
 test('Fails on getData request', async () => {
-  const mockError = new Error('getData goofed');
+  const mockError = new Error('getData Error');
   api.post.mockResolvedValue(baseGqlResponse());
   transactions.getData.mockRejectedValue(mockError);
-  await expect(getPodcastFeed('https://nudecelebsforfree.net/rss')).rejects.toBe(mockError);
+  await expect(getPodcastFeed('https://server.dummy/rss')).rejects.toBe(mockError);
   expect(api.post).toHaveBeenCalled();
   expect(transactions.getData).toHaveBeenCalled();
 });
