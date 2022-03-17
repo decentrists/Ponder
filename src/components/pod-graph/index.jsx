@@ -37,13 +37,10 @@ function PodGraph({ subscriptions }) {
 
   useEffect(() => {
     const cyto = createCytoscape(el.current, getElementsFromSubscriptions(subscriptions), {
-      setSelectedPodcast: () => {},
+      setSelectedPodcastId
     });
     setCy(cyto);
-    cyto.on('tap', 'node', evt => {
-      const data = evt.target.children()[0].data();
-      setSelectedPodcastId(data.id);
-    });
+
     if (process.env.NODE_ENV !== 'production') window.cy = cyto;
     return () => {
       cyto.destroy();
