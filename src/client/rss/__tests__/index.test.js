@@ -52,9 +52,9 @@ describe('getPodcastFeed', () => {
     test('Uses itunes image if image url isn\'t available', async () => {
       parser.parseURL.mockResolvedValue({
         ...BASE_MOCK_RESPONSE,
-        itunes: { image: 'https://nudecelebsforfree.net/steve-buscemi' },
+        itunes: { image: 'https://server.dummy/steve-buscemi' },
       });
-      await request().resolves.toBe('https://nudecelebsforfree.net/steve-buscemi');
+      await request().resolves.toBe('https://server.dummy/steve-buscemi');
     });
 
     test('Favours description over itunes summary', async () => {
@@ -62,14 +62,14 @@ describe('getPodcastFeed', () => {
         ...BASE_MOCK_RESPONSE,
         itunes: {
           ...BASE_MOCK_RESPONSE.itunes,
-          image: 'https://nudecelebsforfree.net/steve-buscemi',
+          image: 'https://server.dummy/steve-buscemi',
         },
         image: {
           ...BASE_MOCK_RESPONSE.image,
-          url: 'https://nudecelebsforfree.net/christopher-walken',
+          url: 'https://server.dummy/christopher-walken',
         },
       });
-      await request().resolves.toBe('https://nudecelebsforfree.net/christopher-walken');
+      await request().resolves.toBe('https://server.dummy/christopher-walken');
     });
   });
 
@@ -81,22 +81,22 @@ describe('getPodcastFeed', () => {
 
     parser.parseURL.mockResolvedValue({
       ...BASE_MOCK_RESPONSE,
-      itunes: { image: 'https://nudecelebsforfree.net/steve-buscemi' },
+      itunes: { image: 'https://server.dummy/steve-buscemi' },
     });
-    await request().resolves.toBe('https://nudecelebsforfree.net/steve-buscemi');
+    await request().resolves.toBe('https://server.dummy/steve-buscemi');
 
     parser.parseURL.mockResolvedValue({
       ...BASE_MOCK_RESPONSE,
       itunes: {
         ...BASE_MOCK_RESPONSE.itunes,
-        image: 'https://nudecelebsforfree.net/steve-buscemi',
+        image: 'https://server.dummy/steve-buscemi',
       },
       image: {
         ...BASE_MOCK_RESPONSE.image,
-        url: 'https://nudecelebsforfree.net/christopher-walken',
+        url: 'https://server.dummy/christopher-walken',
       },
     });
-    await request().resolves.toBe('https://nudecelebsforfree.net/christopher-walken');
+    await request().resolves.toBe('https://server.dummy/christopher-walken');
   });
 
   describe('imageTitle', () => {
@@ -112,10 +112,10 @@ describe('getPodcastFeed', () => {
         ...BASE_MOCK_RESPONSE,
         image: {
           ...BASE_MOCK_RESPONSE.image,
-          title: 'A nude and beatiful Steve Buscemi',
+          title: 'Steve Buscemi',
         },
       });
-      await request().resolves.toBe('A nude and beatiful Steve Buscemi');
+      await request().resolves.toBe('Steve Buscemi');
     });
   });
 
@@ -147,13 +147,13 @@ describe('getPodcastFeed', () => {
     test('Merges values from categories and itunes categories', async () => {
       parser.parseURL.mockResolvedValue({
         ...BASE_MOCK_RESPONSE,
-        categories: ['free', 'celebs', 'nudity'],
+        categories: ['comedy', 'news'],
         itunes: {
           ...BASE_MOCK_RESPONSE.itunes,
-          categories: ['ramranch', 'unearthly'],
+          categories: ['dramedy', 'apples'],
         },
       });
-      await request().resolves.toEqual(['free', 'celebs', 'nudity', 'ramranch', 'unearthly']);
+      await request().resolves.toEqual(['comedy', 'news', 'dramedy', 'apples']);
     });
   });
 
@@ -168,13 +168,13 @@ describe('getPodcastFeed', () => {
     test('Merges values from categories and itunes categories', async () => {
       parser.parseURL.mockResolvedValue({
         ...BASE_MOCK_RESPONSE,
-        keywords: ['free', 'celebs', 'nudity'],
+        keywords: ['comedy', 'news'],
         itunes: {
           ...BASE_MOCK_RESPONSE.itunes,
-          keywords: ['ramranch', 'unearthly'],
+          keywords: ['dramedy', 'apples'],
         },
       });
-      await request().resolves.toEqual(['free', 'celebs', 'nudity', 'ramranch', 'unearthly']);
+      await request().resolves.toEqual(['comedy', 'news', 'dramedy', 'apples']);
     });
   });
 
@@ -210,11 +210,11 @@ describe('getPodcastFeed', () => {
         ...BASE_MOCK_RESPONSE,
         items: [{
           ...BASE_EPISODE_RESPONSE,
-          link: 'https://cameronsworld.net/',
+          link: 'https://myurl.crypto/',
         }],
       });
       await expect(getPodcastFeed(TEST_URL).then(({ episodes }) => episodes[0].url))
-        .resolves.toBe('https://cameronsworld.net/');
+        .resolves.toBe('https://myurl.crypto/');
     });
 
     test('publishedAt', async () => {
@@ -300,14 +300,14 @@ describe('getPodcastFeed', () => {
         ...BASE_MOCK_RESPONSE,
         items: [{
           ...BASE_EPISODE_RESPONSE,
-          keywords: ['ay', 'yo', 'guy'],
+          keywords: ['foo', 'bar'],
           itunes: {
-            keywords: ['lets', 'juice', 'yo'],
+            keywords: ['ray', 'dar'],
           },
         }],
       });
       await expect(getPodcastFeed(TEST_URL).then(({ episodes }) => episodes[0].keywords))
-        .resolves.toEqual(['ay', 'yo', 'guy', 'lets', 'juice']);
+        .resolves.toEqual(['foo', 'bar', 'ray', 'dar']);
     });
   });
 });
