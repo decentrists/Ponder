@@ -12,7 +12,7 @@ function HomePage() {
   async function search({ query }) {
     return subscribe(query).catch(ex => {
       console.error(ex);
-      toast('Could not search for podcasts.', {
+      toast('' + ex, {
         variant: 'danger',
       });
     });

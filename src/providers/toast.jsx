@@ -48,6 +48,7 @@ function ToastProvider({ children }) {
           <li key={message.id}>
             <Toast
               autohide
+              delay={3000}
               variant={message.variant || 'primary'}
               onClose={() => handleClose(message.id)}
             >

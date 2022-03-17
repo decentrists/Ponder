@@ -1,12 +1,17 @@
 import gql from 'fake-tag';
 import client from './client';
 import { toTag, fromTag } from './utils';
+import { isEmpty } from '../../utils';
 
 export default async function getPodcastFeed(subscribeUrl) {
-  const transaction = await client.api.post('/graphql', {
-    query: gql`
-      query GetPodcast($tags: [TagFilter!]!) {
-        transactions(tags: $tags, first: 100, sort: HEIGHT_DESC) {
+  const gqlTagFilter = `
+    [{name: "${toTag('subscribeUrl')}",
+      values: ["${subscribeUrl}"]}]
+  `
+  const gqlQuery = {
+    query: `
+      query {
+        transactions(tags: ${gqlTagFilter}, first: 100, sort: HEIGHT_DESC) {
           edges {
             node {
               id
@@ -18,19 +23,23 @@ export default async function getPodcastFeed(subscribeUrl) {
           }
         }
       }
-    `,
-    variables: {
-      tags: [
-        {
-          name: toTag('subscribeUrl'),
-          values: [subscribeUrl],
-        },
-      ],
-    },
-  })
-    .then(res => res.data.data.transactions.edges[0]?.node);
+    `
+  }
 
-  const podcast = await client.transactions.getData(transaction.id, {
+  const edges = await client.api.post('/graphql', gqlQuery).then(res => {
+    console.log('GraphQL response', res);
+    if (res.status >= 400)
+      return [];
+
+    return res.data.data.transactions.edges;
+  });
+
+  console.log('edges', edges);
+  if (isEmpty(edges))
+    return {};
+
+  const trx = edges[0].node;
+  const podcast = await client.transactions.getData(trx.id, {
     decode: true,
     string: true,
   })
@@ -38,7 +47,7 @@ export default async function getPodcastFeed(subscribeUrl) {
 
   return {
     ...podcast,
-    ...transaction.tags
+    ...trx.tags
       .map(tag => ({
         ...tag,
         name: fromTag(tag.name),
