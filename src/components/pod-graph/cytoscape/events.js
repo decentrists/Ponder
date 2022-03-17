@@ -1,6 +1,6 @@
-export default function applyEvents(cy, { setSelectedPodcast, toggleModal }) {
-  cy.on('tap', 'node', event => {
-    setSelectedPodcast(event.target._private.data);
+export default function applyEvents(cy, { setSelectedPodcastId }) {
+  cy.on('tap', 'node', evt => {
+    const data = evt.target.data();
+    setSelectedPodcastId(data.id);
   });
-  cy.on('tap', 'node', toggleModal);// no logic of toggle modal
 }
