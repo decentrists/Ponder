@@ -7,7 +7,7 @@ function mergeItunesData(items, itunes) {
 }
 
 export async function getPodcastFeed(subscribeUrl) {
-  const { items, ...podcast } = await parser.parseURL(subscribeUrl);
+  const { items, ...podcast } = await parser.parseURL(`https://corsanywhere.herokuapp.com/${subscribeUrl}`);
   const imageUrl = podcast.image?.url || podcast.itunes?.image || null;
   return {
     subscribeUrl,
