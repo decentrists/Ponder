@@ -22,7 +22,7 @@ export function corsApiHeaders() {
 }
 
 export function corsProxyURL() {
-  return 'https://cors-anywhere.herokuapp.com/';
+  return 'https://corsanywhere.herokuapp.com/';
 }
 
 export function withCorsProxy(url) {
