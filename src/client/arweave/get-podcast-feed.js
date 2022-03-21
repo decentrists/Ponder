@@ -1,8 +1,37 @@
+/* eslint-disable no-await-in-loop */
 import client from './client';
-import { toTag, fromTag } from './utils';
-import { isEmpty } from '../../utils';
+import { isEmpty, toDate } from '../../utils';
+import {
+  toTag, fromTag, mergeBatchMetadata, mergeBatchTags,
+} from './utils';
+
+const MAX_BATCH_NUMBER = 100;
 
 export default async function getPodcastFeed(subscribeUrl) {
+  const metadataBatches = [];
+  const tagBatches = [];
+  // TODO: negative batch numbers
+  let batch = 0;
+  do {
+    // console.log(`getPodcastFeedForBatch(${subscribeUrl}, ${batch})`);
+    const [metadata, tags] = await getPodcastFeedForBatch(subscribeUrl, batch);
+    // console.log('metadata=', metadata);
+    // console.log('tags=', tags);
+    if (isEmpty(metadata) || isEmpty(tags)) break;
+
+    metadataBatches.push(metadata);
+    tagBatches.push(tags);
+    batch++;
+  }
+  while (batch < MAX_BATCH_NUMBER);
+
+  const mergedMetadata = mergeBatchMetadata(metadataBatches);
+  const mergedTags = mergeBatchTags(tagBatches);
+
+  return { ...mergedMetadata, ...mergedTags };
+}
+
+async function getPodcastFeedForBatch(subscribeUrl, batch) {
   const gqlQuery = {
     query: `
       query GetPodcast($tags: [TagFilter!]!) {
@@ -25,6 +54,13 @@ export default async function getPodcastFeed(subscribeUrl) {
           name: toTag('subscribeUrl'),
           values: [subscribeUrl],
         },
+        {
+          name: toTag('metadataBatch'),
+          // Here we could get multiple batches at the same time, but fetching one at a time
+          // allows us to select the best metadata from many (partial) copies of the same batch,
+          // without quickly exceeding the 100 transaction limit of the GraphQL response.
+          values: [`${batch}`],
+        },
       ],
     },
   };
@@ -39,37 +75,54 @@ export default async function getPodcastFeed(subscribeUrl) {
     console.warn(`GraphQL returned an error: ${e}`);
     edges = [];
   }
+  // console.log('edges', edges);
+  if (isEmpty(edges)) return [{}, {}];
 
-  console.log('edges', edges);
-  if (isEmpty(edges)) {
-    return {};
-  }
-
+  // TODO: We currently simply grab the newest transaction matching this `batch` nr.
+  //       In the future we might want to fetch multiple transactions referencing
+  //       the same batch and merge the result.
   const trx = edges[0].node;
-  const podcast = await client.transactions.getData(trx.id, {
-    decode: true,
-    string: true,
-  })
-    .then(JSON.parse);
-
-  return {
-    ...podcast,
-    ...trx.tags
+  let podcastMetadata;
+  let tags;
+  try {
+    tags = trx.tags
+      .filter(tag => !['Content-Type', 'Unix-Time', toTag('version')].includes(tag.name))
       .map(tag => ({
         ...tag,
         name: fromTag(tag.name),
+        value: ['firstEpisodeDate', 'lastEpisodeDate'].includes(fromTag(tag.name)) ?
+          toDate(tag.value) : tag.value,
       }))
-      .filter(tag => !['Content-Type', 'Unix-Time', 'version'].includes(tag.name))
       .reduce((acc, tag) => ({
         ...acc,
         [tag.name]: Array.isArray(acc[tag.name]) ? acc[tag.name].concat(tag.value) : tag.value,
       }), {
         categories: [],
         keywords: [],
-      }),
-    episodes: podcast.episodes.map(episode => ({
-      ...episode,
-      publishedAt: new Date(episode.publishedAt),
-    })),
-  };
+      });
+
+    // TODO: Create localStorage cache { trx.id: { podcastMetadata, trx.tags } } for
+    //       transactions that are selected for the result of getPodcastFeed(),
+    //       so that we may skip this client.transactions.getData() call.
+    podcastMetadata = await client.transactions.getData(trx.id, {
+      decode: true,
+      string: true,
+    }).then(JSON.parse);
+  }
+  catch (e) {
+    console.warn(`Malformed data for transaction id ${trx.id}: ${e}`);
+    podcastMetadata = { episodes: [] };
+  }
+
+  return [
+    {
+      ...podcastMetadata,
+      episodes: podcastMetadata.episodes.map(episode => ({
+        ...episode,
+        // TODO: Safeguard against malformed metadata => reject episodes where publishedAt == null
+        publishedAt: toDate(episode.publishedAt),
+      })).sort((a, b) => b.publishedAt - a.publishedAt),
+    },
+    tags,
+  ];
 }

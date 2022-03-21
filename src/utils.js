@@ -2,11 +2,22 @@ export function unixTimestamp(date) {
   return Math.floor(date ? date.getTime() : Date.now() / 1000);
 }
 
-export function episodeId(episode) {
-  return `${episode.title}@${episode.publishedAt.getTime()}`;
+export function toISOString(date) {
+  try {
+    return date.toISOString();
+  }
+  catch (error) {
+    return '';
+  }
 }
 
-/* Returns true if the given array or object is empty or undefined */
+export function toDate(dateString) {
+  if (!dateString) return null;
+  const dateObj = new Date(dateString);
+  return Number.isNaN(dateObj.getYear()) ? null : dateObj;
+}
+
+/* Returns true if the given array or object is empty or not an object */
 export function isEmpty(obj) {
   return (typeof obj !== 'object' || Object.keys(obj).length === 0);
 }

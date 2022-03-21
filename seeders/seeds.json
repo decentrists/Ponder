@@ -8,25 +8,11 @@
         "language": "en-us",
         "episodes": [
           {
-            "title": "Live with Will Arnett at the Wiltern Theatre",
-            "url": "https://chtbl.com/track/9E9755/stitcher.simplecastaudio.com/c945bd13-c7f3-4f22-95b5-4bf98e12b21f/episodes/2a28b168-8da5-44cf-9c8f-cb63a1f257f9/audio/128/default.mp3?aid=rss_feed&awCollectionId=c945bd13-c7f3-4f22-95b5-4bf98e12b21f&awEpisodeId=2a28b168-8da5-44cf-9c8f-cb63a1f257f9&feed=dHoohVNH",
-            "publishedAt": "2021-11-10T15:06:18.000Z",
-            "categories": [],
-            "keywords": []
-          },
-          {
-            "title": "Rachel Dratch",
-            "url": "https://chtbl.com/track/9E9755/stitcher.simplecastaudio.com/c945bd13-c7f3-4f22-95b5-4bf98e12b21f/episodes/5fb94291-24b5-4e9e-9860-b9555c45b49e/audio/128/default.mp3?aid=rss_feed&awCollectionId=c945bd13-c7f3-4f22-95b5-4bf98e12b21f&awEpisodeId=5fb94291-24b5-4e9e-9860-b9555c45b49e&feed=dHoohVNH",
-            "publishedAt": "2021-11-08T05:00:00.000Z",
-            "categories": [],
-            "keywords": []
-          },
-          {
             "title": "Karaoke Tribal Law",
             "url": "https://chtbl.com/track/9E9755/stitcher.simplecastaudio.com/c945bd13-c7f3-4f22-95b5-4bf98e12b21f/episodes/6e27c194-175c-4b82-9917-6bf7bdc06b81/audio/128/default.mp3?aid=rss_feed&awCollectionId=c945bd13-c7f3-4f22-95b5-4bf98e12b21f&awEpisodeId=6e27c194-175c-4b82-9917-6bf7bdc06b81&feed=dHoohVNH",
             "publishedAt": "2021-11-04T04:00:00.000Z",
             "categories": [],
-            "keywords": []
+            "keywords": ["humor"]
           },
           {
             "title": "Elvis Costello",
@@ -1624,7 +1610,54 @@
         "categories": [
           "comedy"
         ],
-        "keywords": []
+        "keywords": [],
+        "firstEpisodeDate": "2018-10-03T23:00:00.000Z",
+        "lastEpisodeDate": "2021-11-04T04:00:00.000Z",
+        "metadataBatch": "0"
+      }
+    },
+    {
+      "contents": {
+        "description": "After 25 years at the Late Night desk, Conan realized that the only people at his holiday party are the men and women who work for him. Over the years and despite thousands of interviews, Conan has never made a real and lasting friendship with any of his celebrity guests. So, he started a podcast to do just that.Deeper, unboundedly playful, and free from FCC regulations, Conan O’Brien Needs a Friend is a weekly opportunity for Conan to hang out with the people he enjoys most and perhaps find some real friendship along the way.",
+        "imageUrl": "https://image.simplecastcdn.com/images/5b7d8c77-15ba-4eff-a999-2e725db21db5/2ca29cb6-c010-4780-a9ba-7e5e1729f565/3000x3000/conaf-cover.jpg?aid=rss_feed",
+        "imageTitle": "Conan O’Brien Needs A Friend",
+        "language": "en-us",
+        "episodes": [
+          {
+            "title": "Live with Will Arnett at the Wiltern Theatre",
+            "url": "https://chtbl.com/track/9E9755/stitcher.simplecastaudio.com/c945bd13-c7f3-4f22-95b5-4bf98e12b21f/episodes/2a28b168-8da5-44cf-9c8f-cb63a1f257f9/audio/128/default.mp3?aid=rss_feed&awCollectionId=c945bd13-c7f3-4f22-95b5-4bf98e12b21f&awEpisodeId=2a28b168-8da5-44cf-9c8f-cb63a1f257f9&feed=dHoohVNH",
+            "publishedAt": "2021-11-10T15:06:18.000Z",
+            "categories": [],
+            "keywords": []
+          },
+          {
+            "title": "Rachel Dratch",
+            "url": "https://chtbl.com/track/9E9755/stitcher.simplecastaudio.com/c945bd13-c7f3-4f22-95b5-4bf98e12b21f/episodes/5fb94291-24b5-4e9e-9860-b9555c45b49e/audio/128/default.mp3?aid=rss_feed&awCollectionId=c945bd13-c7f3-4f22-95b5-4bf98e12b21f&awEpisodeId=5fb94291-24b5-4e9e-9860-b9555c45b49e&feed=dHoohVNH",
+            "publishedAt": "2021-11-08T05:00:00.000Z",
+            "categories": [],
+            "keywords": []
+          },
+          {
+            "title": "Karaoke Tribal Law",
+            "url": "https://chtbl.com/track/9E9755/stitcher.simplecastaudio.com/c945bd13-c7f3-4f22-95b5-4bf98e12b21f/episodes/6e27c194-175c-4b82-9917-6bf7bdc06b81/audio/128/default.mp3?aid=rss_feed&awCollectionId=c945bd13-c7f3-4f22-95b5-4bf98e12b21f&awEpisodeId=6e27c194-175c-4b82-9917-6bf7bdc06b81&feed=dHoohVNH",
+            "publishedAt": "2021-11-04T04:00:00.000Z",
+            "categories": ["comedy"],
+            "keywords": []
+          }
+        ]
+      },
+      "tags": {
+        "subscribeUrl": "https://feeds.simplecast.com/dHoohVNH",
+        "title": "Conan O’Brien Needs A Friend",
+        "categories": [
+          "comedy"
+        ],
+        "keywords": [
+          "humor"
+        ],
+        "firstEpisodeDate": "2021-11-04T04:00:00.000Z",
+        "lastEpisodeDate": "2021-11-10T15:06:18.000Z",
+        "metadataBatch": "1"
       }
     },
     {
@@ -2450,7 +2483,10 @@
           "humor",
           "politics",
           "sketches"
-        ]
+        ],
+        "firstEpisodeDate": "2020-02-20T18:49:53.000Z",
+        "lastEpisodeDate": "2021-11-11T05:04:38.000Z",
+        "metadataBatch": "0"
       }
     }
   ]

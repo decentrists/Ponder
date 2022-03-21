@@ -3,16 +3,18 @@ import PropTypes from 'prop-types';
 import { ToastContext } from './toast';
 import useRerenderEffect from '../hooks/use-rerender-effect';
 import { getPodcast, getAllPodcasts } from '../client';
+import { toDate } from '../utils';
 
 export const SubscriptionsContext = createContext();
 
 function readCachedPodcasts() {
-  const podcasts = JSON.parse(localStorage.getItem('subscriptions')) || []; // TODO: remove this static data
+  const podcasts = JSON.parse(localStorage.getItem('subscriptions')) || [];
+
   return podcasts.map(podcast => ({
     ...podcast,
     episodes: podcast.episodes.map(episode => ({
       ...episode,
-      publishedAt: episode.publishedAt && new Date(episode.publishedAt),
+      publishedAt: toDate(episode.publishedAt),
     })),
   }));
 }
@@ -43,6 +45,7 @@ function SubscriptionsProvider({ children }) {
   async function refresh() {
     setIsRefreshing(true);
     try {
+      // console.log('subscriptions', subscriptions);
       const podcasts = await getAllPodcasts(subscriptions);
       setSubscriptions(podcasts);
       toast('Refresh Success!', { variant: 'success' });
@@ -85,10 +88,10 @@ function SubscriptionsProvider({ children }) {
         subscriptions: subscriptions
           .map(subscription => ({
             ...subscription,
-            episodes: subscription.episodes
+            episodes: (subscription.episodes || []) // TODO
               .map(episode => ({
                 ...episode,
-                publishedAt: episode.publishedAt && new Date(episode.publishedAt),
+                publishedAt: toDate(episode.publishedAt),
               }))
               .sort((a, b) => b.publishedAt - a.publishedAt),
           }))
