@@ -24,6 +24,7 @@ function SubscriptionsProvider({ children }) {
   const [isSyncing, setIsSyncing] = useState(false);
 
   async function subscribe(subscribeUrl) {
+    // TODO: subscribeUrl validation
     if (subscriptions.some(subscription => subscription.subscribeUrl === subscribeUrl)) {
       throw new Error('Already subscribed');
     }

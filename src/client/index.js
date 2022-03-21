@@ -16,10 +16,12 @@ async function fetchFeeds(subscribeUrl) {
 }
 
 function feedDiff(feed) {
-  if (isEmpty(feed.arweave))
+  if (isEmpty(feed.arweave)) {
     return feed.rss.episodes;
-  if (isEmpty(feed.rss))
+  }
+  if (isEmpty(feed.rss)) {
     return feed.arweave.episodes;
+  }
 
   const existingIds = feed.arweave.episodes.map(episodeId);
   return feed.rss.episodes.filter(episode => !existingIds.includes(episodeId(episode)));

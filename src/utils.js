@@ -15,7 +15,7 @@ export function corsApiHeaders() {
   switch (corsProxyURL()) {
     case 'https://cors.bridged.cc/':
       /* See: https://github.com/gridaco/base/issues/23 */
-      return {'x-cors-grida-api-key': 'MyAPIKey'};
+      return { 'x-cors-grida-api-key': 'MyAPIKey' };
     default:
       return {};
   }

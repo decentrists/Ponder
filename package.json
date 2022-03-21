@@ -34,7 +34,6 @@
     "cytoscape-expand-collapse": "^4.1.0",
     "cytoscape-panzoom": "^2.5.3",
     "dayjs": "^1.10.7",
-    "fake-tag": "^3.0.0",
     "formik": "^2.2.9",
     "history": "^5.0.1",
     "html-entities": "^2.3.2",

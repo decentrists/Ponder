@@ -1,5 +1,5 @@
 import parser from './parser';
-import { withCorsProxy } from '../../utils'
+import { withCorsProxy } from '../../utils';
 
 function mergeItunesData(items, itunes) {
   return (items || []).concat(itunes || [])
@@ -36,6 +36,6 @@ export async function getPodcastFeed(subscribeUrl) {
   catch (error) {
     /* TODO: Update error message after implementation of user-specified CORS-Proxies */
     throw new Error('Could not fetch the given RSS feed. ' +
-                    'Is the corsProxyURL specified in src/utils.js working? ' + error);
+                    `Is the corsProxyURL specified in src/utils.js working? ${error}`);
   }
 }
