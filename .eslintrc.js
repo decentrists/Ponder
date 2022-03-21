@@ -20,6 +20,7 @@ module.exports = {
     'max-len': 'off',
     'operator-linebreak': 'off',
     'brace-style': 'off',
+    'no-continue': 'off',
   },
   overrides: [
     {

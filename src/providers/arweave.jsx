@@ -42,6 +42,7 @@ function ArweaveProvider({ children }) {
         loadNewWallet,
 
         async getPodcastFeed(rssUrl) {
+          console.log(`ArweaveProvider.getPodcastFeed(${rssUrl})`);
           arweave.getPodcastFeed(rssUrl).then(setEpisodesToSync);
         },
 

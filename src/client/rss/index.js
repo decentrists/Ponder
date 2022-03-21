@@ -1,5 +1,5 @@
 import parser from './parser';
-import { withCorsProxy } from '../../utils';
+import { withCorsProxy, toDate } from '../../utils';
 
 function mergeItunesData(items, itunes) {
   return (items || []).concat(itunes || [])
@@ -11,6 +11,14 @@ export async function getPodcastFeed(subscribeUrl) {
   try {
     const { items, ...podcast } = await parser.parseURL(withCorsProxy(subscribeUrl));
     const imageUrl = podcast.image?.url || podcast.itunes?.image || null;
+    const episodes = (items || []).map(episode => ({
+      title: episode.title,
+      url: episode.enclosure?.url || episode.link || null,
+      publishedAt: toDate(episode.isoDate || episode.pubDate || null),
+      imageUrl: episode.image?.url || imageUrl,
+      categories: mergeItunesData(episode.categories, episode.itunes?.categories),
+      keywords: mergeItunesData(episode.keywords, episode.itunes?.keywords),
+    }));
     return {
       subscribeUrl,
       title: podcast.title,
@@ -20,17 +28,7 @@ export async function getPodcastFeed(subscribeUrl) {
       language: podcast.language || null,
       categories: mergeItunesData(podcast.categories, podcast.itunes?.categories),
       keywords: mergeItunesData(podcast.keywords, podcast.itunes?.keywords),
-      episodes: (items || []).map(episode => {
-        const publishedAt = episode.isoDate || episode.pubDate || null;
-        return {
-          title: episode.title,
-          url: episode.enclosure?.url || episode.link || null,
-          publishedAt: publishedAt ? new Date(publishedAt) : null,
-          imageUrl: episode.image?.url || imageUrl,
-          categories: mergeItunesData(episode.categories, episode.itunes?.categories),
-          keywords: mergeItunesData(episode.keywords, episode.itunes?.keywords),
-        };
-      }),
+      episodes,
     };
   }
   catch (error) {
