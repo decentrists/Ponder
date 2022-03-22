@@ -20,6 +20,8 @@ module.exports = {
     'no-plusplus': 'off',
     'no-underscore-dangle': 'off',
     'max-len': 'off',
+    'operator-linebreak': 'off',
+    'brace-style': 'off',
   },
   overrides: [
     {
@@ -30,6 +32,9 @@ module.exports = {
         'jest.config.js',
         'seeders/**/*.js',
         'cypress/plugins/**/*',
+        './src/client/arweave/key.json',
+        '**/__mocks__/**/*.js',
+        '**/__tests__/**/*.js',
       ],
       parserOptions: {
         sourceType: 'script',
@@ -50,7 +55,6 @@ module.exports = {
     {
       files: [
         '**/*.test.js',
-        '**/*.test.jsx',
         './tests/**/*',
         '**/__mocks__/**/*.js',
         'jest.setup.js',

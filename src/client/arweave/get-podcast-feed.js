@@ -1,10 +1,10 @@
-import gql from 'fake-tag';
 import client from './client';
 import { toTag, fromTag } from './utils';
+import { isEmpty } from '../../utils';
 
 export default async function getPodcastFeed(subscribeUrl) {
-  const transaction = await client.api.post('/graphql', {
-    query: gql`
+  const gqlQuery = {
+    query: `
       query GetPodcast($tags: [TagFilter!]!) {
         transactions(tags: $tags, first: 100, sort: HEIGHT_DESC) {
           edges {
@@ -27,10 +27,26 @@ export default async function getPodcastFeed(subscribeUrl) {
         },
       ],
     },
-  })
-    .then(res => res.data.data.transactions.edges[0]?.node);
+  };
 
-  const podcast = await client.transactions.getData(transaction.id, {
+  let edges;
+  try {
+    const response = await client.api.post('/graphql', gqlQuery);
+    console.log('GraphQL response', response);
+    edges = response.data.data.transactions.edges;
+  }
+  catch (e) {
+    console.warn(`GraphQL returned an error: ${e}`);
+    edges = [];
+  }
+
+  console.log('edges', edges);
+  if (isEmpty(edges)) {
+    return {};
+  }
+
+  const trx = edges[0].node;
+  const podcast = await client.transactions.getData(trx.id, {
     decode: true,
     string: true,
   })
@@ -38,7 +54,7 @@ export default async function getPodcastFeed(subscribeUrl) {
 
   return {
     ...podcast,
-    ...transaction.tags
+    ...trx.tags
       .map(tag => ({
         ...tag,
         name: fromTag(tag.name),

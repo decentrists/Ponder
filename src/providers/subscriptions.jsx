@@ -3,7 +3,6 @@ import PropTypes from 'prop-types';
 import { ToastContext } from './toast';
 import useRerenderEffect from '../hooks/use-rerender-effect';
 import { getPodcast, getAllPodcasts } from '../client';
-import getCustomStuff from '../components/pod-graph/data'; // TODO: remove this static data and use the subsription context
 
 export const SubscriptionsContext = createContext();
 
@@ -25,6 +24,7 @@ function SubscriptionsProvider({ children }) {
   const [isSyncing, setIsSyncing] = useState(false);
 
   async function subscribe(subscribeUrl) {
+    // TODO: subscribeUrl validation
     if (subscriptions.some(subscription => subscription.subscribeUrl === subscribeUrl)) {
       throw new Error('Already subscribed');
     }

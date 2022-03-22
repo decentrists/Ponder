@@ -1,6 +1,6 @@
 import * as arweave from './arweave';
 import * as rss from './rss';
-import { episodeId } from '../utils';
+import { episodeId, isEmpty } from '../utils';
 
 export { createPodcast } from './arweave';
 
@@ -16,6 +16,13 @@ async function fetchFeeds(subscribeUrl) {
 }
 
 function feedDiff(feed) {
+  if (isEmpty(feed.arweave)) {
+    return feed.rss.episodes;
+  }
+  if (isEmpty(feed.rss)) {
+    return feed.arweave.episodes;
+  }
+
   const existingIds = feed.arweave.episodes.map(episodeId);
   return feed.rss.episodes.filter(episode => !existingIds.includes(episodeId(episode)));
 }
@@ -34,12 +41,13 @@ function mergeFeed(subscribeUrl, feed) {
       }
     ));
     localStorage.setItem('toSync', JSON.stringify(newValue));
+    console.log('toSync', toSync);
   }
 
   return {
     ...feed.arweave,
     ...feed.rss,
-    episodes: feed.arweave.episodes
+    episodes: (feed.arweave?.episodes || [])
       .concat(newEpisodes)
       .sort((a, b) => b.publishedAt - a.publishedAt),
   };
