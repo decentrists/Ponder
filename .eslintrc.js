@@ -32,7 +32,6 @@ module.exports = {
         'jest.config.js',
         'seeders/**/*.js',
         'cypress/plugins/**/*',
-        './src/client/arweave/key.json',
         '**/__mocks__/**/*.js',
         '**/__tests__/**/*.js',
       ],
