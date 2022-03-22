@@ -22,8 +22,8 @@ export default async function getPodcastFeed(subscribeUrl) {
     variables: {
       tags: [
         {
-          name: `${toTag('subscribeUrl')}`,
-          values: [`${subscribeUrl}`],
+          name: toTag('subscribeUrl'),
+          values: [subscribeUrl],
         },
       ],
     },
