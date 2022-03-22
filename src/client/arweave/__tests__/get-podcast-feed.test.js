@@ -84,11 +84,11 @@ test('Successful fetch', async () => {
   });
 });
 
-test('Fails on GraphQL request', async () => {
+test('Catches GraphQL request error and returns {}', async () => {
   const mockError = new Error('GraphQL Error');
   api.post.mockRejectedValue(mockError);
   transactions.getData.mockResolvedValue(JSON.stringify(BASE_TRANSACTION_RESPONSE));
-  await expect(getPodcastFeed('https://server.dummy/rss')).rejects.toBe(mockError);
+  await expect(getPodcastFeed('https://server.dummy/rss')).resolves.toEqual({});
   expect(api.post).toHaveBeenCalled();
   expect(transactions.getData).not.toHaveBeenCalled();
 });

@@ -2,7 +2,6 @@
 
 require('dotenv').config();
 const Arweave = require('arweave');
-const key = require('../src/client/arweave/key.json');
 
 const TAG_MAP = {
   categories: 'category',
@@ -23,9 +22,15 @@ module.exports = async function seed(seeds, ms = 5000) {
     logging: true,
   });
 
+  const wallet = await client.wallets.generate();
+  const address = await client.wallets.jwkToAddress(wallet);
+  await client.api.get(`/mint/${address}/100000000000000000`);
+
+  console.log(`Wallet at address ${address} created with 100000 AR.`);
   console.log('Begin seeding...');
+
   await Promise.all(seeds.podcasts
-    .map(({ contents, tags }) => client.createTransaction({ data: JSON.stringify(contents) }, key)
+    .map(({ contents, tags }) => client.createTransaction({ data: JSON.stringify(contents) }, wallet)
       .then(trx => {
         trx.addTag('Content-Type', 'application/json');
         trx.addTag('Unix-Time', Math.floor(Date.now() / 1000));
@@ -40,7 +45,7 @@ module.exports = async function seed(seeds, ms = 5000) {
           .forEach(([k, v]) => {
             trx.addTag(`${process.env.TAG_PREFIX}-${k}`, v);
           });
-        return client.transactions.sign(trx, key)
+        return client.transactions.sign(trx, wallet)
           .then(() => client.transactions.post(trx));
       })));
   console.log('Seeding successful!');

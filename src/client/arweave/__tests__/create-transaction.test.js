@@ -1,7 +1,6 @@
 import { advanceTo } from 'jest-date-mock';
 import { createPodcast } from '../create-transaction';
 import { addTag, createTransaction } from '../client';
-import key from '../key.json';
 
 jest.mock('../client');
 
@@ -15,6 +14,8 @@ const BASE_PODCAST = {
   keywords: [],
   categories: [],
 };
+
+const stubbedWallet = {};
 
 const originalVersion = process.env.VERSION;
 const originalTagPrefix = process.env.TAG_PREFIX;
@@ -39,7 +40,7 @@ describe('createPodcast', () => {
     expect(createTransaction).not.toHaveBeenCalled();
     expect(addTag).not.toHaveBeenCalled();
 
-    await createPodcast(BASE_PODCAST);
+    await createPodcast(stubbedWallet, BASE_PODCAST);
 
     expect(createTransaction).toHaveBeenCalledWith({
       data: JSON.stringify({
@@ -49,7 +50,7 @@ describe('createPodcast', () => {
         imageTitle: 'Conan O’Brien Needs A Friend',
         language: 'en-us',
       }),
-    }, key);
+    }, stubbedWallet);
 
     expect(addTag).toHaveBeenCalledWith('Content-Type', 'application/json');
     expect(addTag).toHaveBeenCalledWith('Unix-Time', Math.floor(Date.now() / 1000));
@@ -65,7 +66,7 @@ describe('createPodcast', () => {
     expect(createTransaction).not.toHaveBeenCalled();
     expect(addTag).not.toHaveBeenCalled();
 
-    await createPodcast({
+    await createPodcast(stubbedWallet, {
       ...BASE_PODCAST,
       categories: ['a', 'b', 'c'],
       keywords: ['x', 'y', 'z'],
@@ -79,7 +80,7 @@ describe('createPodcast', () => {
         imageTitle: 'Conan O’Brien Needs A Friend',
         language: 'en-us',
       }),
-    }, key);
+    }, stubbedWallet);
 
     expect(addTag).toHaveBeenCalledWith('abc-category', 'a');
     expect(addTag).toHaveBeenCalledWith('abc-category', 'b');

@@ -9,7 +9,7 @@ seed({
     ...podcast,
     contents: {
       ...podcast.contents,
-      episodes: podcast.contents.episodes.slice(0, -10),
+      episodes: podcast.contents.episodes.slice(0, -2),
     },
   })),
 });

@@ -2,20 +2,27 @@ import React, { createContext, useContext, useState } from 'react';
 import PropTypes from 'prop-types';
 import { ToastContext } from './toast';
 import { createPodcast } from '../client';
+import { ArweaveContext } from './arweave';
 
 export const ArweaveSyncContext = createContext();
 
 function ArweaveSyncProvider({ children }) {
+  const { getWallet, getWalletAddress } = useContext(ArweaveContext);
   const toast = useContext(ToastContext);
   const [isSyncing, setIsSyncing] = useState(false);
 
   async function sync() {
     setIsSyncing(true);
     try {
-      const podcastsToBeSynced = JSON.parse(localStorage.getItem('podcastsToBeSynced'));
+      const podcastsToBeSynced = JSON.parse(localStorage.getItem('toSync'));
+      console.log('podcastsToBeSynced', podcastsToBeSynced);
       if (!podcastsToBeSynced.length) toast('There are no podcasts to sync.');
       else {
-        await Promise.all(podcastsToBeSynced.map(createPodcast));
+        const wallet = getWallet();
+
+        // TODO: this is for debugging in ArSync v0.5-1.0
+        console.log('walletAddress', getWalletAddress());
+        await Promise.all(podcastsToBeSynced.map(podcast => createPodcast(wallet, podcast)));
       }
     } catch (ex) {
       console.error(ex);
