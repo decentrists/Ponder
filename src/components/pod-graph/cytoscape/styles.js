@@ -38,13 +38,6 @@ export default function styles(cy) {
     cy.style().selector('edge').style(k, v).update();
   });
 
-  // COLAPSE NODES
-  Object.entries({
-    width: 56,
-    height: 56,
-  }).forEach(([k, v]) => {
-    cy.style().selector('node.cy-expand-collapse-collapsed-node').style(k, v).update();
-  });
   Object.entries({
     'background-color': '#030303',
     'background-opacity': '1',

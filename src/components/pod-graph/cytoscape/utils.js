@@ -26,17 +26,15 @@ export const findAllDisjointGraphs = (subscriptions, disjointGraphs) => {
   const graph = [firstUnvisitedNode];
   while (true) {
     // eslint-disable-next-line no-loop-func
-    const relatedSubIndex = subscriptions.findIndex(item => item.visited !== true
-      && haveSharedElements(keywordsAndCategoriesInCommon,
-        [...item.keywords, ...item.categories]));
+    const relatedPodcast = subscriptions.find(item => item.visited !== true
+      && haveSharedElements(keywordsAndCategoriesInCommon, [...item.keywords, ...item.categories]));
 
-    if (relatedSubIndex === -1) break;
+    if (!relatedPodcast) break;
 
-    const relatedSub = subscriptions[relatedSubIndex];
-    relatedSub.visited = true;
+    relatedPodcast.visited = true;
     keywordsAndCategoriesInCommon = removeDuplicateElements([...keywordsAndCategoriesInCommon,
-      ...relatedSub.categories, ...relatedSub.keywords]);
-    graph.push(relatedSub);
+      ...relatedPodcast.categories, ...relatedPodcast.keywords]);
+    graph.push(relatedPodcast);
   }
   disjointGraphs.push(graph);
 
