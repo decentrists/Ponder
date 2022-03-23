@@ -6,7 +6,6 @@ import applyPanzoom from './panzoom';
 import applyEvents from './events';
 import applyNodeGroups from './node-groups';
 import applyHtmlLabel from './html-cytoscape';
-// import applyExpandColapse from './expand-colapse';
 
 cytoscape.use(dagre);
 
@@ -24,7 +23,6 @@ export default function createCytoscape(container, elements, deps) {
   applyEvents(cy, deps);
   applyNodeGroups(cy, deps);
   applyHtmlLabel(cy, deps);
-  // applyExpandColapse(cy, deps);
   cy.fit();
   return cy;
 }

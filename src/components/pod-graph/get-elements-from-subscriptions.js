@@ -8,14 +8,15 @@ export default function getElementsFromSubscriptions(subscriptions) {
 
   disjointGraphs.forEach(graph => {
     const id = uuid();
-    nodes.push({
+    const compoundNode = {
       group: 'nodes',
       data: {
         id,
         name: id,
       },
       classes: 'customGroup',
-    });
+    };
+    nodes.push(compoundNode);
     nodes.push(...graph.map(podcast => ({
       group: 'nodes',
       classes: 'customNodes',
@@ -34,7 +35,6 @@ export default function getElementsFromSubscriptions(subscriptions) {
     })));
   });
 
-  // edges
   const edges = subscriptions
     .reduce((acc, podcast, _, arrayReference) => {
       // A match is any other podcast that has one same category or keyword
@@ -58,7 +58,7 @@ export default function getElementsFromSubscriptions(subscriptions) {
 
       return [...acc, ...result];
     }, [])
-    // remove duplicate edges since the graph is uni-directional
+    // remove duplicate edges since the graph is undirected.
     .reduce((acc, edge) => (
       acc.some(a => a.target === edge.source && a.source === edge.target)
         ? acc
