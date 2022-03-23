@@ -1,81 +1,68 @@
-function normalizeElements(elements) {
-  const isArray = elements.length != null;
-  if (isArray) return elements;
-  let { nodes, edges } = elements;
-  if (nodes == null) nodes = [];
-  if (edges == null) edges = [];
-  return nodes.concat(edges);
-}
+import { v4 as uuid } from 'uuid';
+import { findAllDisjointGraphs, findSharedCategoriesAndKeywords, haveSharedElements } from './cytoscape/utils';
 
 export default function getElementsFromSubscriptions(subscriptions) {
-  // nodes
-  const nodes = subscriptions.map(podcast => ({
-    group: 'nodes',
-    classes: 'customNodes',
-    data: {
-      id: podcast.subscribeUrl,
-      label: podcast.title,
-      categories: podcast.categories,
-      keywords: podcast.keywords,
-      episodes: podcast.episodes,
-      description: podcast.description,
-      title: podcast.title,
-      imageUrl: podcast.imageUrl,
-      imageTitle: podcast.title,
-      parent: podcast.categories.includes('comedy') ? 'comedy' : 'sports',
-    },
-  }));
+  const disjointGraphs = findAllDisjointGraphs(subscriptions, []);
 
-  // parents nodes
-  const group = {
-    group: 'nodes',
-    data: {
-      id: 'comedy',
-      name: 'comedy',
-    },
-    classes: 'customGroup',
-  };
-  const group2 = {
-    group: 'nodes',
-    data: {
-      id: 'sports',
-      name: 'sports',
-    },
-    classes: 'customGroup',
-  };
-  nodes.push(group, group2);
+  const nodes = [];
+
+  disjointGraphs.forEach(graph => {
+    const id = uuid();
+    nodes.push({
+      group: 'nodes',
+      data: {
+        id,
+        name: id,
+      },
+      classes: 'customGroup',
+    });
+    nodes.push(...graph.map(podcast => ({
+      group: 'nodes',
+      classes: 'customNodes',
+      data: {
+        id: podcast.subscribeUrl,
+        label: podcast.title,
+        categories: podcast.categories,
+        keywords: podcast.keywords,
+        episodes: podcast.episodes,
+        description: podcast.description,
+        title: podcast.title,
+        imageUrl: podcast.imageUrl,
+        imageTitle: podcast.title,
+        parent: id,
+      },
+    })));
+  });
+
   // edges
   const edges = subscriptions
-    .reduce((acc, podcast, _, xs) => {
+    .reduce((acc, podcast, _, arrayReference) => {
       // A match is any other podcast that has one same category or keyword
-      const matches = xs.filter(({ categories, keywords }) => (
-        podcast.categories.some(category => categories.includes(category))
-        || podcast.keywords.some(keyword => keywords.includes(keyword))
+      let matches = arrayReference.filter(({ categories, keywords }) => (
+        haveSharedElements(podcast.categories, categories)
+        || haveSharedElements(podcast.keywords, keywords)
       ));
 
-      // If there are no matches there is nothing to add
-      if (!matches.length) return acc;
+      // remove loops (edge from a node to itself)
+      matches = matches.filter(match => match.subscribeUrl !== podcast.subscribeUrl);
 
-      // Tack dat on
-      return acc.concat(matches.map(match => {
-        const relations = podcast.categories.filter(category => match.categories.includes(category))
-          .concat(podcast.keywords.filter(keyword => match.keywords.includes(keyword)));
-        return {
+      const result = matches.map(match => {
+        const relations = findSharedCategoriesAndKeywords(podcast, match);
+        const edge = {
           source: podcast.subscribeUrl,
           target: match.subscribeUrl,
-          EdgeStyle: relations.length ? 'solid' : 'dashed', // havent tested yet with a different podcast categories dure to CORS issue...i told matt about it
           label: relations.join(', '),
         };
-      }));
+        return { data: edge };
+      });
+
+      return [...acc, ...result];
     }, [])
+    // remove duplicate edges since the graph is uni-directional
     .reduce((acc, edge) => (
       acc.some(a => a.target === edge.source && a.source === edge.target)
         ? acc
         : acc.concat(edge)
-    ), [])
-    .filter(edge => edge.target !== edge.source)
-    .map(data => ({
-      data,
-    }));
-  return normalizeElements({ nodes, edges });
+    ), []);
+  return [...nodes, ...edges];
 }
