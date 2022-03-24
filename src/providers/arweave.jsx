@@ -16,21 +16,24 @@ function ArweaveProvider({ children }) {
         hasItemsToSync: !!(podcastsToSync.length || setPodcastsToSync.length),
 
         async getWalletAddress() {
-          if (!walletAddress) {
-            if (!wallet) {
-              await setWallet(arweave.createNewDevWallet());
-            }
-            await setWalletAddress(arweave.getWalletAddress(wallet));
+          if (walletAddress) return walletAddress;
+          let devWallet = wallet;
+          if (!devWallet) {
+            devWallet = await arweave.createNewDevWallet();
+            setWallet(devWallet);
           }
-          return walletAddress;
+          const walletAddr = await arweave.getWalletAddress(devWallet);
+          setWalletAddress(walletAddr);
+          return walletAddr;
         },
 
         async getWallet() {
-          if (!wallet) {
-            await setWallet(arweave.createNewDevWallet());
-            await setWalletAddress(arweave.getWalletAddress(wallet));
+          let devWallet = wallet;
+          if (!devWallet) {
+            devWallet = await arweave.createNewDevWallet();
+            setWallet(devWallet);
           }
-          return walletAddress;
+          return devWallet;
         },
 
         async getPodcastFeed(rssUrl) {
