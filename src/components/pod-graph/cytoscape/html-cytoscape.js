@@ -48,38 +48,39 @@ export default function applyHtmlLabel(cy) {
         return cardElements(data, 'selected');
       },
     },
-    {
-      query: '.customGroup',
-      halign: 'center',
-      valign: 'center',
-      halignBox: 'center',
-      valignBox: 'center',
-      tpl(data) {
-        return `
-          <div class="group ${data.collapsedChildren ? 'show' : 'hide'}" data-id="${sanitizeHtml(data.id)}">
-          <h5 class="group-header">
-          ${sanitizeHtml(data.name)}
-          </h5>
-            <span class="group-graphic ">
-              <i class="fa fa-heart" aria-hidden="true"></i>
-            </span>
-            <div class="card-front__details">
-              <span class="cardStats_stat cardStats_stat-likes">
-                <label class="group-label "> episodes</label>
-               <div>
-                 <i class="fas fa-headset"></i> 69
-               </div>
-              </span>
-              <span class='cardStats_stat cardStats_stat-comments'>
-              <label class="group-label ">comments</label>
-                <div>
-                <i class='far fa-comment fa-fw'></i> 66
-                </div>
-              </span>
-            </div>
-          </div>
-        `;
-      },
-    },
+    // {
+    //   query: '.customGroup',
+    //   halign: 'center',
+    //   valign: 'center',
+    //   halignBox: 'center',
+    //   valignBox: 'center',
+    //   tpl(data) {
+    //     console.log('custom group data', data);
+    //     return `
+    //       <div style="border:1px solid red;" class="group ${data.collapsedChildren ? 'show' : 'hide'}" data-id="${sanitizeHtml(data.id)}">
+    //       <h5 class="group-header">
+    //       ${sanitizeHtml(data.label)}
+    //       </h5>
+    //         <span class="group-graphic ">
+    //           <i class="fa fa-heart" aria-hidden="true"></i>
+    //         </span>
+    //         <div class="card-front__details">
+    //           <span class="cardStats_stat cardStats_stat-likes">
+    //             <label class="group-label "> episodes</label>
+    //            <div>
+    //              <i class="fas fa-headset"></i> 69
+    //            </div>
+    //           </span>
+    //           <span class='cardStats_stat cardStats_stat-comments'>
+    //           <label class="group-label ">comments</label>
+    //             <div>
+    //             <i class='far fa-comment fa-fw'></i> 66
+    //             </div>
+    //           </span>
+    //         </div>
+    //       </div>
+    //     `;
+    //   },
+    // },
   ]);
 }

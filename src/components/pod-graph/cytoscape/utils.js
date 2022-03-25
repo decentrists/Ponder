@@ -1,7 +1,4 @@
-export const haveSharedElements = (arr1, arr2) => {
-  const found = arr1.some(item => arr2.includes(item));
-  return found;
-};
+export const haveSharedElements = (arr1, arr2) => arr1.some(item => arr2.includes(item));
 
 const removeDuplicateElements = array => [...new Set(array)];
 
@@ -24,9 +21,10 @@ export const findAllDisjointGraphs = (subscriptions, disjointGraphs) => {
     ...firstUnvisitedNode.keywords]);
 
   const graph = [firstUnvisitedNode];
-  while (true) {
+  let relatedPodcast;
+  do {
     // eslint-disable-next-line no-loop-func
-    const relatedPodcast = subscriptions.find(item => item.visited !== true
+    relatedPodcast = subscriptions.find(item => item.visited !== true
       && haveSharedElements(keywordsAndCategoriesInCommon, [...item.keywords, ...item.categories]));
 
     if (!relatedPodcast) break;
@@ -35,7 +33,8 @@ export const findAllDisjointGraphs = (subscriptions, disjointGraphs) => {
     keywordsAndCategoriesInCommon = removeDuplicateElements([...keywordsAndCategoriesInCommon,
       ...relatedPodcast.categories, ...relatedPodcast.keywords]);
     graph.push(relatedPodcast);
-  }
+  } while (relatedPodcast);
+
   disjointGraphs.push(graph);
 
   return findAllDisjointGraphs(subscriptions, disjointGraphs);

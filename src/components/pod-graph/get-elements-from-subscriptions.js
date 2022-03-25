@@ -12,7 +12,6 @@ export default function getElementsFromSubscriptions(subscriptions) {
       group: 'nodes',
       data: {
         id,
-        name: id,
       },
       classes: 'customGroup',
     };
@@ -60,7 +59,7 @@ export default function getElementsFromSubscriptions(subscriptions) {
     }, [])
     // remove duplicate edges since the graph is undirected.
     .reduce((acc, edge) => (
-      acc.some(a => a.target === edge.source && a.source === edge.target)
+      acc.some(item => item.data.target === edge.data.source && item.data.source === edge.data.target)
         ? acc
         : acc.concat(edge)
     ), []);
