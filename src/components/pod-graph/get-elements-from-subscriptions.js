@@ -1,8 +1,9 @@
 import { v4 as uuid } from 'uuid';
-import { findAllDisjointGraphs, findSharedCategoriesAndKeywords, haveSharedElements } from './cytoscape/utils';
+import { groupSubscriptionsBySharedKeywords, findSharedCategoriesAndKeywords, haveSharedElements }
+  from './cytoscape/utils';
 
 export default function getElementsFromSubscriptions(subscriptions) {
-  const disjointGraphs = findAllDisjointGraphs(subscriptions, []);
+  const disjointGraphs = groupSubscriptionsBySharedKeywords(subscriptions);
 
   const nodes = [];
 
