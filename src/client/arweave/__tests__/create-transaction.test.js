@@ -1,6 +1,6 @@
 import { advanceTo } from 'jest-date-mock';
 import { createPodcast } from '../create-transaction';
-import { addTag, createTransaction } from '../client';
+import { addTag, createTransaction } from '../__mocks__/client';
 
 jest.mock('../client');
 

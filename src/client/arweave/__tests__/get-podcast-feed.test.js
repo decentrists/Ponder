@@ -1,5 +1,5 @@
 import getPodcastFeed from '../get-podcast-feed';
-import { transactions, api } from '../client';
+import { transactions, api } from '../__mocks__/client';
 
 jest.mock('../client');
 
