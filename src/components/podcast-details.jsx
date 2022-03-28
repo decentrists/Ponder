@@ -25,9 +25,6 @@ function PodcastDetails({
   description,
   imageUrl,
   imageTitle,
-  language,
-  categories,
-  keywords,
   episodes,
 }) {
   return (

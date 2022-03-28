@@ -1,5 +1,3 @@
-'use strict';
-
 require('dotenv').config();
 const Arweave = require('arweave');
 
