@@ -3,7 +3,6 @@ import client from './client';
 export async function createNewDevWallet() {
   const wallet = await client.wallets.generate();
   await mintDevTokens(await getWalletAddress(wallet));
-  
   return wallet;
 }
 

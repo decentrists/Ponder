@@ -1,0 +1,5 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+# TODO: Currently a couple of tests fail so we need to look into them and then uncomment the line below 
+# npm run test
