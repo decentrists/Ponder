@@ -1,5 +1,6 @@
 import getPodcastFeed from '../get-podcast-feed';
-import { transactions, api } from '../__mocks__/client';
+// eslint-disable-next-line import/named
+import { transactions, api } from '../client';
 
 jest.mock('../client');
 
