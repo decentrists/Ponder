@@ -17,7 +17,7 @@ export default function styles(cy) {
     'font-weight': 200,
     'font-size': '20px',
     'source-arrow-shape': 'square',
-    'target-arrow-shape': 'triangle',
+    'target-arrow-shape': 'square',
     'text-halign': 'center',
     'text-valign': 'center',
     'text-max-width': 120,
