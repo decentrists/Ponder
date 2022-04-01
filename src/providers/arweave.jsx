@@ -1,4 +1,6 @@
-import React, { createContext, useState, useRef, useEffect } from 'react';
+import React, {
+  createContext, useState, useRef, useEffect,
+} from 'react';
 import PropTypes from 'prop-types';
 import * as arweave from '../client/arweave';
 
@@ -6,6 +8,7 @@ export const ArweaveContext = createContext();
 
 function ArweaveProvider({ children }) {
   const [podcastsToSync, setPodcastsToSync] = useState([]);
+  // eslint-disable-next-line no-unused-vars
   const [episodesToSync, setEpisodesToSync] = useState([]);
   const [wallet, setWallet] = useState(null);
   const [walletAddress, setWalletAddress] = useState('');

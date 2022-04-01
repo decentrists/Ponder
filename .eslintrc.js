@@ -1,5 +1,3 @@
-'use strict';
-
 module.exports = {
   root: true,
   parser: '@babel/eslint-parser',
@@ -36,7 +34,7 @@ module.exports = {
         '**/__tests__/**/*.js',
       ],
       parserOptions: {
-        sourceType: 'script',
+        sourceType: 'module',
       },
       rules: {
         strict: [2, 'global'],

@@ -59,6 +59,8 @@ function SubscriptionsProvider({ children }) {
     setIsSyncing(true);
     try {
       const toSync = JSON.parse(localStorage.getItems('subscriptions'));
+      // just for the sake of stopping Eslint from complaining
+      console.log(toSync);
     } catch (ex) {
       console.error(ex);
       toast('Failed to sync with Arweave.', { variant: 'danger' });

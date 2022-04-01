@@ -12,7 +12,7 @@ function HomePage() {
   async function search({ query }) {
     return subscribe(query).catch(ex => {
       console.error(ex);
-      toast('' + ex, {
+      toast(`${ex}`, {
         variant: 'danger',
       });
     });

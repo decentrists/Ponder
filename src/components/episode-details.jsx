@@ -44,15 +44,16 @@ EpisodeDetails.propTypes = {
   url: PropTypes.string.isRequired,
   publishedAt: PropTypes.instanceOf(Date),
   imageUrl: PropTypes.string,
-  categories: PropTypes.arrayOf(PropTypes.string),
-  keywords: PropTypes.arrayOf(PropTypes.string),
+  // uncomment once you actually use categories and keywords in EpisodeDetails
+  // categories: PropTypes.arrayOf(PropTypes.string),
+  // keywords: PropTypes.arrayOf(PropTypes.string),
 };
 
 EpisodeDetails.defaultProps = {
   publishedAt: null,
   imageUrl: null,
-  categories: [],
-  keywords: [],
+  // categories: [],
+  // keywords: [],
 };
 
 export default EpisodeDetails;

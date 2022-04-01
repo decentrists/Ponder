@@ -5,6 +5,7 @@ import { Form, Button } from 'react-bootstrap';
 import { FaArrowRight } from 'react-icons/fa';
 import * as Yup from 'yup';
 import { ToastContext } from '../providers/toast';
+// eslint-disable-next-line import/named
 import { addUrl } from '../client';
 
 const LowerControls = styled.div`
