@@ -1,5 +1,5 @@
-export function unixTimestamp(date) {
-  return Math.floor(date ? date.getTime() : Date.now() / 1000);
+export function unixTimestamp(date = null) {
+  return `${Math.floor(date ? date.getTime() : Date.now() / 1000)}`;
 }
 
 export function toISOString(date) {

@@ -96,7 +96,9 @@ function mergedBatchesResult(metadataBatch, firstEpisodeDate, lastEpisodeDate) {
 }
 
 function getDataJson(firstEpisodeIndex, numEpisodes) {
-  return { episodes: episodes.slice(firstEpisodeIndex, firstEpisodeIndex + numEpisodes) };
+  return JSON.stringify({
+    episodes: episodes.slice(firstEpisodeIndex, firstEpisodeIndex + numEpisodes),
+  });
 }
 
 const originalTagPrefix = process.env.TAG_PREFIX;
@@ -110,10 +112,10 @@ afterAll(() => {
 
 describe('Successful fetch', () => {
   describe('With 1 metadata batch', () => {
-    it('Returns the expected merged metadata and tags', async () => {
+    it('returns the expected merged metadata and tags', async () => {
       api.post.mockResolvedValueOnce(gqlResponse(0, ep1date, ep4date));
       api.post.mockResolvedValueOnce(emptyGqlResponse());
-      transactions.getData.mockResolvedValueOnce(JSON.stringify(getDataJson(0, 4)));
+      transactions.getData.mockResolvedValueOnce(getDataJson(0, 4));
       expect(transactions.getData).not.toHaveBeenCalled();
 
       await expect(getPodcastFeed('https://server.dummy/rss'))
@@ -126,12 +128,12 @@ describe('Successful fetch', () => {
   });
 
   describe('With 2 metadata batches', () => {
-    it('Returns the expected merged metadata and tags', async () => {
+    it('returns the expected merged metadata and tags', async () => {
       api.post.mockResolvedValueOnce(gqlResponse(0, ep1date, ep2date));
-      transactions.getData.mockResolvedValueOnce(JSON.stringify(getDataJson(2, 2)));
+      transactions.getData.mockResolvedValueOnce(getDataJson(2, 2));
 
       api.post.mockResolvedValueOnce(gqlResponse(1, ep3date, ep4date));
-      transactions.getData.mockResolvedValueOnce(JSON.stringify(getDataJson(0, 2)));
+      transactions.getData.mockResolvedValueOnce(getDataJson(0, 2));
 
       api.post.mockResolvedValueOnce(emptyGqlResponse());
 
@@ -145,18 +147,18 @@ describe('Successful fetch', () => {
   });
 
   describe('With 3 metadata batches', () => {
-    it('Returns the expected merged metadata and tags', async () => {
+    it('returns the expected merged metadata and tags', async () => {
       // oldest episode
       api.post.mockResolvedValueOnce(gqlResponse(0, ep1date, ep1date));
-      transactions.getData.mockResolvedValueOnce(JSON.stringify(getDataJson(3, 1)));
+      transactions.getData.mockResolvedValueOnce(getDataJson(3, 1));
 
       // oldest 2 episodes (including 1 duplicate)
       api.post.mockResolvedValueOnce(gqlResponse(1, ep1date, ep2date));
-      transactions.getData.mockResolvedValueOnce(JSON.stringify(getDataJson(2, 2)));
+      transactions.getData.mockResolvedValueOnce(getDataJson(2, 2));
 
       // newest 2 episodes
       api.post.mockResolvedValueOnce(gqlResponse(2, ep3date, ep4date));
-      transactions.getData.mockResolvedValueOnce(JSON.stringify(getDataJson(0, 2)));
+      transactions.getData.mockResolvedValueOnce(getDataJson(0, 2));
 
       api.post.mockResolvedValueOnce(emptyGqlResponse());
 
@@ -172,17 +174,17 @@ describe('Successful fetch', () => {
 
 describe('Error handling', () => {
   describe('With 3 metadata batches, where the middle one is corrupted', () => {
-    it('Returns the expected merged metadata and tags', async () => {
+    it('returns the expected merged metadata and tags', async () => {
       const mockError = new Error('getData Error');
 
       api.post.mockResolvedValueOnce(gqlResponse(0, ep1date, ep2date));
-      transactions.getData.mockResolvedValueOnce(JSON.stringify(getDataJson(2, 2)));
+      transactions.getData.mockResolvedValueOnce(getDataJson(2, 2));
 
-      api.post.mockResolvedValueOnce(gqlResponse(1, ep3date, ep4date));
-      transactions.getData.mockRejectedValue(mockError);
+      api.post.mockResolvedValueOnce(gqlResponse(1, ep1date, ep2date));
+      transactions.getData.mockRejectedValueOnce(mockError);
 
       api.post.mockResolvedValueOnce(gqlResponse(2, ep3date, ep4date));
-      transactions.getData.mockResolvedValueOnce(JSON.stringify(getDataJson(0, 2)));
+      transactions.getData.mockResolvedValueOnce(getDataJson(0, 2));
 
       api.post.mockResolvedValueOnce(emptyGqlResponse());
 
@@ -195,10 +197,10 @@ describe('Error handling', () => {
     });
   });
 
-  it('Catches GraphQL request error and returns {}', async () => {
+  it('catches GraphQL request error and returns {}', async () => {
     const mockError = new Error('GraphQL Error');
     api.post.mockRejectedValue(mockError);
-    transactions.getData.mockResolvedValue(JSON.stringify(getDataJson(0, 4)));
+    transactions.getData.mockResolvedValue(getDataJson(0, 4));
     await expect(getPodcastFeed('https://server.dummy/rss')).resolves.toEqual({});
     expect(api.post).toHaveBeenCalled();
     expect(transactions.getData).not.toHaveBeenCalled();
