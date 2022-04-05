@@ -30,7 +30,7 @@ export const groupSubscriptionsBySharedKeywords = subscriptions => {
 /* @param [<Object>] nodes
    @param [<<Object>>] disjointGraphs The intermediate result through recursion
    @return [<<Object>>] An array of graph representations grouped by shared keywords & categories */
-const findAllDisjointGraphs = (nodes, disjointGraphs = []) => {
+export const findAllDisjointGraphs = (nodes, disjointGraphs = []) => {
   const firstUnvisitedNode = nodes.find(item => item.visited !== true);
   if (!firstUnvisitedNode) return disjointGraphs;
 
