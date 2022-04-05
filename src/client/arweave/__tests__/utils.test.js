@@ -172,7 +172,6 @@ describe('mergeBatchMetadata', () => {
   // Each metadataBatches[i] mimicks a podcast metadata object as parsed from the JSON payload of an
   // Arweave transaction. Therefore, the following props reside elsewhere, namely in the tags:
   // { subscribeUrl, title, categories, keywords, firstEpisodeDate, lastEpisodeDate, metadataBatch }
-  // TODO: {description, language} should be moved to the tags as well, to make them GQL-searchable.
   //
   // metadataBatches[i] are ordered from old to new, where metadata of newer batches take precedence
   const metadataBatches = [

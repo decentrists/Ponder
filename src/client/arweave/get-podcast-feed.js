@@ -17,18 +17,24 @@ export default async function getPodcastFeed(subscribeUrl) {
     const [metadata, tags] = await getPodcastFeedForBatch(subscribeUrl, batch);
     // console.log('metadata=', metadata);
     // console.log('tags=', tags);
-    if (isEmpty(metadata) || isEmpty(tags)) break;
+    if (!isEmpty(tags)) {
+      if (isEmpty(metadata)) {
+        // Match found for this batch number, but with invalid metadata
+        // TODO: prioritize next trx.id with this batch number;
+        //       for now, we continue to attempt the next batch number
+      }
+      else {
+        metadataBatches.push(metadata);
+        tagBatches.push(tags);
+      }
+    }
+    else break;
 
-    metadataBatches.push(metadata);
-    tagBatches.push(tags);
     batch++;
   }
   while (batch < MAX_BATCH_NUMBER);
 
-  const mergedMetadata = mergeBatchMetadata(metadataBatches);
-  const mergedTags = mergeBatchTags(tagBatches);
-
-  return { ...mergedMetadata, ...mergedTags };
+  return { ...mergeBatchMetadata(metadataBatches), ...mergeBatchTags(tagBatches) };
 }
 
 async function getPodcastFeedForBatch(subscribeUrl, batch) {
@@ -76,7 +82,7 @@ async function getPodcastFeedForBatch(subscribeUrl, batch) {
     edges = [];
   }
   // console.log('edges', edges);
-  if (isEmpty(edges)) return [{}, {}];
+  if (!edges.length) return [{}, {}];
 
   // TODO: We currently simply grab the newest transaction matching this `batch` nr.
   //       In the future we might want to fetch multiple transactions referencing
@@ -111,13 +117,14 @@ async function getPodcastFeedForBatch(subscribeUrl, batch) {
   }
   catch (e) {
     console.warn(`Malformed data for transaction id ${trx.id}: ${e}`);
-    podcastMetadata = { episodes: [] };
+    podcastMetadata = {};
   }
+  if (isEmpty(podcastMetadata)) return [{}, tags];
 
   return [
     {
       ...podcastMetadata,
-      episodes: podcastMetadata.episodes.map(episode => ({
+      episodes: (podcastMetadata.episodes || []).map(episode => ({
         ...episode,
         // TODO: Safeguard against malformed metadata => reject episodes where publishedAt == null
         publishedAt: toDate(episode.publishedAt),

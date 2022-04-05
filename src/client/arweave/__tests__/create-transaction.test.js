@@ -2,19 +2,76 @@ import { advanceTo } from 'jest-date-mock';
 import { postPodcastMetadata } from '../create-transaction';
 // eslint-disable-next-line import/named
 import { addTag, createTransaction } from '../client';
+// TODO: mock unixTimestamp()
+import { unixTimestamp } from '../../../utils';
+import { toTag } from '../utils';
 
 jest.mock('../client');
 
-const BASE_PODCAST = {
+const ep4date = '2021-11-10T15:06:18.000Z';
+const ep3date = '2021-11-09T15:06:18.000Z';
+const ep2date = '2021-11-08T05:00:00.000Z';
+const ep1date = '2021-11-08T04:00:00.000Z';
+const allEpisodes = [
+  {
+    title: 'Ep4',
+    url: 'https://server.dummy/ep4',
+    publishedAt: new Date(ep4date),
+    categories: ['cat4'],
+    keywords: [],
+  },
+  {
+    title: 'Ep3',
+    url: 'https://server.dummy/ep3',
+    publishedAt: new Date(ep3date),
+    categories: [],
+    keywords: ['key3'],
+  },
+  {
+    title: 'Ep2',
+    url: 'https://server.dummy/ep2',
+    publishedAt: new Date(ep2date),
+    categories: [],
+    keywords: ['key2'],
+  },
+  {
+    title: 'Ep1',
+    url: 'https://server.dummy/ep1',
+    publishedAt: new Date(ep1date),
+    categories: ['cat1'],
+    keywords: [],
+  },
+];
+
+const BASE_CACHED_METADATA = {
   subscribeUrl: 'https://example.com/foo',
-  title: 'Example Podcast',
-  description: 'Literally an example',
-  imageUrl: 'https://image.simplecastcdn.com/images/5b7d8c77-15ba-4eff-a999-2e725db21db5/2ca29cb6-c010-4780-a9ba-7e5e1729f565/3000x3000/conaf-cover.jpg?aid=rss_feed',
-  imageTitle: 'Conan O’Brien Needs A Friend',
-  language: 'en-us',
-  keywords: [],
-  categories: [],
+  title: 'cachedTitle',
+  description: 'cachedDescription',
+  imageUrl: 'https://cached.imgurl/img.png?ver=0',
+  imageTitle: 'cachedImageTitle',
+  unknownField: 'cachedUnknownField',
+  categories: ['cached cat'], // ignored by postPodcastMetadata
+  keywords: ['cached key'], // ignored by postPodcastMetadata
+  episodes: [], // ignored by postPodcastMetadata
 };
+
+const BASE_NEW_METADATA = {
+  subscribeUrl: 'https://example.com/foo',
+  title: 'newTitle',
+  description: 'newDescription',
+  language: 'en-us',
+  categories: ['podcat1', 'podcat2'],
+  keywords: ['podkey1', 'podkey2'],
+  episodes: allEpisodes,
+};
+
+function cachedMetadata(additionalFields = {}) {
+  return { ...BASE_CACHED_METADATA, ...additionalFields };
+}
+
+function newMetadata(additionalFields = {}) {
+  return { ...BASE_NEW_METADATA, ...additionalFields };
+}
 
 const stubbedWallet = {};
 
@@ -36,59 +93,114 @@ afterAll(() => {
   process.env.TAG_PREFIX = originalTagPrefix;
 });
 
-// TODO: Fix tests after create-transaction refactor
-xdescribe('postPodcastMetadata', () => {
-  test('Bare bones', async () => {
-    expect(createTransaction).not.toHaveBeenCalled();
-    expect(addTag).not.toHaveBeenCalled();
+describe('postPodcastMetadata', () => {
+  function assertAddTagCalls(expectedTags) {
+    const formattedExpectedTags = [
+      ['Content-Type', 'application/json'],
+      ['Unix-Time', unixTimestamp()],
+      [toTag('version'), 'testVersion'],
+    ].concat(expectedTags.map(([k, v]) => [toTag(k), v]));
 
-    await postPodcastMetadata(stubbedWallet, BASE_PODCAST);
+    expect(addTag.mock.calls).toEqual(formattedExpectedTags);
+  }
 
-    expect(createTransaction).toHaveBeenCalledWith({
-      data: JSON.stringify({
-        title: 'Example Podcast',
-        description: 'Literally an example',
-        imageUrl: 'https://image.simplecastcdn.com/images/5b7d8c77-15ba-4eff-a999-2e725db21db5/2ca29cb6-c010-4780-a9ba-7e5e1729f565/3000x3000/conaf-cover.jpg?aid=rss_feed',
-        imageTitle: 'Conan O’Brien Needs A Friend',
-        language: 'en-us',
-      }),
-    }, stubbedWallet);
+  describe('When there is no cached metadata yet for the podcast to be posted to Arweave', () => {
+    it('creates a transaction with the expected metadata and tags', async () => {
+      expect(createTransaction).not.toHaveBeenCalled();
+      expect(addTag).not.toHaveBeenCalled();
 
-    expect(addTag).toHaveBeenCalledWith('Content-Type', 'application/json');
-    expect(addTag).toHaveBeenCalledWith('Unix-Time', Math.floor(Date.now() / 1000));
-    expect(addTag).toHaveBeenCalledWith('abc-version', 'testVersion');
-    expect(addTag).toHaveBeenCalledWith('abc-subscribeUrl', 'https://example.com/foo');
-    expect(addTag).toHaveBeenCalledWith('abc-title', 'Example Podcast');
-    expect(addTag).toHaveBeenCalledWith('abc-description', 'Literally an example');
-    expect(addTag).not.toHaveBeenCalledWith('abc-category');
-    expect(addTag).not.toHaveBeenCalledWith('abc-keyword');
+      const expectedMetadata = newMetadata();
+      const expectedTags = [
+        ['subscribeUrl', 'https://example.com/foo'],
+        ['title', 'newTitle'],
+        ['description', 'newDescription'],
+        ['language', 'en-us'],
+        ['category', 'podcat1'],
+        ['category', 'podcat2'],
+        ['keyword', 'podkey1'],
+        ['keyword', 'podkey2'],
+        ['firstEpisodeDate', ep1date],
+        ['lastEpisodeDate', ep4date],
+        ['metadataBatch', '0'],
+      ];
+      await postPodcastMetadata(stubbedWallet, expectedMetadata, {});
+      expect(createTransaction)
+        .toHaveBeenCalledWith({ data: JSON.stringify(expectedMetadata) }, stubbedWallet);
+      assertAddTagCalls(expectedTags);
+    });
   });
 
-  test('Categories and keywords', async () => {
-    expect(createTransaction).not.toHaveBeenCalled();
-    expect(addTag).not.toHaveBeenCalled();
+  describe('When 1 cached batch of older metadata exists', () => {
+    it('creates a transaction with the expected metadata and tags', async () => {
+      expect(createTransaction).not.toHaveBeenCalled();
+      expect(addTag).not.toHaveBeenCalled();
 
-    await postPodcastMetadata(stubbedWallet, {
-      ...BASE_PODCAST,
-      categories: ['a', 'b', 'c'],
-      keywords: ['x', 'y', 'z'],
+      const currentBatchFields = {
+        firstEpisodeDate: ep1date,
+        lastEpisodeDate: ep2date,
+        metadataBatch: 0,
+      };
+      const expectedMetadata = newMetadata({ episodes: allEpisodes.slice(0, 2) });
+      const expectedTags = [
+        ['subscribeUrl', 'https://example.com/foo'],
+        ['title', 'newTitle'],
+        ['description', 'newDescription'],
+        ['language', 'en-us'],
+        ['category', 'podcat1'],
+        ['category', 'podcat2'],
+        ['keyword', 'podkey1'],
+        ['keyword', 'podkey2'],
+        ['firstEpisodeDate', ep3date],
+        ['lastEpisodeDate', ep4date],
+        ['metadataBatch', '1'],
+      ];
+      await postPodcastMetadata(
+        stubbedWallet,
+        expectedMetadata,
+        cachedMetadata(currentBatchFields),
+      );
+      expect(createTransaction)
+        .toHaveBeenCalledWith({ data: JSON.stringify(expectedMetadata) }, stubbedWallet);
+      assertAddTagCalls(expectedTags);
     });
+  });
 
-    expect(createTransaction).toHaveBeenCalledWith({
-      data: JSON.stringify({
-        title: 'Example Podcast',
-        description: 'Literally an example',
-        imageUrl: 'https://image.simplecastcdn.com/images/5b7d8c77-15ba-4eff-a999-2e725db21db5/2ca29cb6-c010-4780-a9ba-7e5e1729f565/3000x3000/conaf-cover.jpg?aid=rss_feed',
-        imageTitle: 'Conan O’Brien Needs A Friend',
-        language: 'en-us',
-      }),
-    }, stubbedWallet);
+  xdescribe('When 1 cached batch of newer metadata exists', () => {
+    // TODO: Not yet implemented
+  });
 
-    expect(addTag).toHaveBeenCalledWith('abc-category', 'a');
-    expect(addTag).toHaveBeenCalledWith('abc-category', 'b');
-    expect(addTag).toHaveBeenCalledWith('abc-category', 'c');
-    expect(addTag).toHaveBeenCalledWith('abc-keyword', 'x');
-    expect(addTag).toHaveBeenCalledWith('abc-keyword', 'y');
-    expect(addTag).toHaveBeenCalledWith('abc-keyword', 'z');
+  describe('When 2 aggregated cached batches of older metadata exist', () => {
+    it('creates a transaction with the expected metadata and tags', async () => {
+      expect(createTransaction).not.toHaveBeenCalled();
+      expect(addTag).not.toHaveBeenCalled();
+
+      const currentBatchFields = {
+        firstEpisodeDate: ep1date,
+        lastEpisodeDate: ep3date,
+        metadataBatch: 1,
+      };
+      const expectedMetadata = newMetadata({ episodes: allEpisodes.slice(0, 1) });
+      const expectedTags = [
+        ['subscribeUrl', 'https://example.com/foo'],
+        ['title', 'newTitle'],
+        ['description', 'newDescription'],
+        ['language', 'en-us'],
+        ['category', 'podcat1'],
+        ['category', 'podcat2'],
+        ['keyword', 'podkey1'],
+        ['keyword', 'podkey2'],
+        ['firstEpisodeDate', ep4date],
+        ['lastEpisodeDate', ep4date],
+        ['metadataBatch', '2'],
+      ];
+      await postPodcastMetadata(
+        stubbedWallet,
+        expectedMetadata,
+        cachedMetadata(currentBatchFields),
+      );
+      expect(createTransaction)
+        .toHaveBeenCalledWith({ data: JSON.stringify(expectedMetadata) }, stubbedWallet);
+      assertAddTagCalls(expectedTags);
+    });
   });
 });
