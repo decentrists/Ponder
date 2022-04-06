@@ -1,3 +1,5 @@
+import { v4 as uuid } from 'uuid';
+
 export const findSharedCategoriesAndKeywords = (podcast1, podcast2) => removeDuplicateElements([
   ...podcast1.categories.filter(category => podcast2.categories.includes(category)),
   ...podcast1.categories.filter(category => podcast2.keywords.includes(category)),
@@ -54,4 +56,74 @@ export const findAllDisjointGraphs = (nodes, disjointGraphs = []) => {
   disjointGraphs.push(graph);
 
   return findAllDisjointGraphs(nodes, disjointGraphs);
+};
+
+export const generateNodes = disjointGraphs => {
+  const nodes = [];
+
+  disjointGraphs.forEach(graph => {
+    const id = uuid();
+    const compoundNode = {
+      group: 'nodes',
+      data: {
+        id,
+      },
+      classes: 'customGroup',
+    };
+    nodes.push(compoundNode);
+    nodes.push(...graph.map(podcast => ({
+      group: 'nodes',
+      classes: 'customNodes',
+      data: {
+        id: podcast.subscribeUrl,
+        label: podcast.title,
+        categories: podcast.categories,
+        keywords: podcast.keywords,
+        episodes: podcast.episodes,
+        description: podcast.description,
+        title: podcast.title,
+        imageUrl: podcast.imageUrl,
+        imageTitle: podcast.title,
+        parent: id,
+      },
+    })));
+  });
+
+  return nodes;
+};
+
+export const generateEdges = disjointGraphs => {
+  const eachDisjointGraphEdges = disjointGraphs.map(graph => graph
+    .reduce((acc, podcast, _, arrayReference) => {
+    // A match is any other podcast that has one same category or keyword
+      let matches = arrayReference.filter(({ categories, keywords }) => (
+        haveSharedElements(podcast.categories, categories)
+        || haveSharedElements(podcast.keywords, keywords)
+      ));
+
+      // remove loops (edge from a node to itself)
+      matches = matches.filter(match => match.subscribeUrl !== podcast.subscribeUrl);
+
+      const result = matches.map(match => {
+        const relations = findSharedCategoriesAndKeywords(podcast, match);
+        const edge = {
+          source: podcast.subscribeUrl,
+          target: match.subscribeUrl,
+          label: relations.join(', '),
+        };
+        return { data: edge };
+      });
+
+      return [...acc, ...result];
+    }, [])
+    // remove duplicate edges since the graph is undirected.
+    .reduce((acc, edge) => (
+      acc.some(item => item.data.target === edge.data.source && item.data.source === edge.data.target)
+        ? acc
+        : acc.concat(edge)
+    ), []));
+
+  const edges = eachDisjointGraphEdges.reduce((acc, curr) => [...acc, ...curr], []);
+
+  return edges;
 };
