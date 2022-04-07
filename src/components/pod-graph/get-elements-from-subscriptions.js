@@ -1,68 +1,17 @@
-import { v4 as uuid } from 'uuid';
-import { groupSubscriptionsBySharedKeywords, findSharedCategoriesAndKeywords, haveSharedElements }
-  from './cytoscape/utils';
+import {
+  groupSubscriptionsBySharedKeywords, generateNodes, generateEdges,
+}
+  from './cytoscape/graph-logic/computation';
 
 export default function getElementsFromSubscriptions(subscriptions) {
   const disjointGraphs = groupSubscriptionsBySharedKeywords(subscriptions);
 
-  const nodes = [];
+  const nodes = generateNodes(disjointGraphs);
 
-  disjointGraphs.forEach(graph => {
-    const id = uuid();
-    const compoundNode = {
-      group: 'nodes',
-      data: {
-        id,
-      },
-      classes: 'customGroup',
-    };
-    nodes.push(compoundNode);
-    nodes.push(...graph.map(podcast => ({
-      group: 'nodes',
-      classes: 'customNodes',
-      data: {
-        id: podcast.subscribeUrl,
-        label: podcast.title,
-        categories: podcast.categories,
-        keywords: podcast.keywords,
-        episodes: podcast.episodes,
-        description: podcast.description,
-        title: podcast.title,
-        imageUrl: podcast.imageUrl,
-        imageTitle: podcast.title,
-        parent: id,
-      },
-    })));
-  });
+  const edges = generateEdges(disjointGraphs);
 
-  const edges = subscriptions
-    .reduce((acc, podcast, _, arrayReference) => {
-      // A match is any other podcast that has one same category or keyword
-      let matches = arrayReference.filter(({ categories, keywords }) => (
-        haveSharedElements(podcast.categories, categories)
-        || haveSharedElements(podcast.keywords, keywords)
-      ));
+  console.log('edges,', edges);
+  console.log('nodes,', nodes);
 
-      // remove loops (edge from a node to itself)
-      matches = matches.filter(match => match.subscribeUrl !== podcast.subscribeUrl);
-
-      const result = matches.map(match => {
-        const relations = findSharedCategoriesAndKeywords(podcast, match);
-        const edge = {
-          source: podcast.subscribeUrl,
-          target: match.subscribeUrl,
-          label: relations.join(', '),
-        };
-        return { data: edge };
-      });
-
-      return [...acc, ...result];
-    }, [])
-    // remove duplicate edges since the graph is undirected.
-    .reduce((acc, edge) => (
-      acc.some(item => item.data.target === edge.data.source && item.data.source === edge.data.target)
-        ? acc
-        : acc.concat(edge)
-    ), []);
   return [...nodes, ...edges];
 }
