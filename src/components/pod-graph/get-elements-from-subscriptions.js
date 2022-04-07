@@ -1,7 +1,7 @@
 import {
   groupSubscriptionsBySharedKeywords, generateNodes, generateEdges,
 }
-  from './cytoscape/utils';
+  from './cytoscape/graph-logic/computation';
 
 export default function getElementsFromSubscriptions(subscriptions) {
   const disjointGraphs = groupSubscriptionsBySharedKeywords(subscriptions);

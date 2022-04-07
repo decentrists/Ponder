@@ -1,4 +1,4 @@
-import { findAllDisjointGraphs } from '../utils';
+import { findAllDisjointGraphs } from '../computation';
 
 const getIdsFromGraphs = graph => graph.map(item => item.subscribeUrl).sort();
 
