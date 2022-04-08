@@ -1,5 +1,8 @@
 import { v4 as uuid } from 'uuid';
-import { findSharedCategoriesAndKeywords, haveSharedElements, removeDuplicateElements } from './utils';
+import {
+  findSharedCategoriesAndKeywords, haveSharedElements,
+  removeDuplicateElements,
+} from './utils';
 
 /* @param [<Object>] nodes
    @param [<<Object>>] disjointGraphs The intermediate result through recursion
@@ -107,7 +110,8 @@ export const generateEdges = disjointGraphs => {
     }, [])
   // remove duplicate edges since the graph is undirected.
     .reduce((acc, edge) => (
-      acc.some(item => item.data.target === edge.data.source && item.data.source === edge.data.target)
+      acc.some(item => item.data.target === edge.data.source &&
+         item.data.source === edge.data.target)
         ? acc
         : acc.concat(edge)
     ), []));

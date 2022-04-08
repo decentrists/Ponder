@@ -57,7 +57,8 @@ export default function applyHtmlLabel(cy) {
     //   tpl(data) {
     //     console.log('custom group data', data);
     //     return `
-    //       <div style="border:1px solid red;" class="group ${data.collapsedChildren ? 'show' : 'hide'}" data-id="${sanitizeHtml(data.id)}">
+    //       <div style="border:1px solid red;" class="group ${data.collapsedChildren ?
+    //         'show' : 'hide'}" data-id="${sanitizeHtml(data.id)}">
     //       <h5 class="group-header">
     //       ${sanitizeHtml(data.label)}
     //       </h5>

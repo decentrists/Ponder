@@ -17,7 +17,6 @@ module.exports = {
     'no-use-before-define': 'off',
     'no-plusplus': 'off',
     'no-underscore-dangle': 'off',
-    'max-len': 'off',
     'operator-linebreak': 'off',
     'brace-style': 'off',
     'no-continue': 'off',
@@ -73,6 +72,14 @@ module.exports = {
       files: ['src/components/cytoscape/cytoscape/**/*.js'],
       rules: {
         'no-underscore-dangle': 0,
+      },
+    },
+    {
+      files: ['*.js', '*.jsx', '*.ts', '*.tsx'],
+      rules: {
+        'max-len': ['error', {
+          code: 100,
+        }],
       },
     },
   ],

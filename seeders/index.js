@@ -28,7 +28,10 @@ module.exports = async function seed(seeds, ms = 5000) {
   console.log('Begin seeding...');
 
   await Promise.all(seeds.podcasts
-    .map(({ contents, tags }) => client.createTransaction({ data: JSON.stringify(contents) }, wallet)
+    .map(({ contents, tags }) => client.createTransaction({
+      data:
+       JSON.stringify(contents),
+    }, wallet)
       .then(trx => {
         trx.addTag('Content-Type', 'application/json');
         trx.addTag('Unix-Time', Math.floor(Date.now() / 1000));
