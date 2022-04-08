@@ -1,4 +1,4 @@
-import { isEmpty } from '../../utils';
+import { isEmpty, toDate } from '../../utils';
 
 const cloneDeep = require('lodash.clonedeep');
 
@@ -125,23 +125,23 @@ export function mergeBatchMetadata(metadataBatches) {
 export function mergeBatchTags(tagBatches) {
   // console.log('mergeBatchTags(tagBatches)', tagBatches);
   return tagBatches.reduce((acc, batch) => {
-    Object.entries(batch).forEach(([tagName, tagValue]) => {
-      switch (tagName) {
+    Object.entries(batch).forEach(([tag, value]) => {
+      switch (tag) {
         case 'firstEpisodeDate':
-          if (!acc.firstEpisodeDate || tagValue < acc.firstEpisodeDate) acc[tagName] = tagValue;
+          if (!acc.firstEpisodeDate || value < acc.firstEpisodeDate) acc[tag] = toDate(value);
           break;
         case 'lastEpisodeDate':
-          if (!acc.lastEpisodeDate || tagValue > acc.lastEpisodeDate) acc[tagName] = tagValue;
+          if (!acc.lastEpisodeDate || value > acc.lastEpisodeDate) acc[tag] = toDate(value);
           break;
         case 'metadataBatch':
-          acc[tagName] = Math.max(acc.metadataBatch || 0, parseInt(tagValue, 10));
+          acc[tag] = Math.max(acc.metadataBatch || 0, parseInt(value, 10));
           break;
         case 'categories':
         case 'keywords':
-          acc[tagName] = mergeArrays(acc[tagName] || [], tagValue);
+          acc[tag] = mergeArrays(acc[tag] || [], value);
           break;
         default:
-          acc[tagName] = tagValue;
+          acc[tag] = value;
       }
     });
     return acc;

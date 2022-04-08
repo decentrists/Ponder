@@ -46,5 +46,8 @@ export async function getPodcast(subscribeUrl) {
 }
 
 export async function getAllPodcasts(subscriptions) {
-  return subscriptions.map(subscription => getPodcast(subscription.subscribeUrl));
+  const newSubscriptions = await Promise.all(
+    subscriptions.map(subscription => getPodcast(subscription.subscribeUrl)),
+  );
+  return newSubscriptions;
 }

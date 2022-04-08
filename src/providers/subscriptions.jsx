@@ -3,20 +3,14 @@ import PropTypes from 'prop-types';
 import { ToastContext } from './toast';
 import useRerenderEffect from '../hooks/use-rerender-effect';
 import { getPodcast, getAllPodcasts } from '../client';
-import { toDate } from '../utils';
+import { withDateObjects } from '../utils';
 
 export const SubscriptionsContext = createContext();
 
 function readCachedPodcasts() {
   const podcasts = JSON.parse(localStorage.getItem('subscriptions')) || [];
 
-  return podcasts.map(podcast => ({
-    ...podcast,
-    episodes: podcast.episodes.map(episode => ({
-      ...episode,
-      publishedAt: toDate(episode.publishedAt),
-    })),
-  }));
+  return withDateObjects(podcasts);
 }
 
 function SubscriptionsProvider({ children }) {
@@ -43,16 +37,16 @@ function SubscriptionsProvider({ children }) {
   }
 
   async function refresh() {
+    if (isRefreshing) return;
+
     setIsRefreshing(true);
     try {
-      // console.log('subscriptions', subscriptions);
-      const podcasts = await getAllPodcasts(subscriptions);
-      setSubscriptions(podcasts);
+      const newSubscriptions = await getAllPodcasts(subscriptions);
+      setSubscriptions(withDateObjects(newSubscriptions));
       toast('Refresh Success!', { variant: 'success' });
-      return podcasts;
     } catch (ex) {
       console.error(ex);
-      toast('Failed to refresh subscriptions.', { variant: 'danger' });
+      toast(`Failed to refresh subscriptions: ${ex}`, { variant: 'danger' });
     } finally {
       setIsRefreshing(false);
     }
@@ -61,9 +55,7 @@ function SubscriptionsProvider({ children }) {
   async function sync() {
     setIsSyncing(true);
     try {
-      const toSync = JSON.parse(localStorage.getItems('subscriptions'));
-      // just for the sake of stopping Eslint from complaining
-      console.log(toSync);
+      // const toSync = JSON.parse(localStorage.getItems('subscriptions'));
     } catch (ex) {
       console.error(ex);
       toast('Failed to sync with Arweave.', { variant: 'danger' });
@@ -85,22 +77,7 @@ function SubscriptionsProvider({ children }) {
         unsubscribe,
         refresh,
         isRefreshing,
-        subscriptions: subscriptions
-          .map(subscription => ({
-            ...subscription,
-            episodes: (subscription.episodes || []) // TODO
-              .map(episode => ({
-                ...episode,
-                publishedAt: toDate(episode.publishedAt),
-              }))
-              .sort((a, b) => b.publishedAt - a.publishedAt),
-          }))
-          .map(subscription => ({
-            ...subscription,
-            firstPublishedAt: subscription.episodes.at(0).publishedAt,
-            lastPublishedAt: subscription.episodes.at(-1).publishedAt,
-          }))
-          .sort((a, b) => a.title.localeCompare(b.title)),
+        subscriptions: withDateObjects(subscriptions),
       }}
     >
       {children}

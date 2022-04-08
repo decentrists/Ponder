@@ -60,7 +60,7 @@ function PodcastList({ subscriptions, unsubscribe }) {
                         <LatestRelease>
                           <RiMapPinTimeLine />
                           <TimeRelease>
-                            {dayjs(subscription.firstPublishedAt).fromNow()}
+                            {dayjs(subscription.firstEpisodeDate).fromNow()}
                           </TimeRelease>
 
                         </LatestRelease>
