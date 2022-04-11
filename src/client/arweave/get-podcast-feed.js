@@ -1,8 +1,11 @@
 /* eslint-disable no-await-in-loop */
 import client from './client';
-import { isEmpty, toDate } from '../../utils';
+import { isEmpty, toDate, podcastWithDateObjects } from '../../utils';
 import {
-  toTag, fromTag, mergeBatchMetadata, mergeBatchTags,
+  toTag,
+  fromTag,
+  mergeBatchMetadata,
+  mergeBatchTags,
 } from './utils';
 
 const MAX_BATCH_NUMBER = 100;
@@ -121,15 +124,6 @@ async function getPodcastFeedForBatch(subscribeUrl, batch) {
   }
   if (isEmpty(podcastMetadata)) return [{}, tags];
 
-  return [
-    {
-      ...podcastMetadata,
-      episodes: (podcastMetadata.episodes || []).map(episode => ({
-        ...episode,
-        // TODO: Safeguard against malformed metadata => reject episodes where publishedAt == null
-        publishedAt: toDate(episode.publishedAt),
-      })).sort((a, b) => b.publishedAt - a.publishedAt),
-    },
-    tags,
-  ];
+  // TODO: Safeguard against malformed metadata => reject episodes where publishedAt == null
+  return [podcastWithDateObjects(podcastMetadata, true), tags];
 }

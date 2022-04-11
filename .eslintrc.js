@@ -20,6 +20,14 @@ module.exports = {
     'operator-linebreak': 'off',
     'brace-style': 'off',
     'no-continue': 'off',
+    'prefer-object-spread': 'off',
+    'object-curly-newline': ['error', {
+      ImportDeclaration: {
+        consistent: true,
+        multiline: true,
+        minProperties: 4,
+      },
+    }],
   },
   overrides: [
     {

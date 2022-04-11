@@ -6,15 +6,22 @@ const PLURAL_TAG_MAP = {
   category: 'categories',
   keyword: 'keywords',
 };
-
 const TAG_EXCLUDES = ['Content-Type', 'Unix-Time'];
 
+function sanityCheckedTag() {
+  const tag = process.env.TAG_PREFIX;
+  if (!tag || tag === 'undefined' || tag === 'null') {
+    throw new Error('process.env.TAG_PREFIX is not set up. Please contact our development team.');
+  }
+  return tag;
+}
+
 export function toTag(name) {
-  return TAG_EXCLUDES.includes(name) ? name : `${process.env.TAG_PREFIX}-${name}`;
+  return TAG_EXCLUDES.includes(name) ? name : `${sanityCheckedTag()}-${name}`;
 }
 
 export function fromTag(tagName) {
-  const a = tagName.replace(new RegExp(`^${process.env.TAG_PREFIX}-`), '');
+  const a = tagName.replace(new RegExp(`^${sanityCheckedTag()}-`), '');
   return PLURAL_TAG_MAP[a] || a;
 }
 
@@ -64,7 +71,6 @@ function mergeEpisodesMetadata(oldEpisodes, newEpisodes) {
       // Replace duplicate oldEpisode with merged episode metadata
       const categories = mergeArrays(oldEpisode.categories, newEpisode.categories);
       const keywords = mergeArrays(oldEpisode.keywords, newEpisode.keywords);
-      // eslint-disable-next-line prefer-object-spread
       oldEpisodesWithMerges[oldEpisodeIndex] = Object.assign(
         { ...oldEpisode, ...newEpisode },
         categories.length ? { categories } : null,
