@@ -3,6 +3,7 @@ import React, {
 } from 'react';
 import PropTypes from 'prop-types';
 import * as arweave from '../client/arweave';
+import { valuesEqual } from '../utils';
 
 export const ArweaveContext = createContext();
 
@@ -14,16 +15,20 @@ function ArweaveProvider({ children }) {
   const [walletAddress, setWalletAddress] = useState('');
   const loadingWallet = useRef(false);
 
-  /* Loads the state variables `wallet` and `walletAddress` for the given `newWallet`.
+  /**
+   * Loads the state variables `wallet` and `walletAddress` for the given `newWallet`.
    * If !newWallet, a new developer wallet is created and some AR tokens are minted.
-   * @param [Object, null] newWallet */
+   * @param {(Object|null)} newWallet
+   */
   async function loadNewWallet(newWallet) {
     if (!loadingWallet.current) {
       loadingWallet.current = true;
 
       const userOrDevWallet = newWallet || await arweave.createNewDevWallet();
-      setWallet(userOrDevWallet);
-      setWalletAddress(await arweave.getWalletAddress(userOrDevWallet));
+      if (!valuesEqual(wallet, newWallet)) {
+        setWalletAddress(await arweave.getWalletAddress(userOrDevWallet));
+        setWallet(userOrDevWallet);
+      }
 
       loadingWallet.current = false;
     }

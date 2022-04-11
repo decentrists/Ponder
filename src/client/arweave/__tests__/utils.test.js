@@ -6,20 +6,11 @@ import {
   mergeBatchTags,
 } from '../utils';
 
-/**
- * Helper function for deeper equality assertion.
- * @param {Array.<Object>} arrayOfObjects
- * @param {string} prop
- * @return {Array.<string>}
- */
-function listPropValues(arrayOfObjects, prop) {
-  return arrayOfObjects.map(obj => obj[prop]);
-}
-
 const originalTagPrefix = process.env.TAG_PREFIX;
+const testTag = 'testPonder';
 
 beforeAll(() => {
-  Object.assign(process.env, { TAG_PREFIX: 'testPonder' });
+  Object.assign(process.env, { TAG_PREFIX: testTag });
 });
 
 afterAll(() => {
@@ -58,8 +49,8 @@ describe('mergeEpisodeBatches', () => {
       keywords: [],
     },
   ];
-  const oldEpisodes = episodes.slice(-2);
-  const newEpisodes = episodes.slice(0, 2);
+  const oldEpisodes = [episodes[2], episodes[3]];
+  const newEpisodes = [episodes[0], episodes[1]];
   const episodes3and1 = [episodes[1], episodes[3]];
   const episodes4and2 = [episodes[0], episodes[2]];
   const episodes421 = [episodes[0], episodes[2], episodes[3]];
@@ -89,7 +80,7 @@ describe('mergeEpisodeBatches', () => {
     });
 
     describe('When given 1 batch with 1 episode with only a publishedAt prop', () => {
-      it('returns an array with the minimal episodes metadata', () => {
+      it('returns an array with the minimal episode\'s metadata', () => {
         const minimalEpisode = { publishedAt: new Date('2021-11-10T15:06:18.000Z') };
         expect(mergeEpisodeBatches([[minimalEpisode]])).toStrictEqual([minimalEpisode]);
       });
@@ -129,22 +120,36 @@ describe('mergeEpisodeBatches', () => {
   });
 
   describe('When some batches contain duplicate episodes metadata', () => {
-    const assertResultProps = result => {
-      expect(listPropValues(result, 'title')).toStrictEqual(['Ep4', 'Ep3', 'Ep2', 'NewEp1']);
-      expect(listPropValues(result, 'url')).toStrictEqual(listPropValues(episodes, 'url'));
-      expect(listPropValues(result, 'publishedAt'))
-        .toStrictEqual(listPropValues(episodes, 'publishedAt'));
-      expect(listPropValues(result, 'categories')).toStrictEqual([
-        ['cat4', 'newcat4'],
-        [],
-        [],
-        ['cat1', 'newcat1'],
-      ]);
-      expect(listPropValues(result, 'keywords')).toStrictEqual([
-        [],
-        ['key3'],
-        ['key2'],
-        [],
+    const assertMergedResult = result => {
+      expect(result).toEqual([
+        {
+          title: 'Ep4',
+          url: 'https://server.dummy/ep4',
+          publishedAt: episodes[0].publishedAt,
+          categories: ['cat4', 'newcat4'],
+          keywords: [],
+        },
+        {
+          title: 'Ep3',
+          url: 'https://server.dummy/ep3',
+          publishedAt: episodes[1].publishedAt,
+          categories: [],
+          keywords: ['key3'],
+        },
+        {
+          title: 'Ep2',
+          url: 'https://server.dummy/ep2',
+          publishedAt: episodes[2].publishedAt,
+          categories: [],
+          keywords: ['key2'],
+        },
+        {
+          title: 'NewEp1',
+          url: 'https://server.dummy/ep1',
+          publishedAt: episodes[3].publishedAt,
+          categories: ['cat1', 'newcat1'],
+          keywords: [],
+        },
       ]);
     };
 
@@ -156,13 +161,13 @@ describe('mergeEpisodeBatches', () => {
 
     describe('When given 1 older batch + 1 newer batch + 1 batch with updated metadata', () => {
       it('returns a sorted array of merged episodes', () => {
-        assertResultProps(mergeEpisodeBatches([oldEpisodes, newEpisodes, updatedEpisodes]));
+        assertMergedResult(mergeEpisodeBatches([oldEpisodes, newEpisodes, updatedEpisodes]));
       });
     });
 
     describe('When given 1 newer batch + 1 older batch + 1 batch with updated metadata', () => {
       it('returns a sorted array of merged episodes', () => {
-        assertResultProps(mergeEpisodeBatches([newEpisodes, oldEpisodes, updatedEpisodes]));
+        assertMergedResult(mergeEpisodeBatches([newEpisodes, oldEpisodes, updatedEpisodes]));
       });
     });
   });
@@ -206,7 +211,7 @@ describe('mergeBatchMetadata', () => {
 
   describe('When given 1 batch of podcast metadata', () => {
     it('returns the same batch', () => {
-      expect(mergeBatchMetadata(metadataBatches.slice(0, 1))).toStrictEqual(metadataBatches[0]);
+      expect(mergeBatchMetadata([metadataBatches[0]])).toStrictEqual(metadataBatches[0]);
     });
   });
 
@@ -331,14 +336,30 @@ describe('mergeBatchTags', () => {
   });
 });
 
-describe('toTag', () => {
-  it('prepends tag prefix to name', () => {
+describe('toTag, fromTag', () => {
+  it('toTag() prepends tag prefix to name', () => {
     expect(toTag('foo')).toBe('testPonder-foo');
   });
-});
 
-describe('fromTag', () => {
-  it('removes prepending prefix to name', () => {
+  it('fromTag() removes prepending prefix to name', () => {
     expect(fromTag(toTag('foo'))).toBe('foo');
+  });
+
+  describe('sanity checks', () => {
+    afterEach(() => {
+      Object.assign(process.env, { TAG_PREFIX: testTag });
+    });
+
+    it('raises an error if the TAG_PREFIX is empty', () => {
+      Object.assign(process.env, { TAG_PREFIX: '' });
+      expect(() => toTag('foo')).toThrow();
+      expect(() => fromTag('foo')).toThrow();
+    });
+
+    it('raises an error if the TAG_PREFIX is undefined', () => {
+      Object.assign(process.env, { TAG_PREFIX: undefined });
+      expect(() => toTag('foo')).toThrow();
+      expect(() => fromTag('undefined-foo')).toThrow();
+    });
   });
 });

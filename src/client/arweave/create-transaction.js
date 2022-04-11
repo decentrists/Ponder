@@ -66,7 +66,8 @@ function episodeTags(newEpisodes, podcast) {
 }
 
 function getMetadataBatchNumber(podcast, firstEpisodeDate, lastEpisodeDate) {
-  if (!(firstEpisodeDate instanceof Date && lastEpisodeDate instanceof Date)) {
+  if (!(firstEpisodeDate instanceof Date && lastEpisodeDate instanceof Date) ||
+      !firstEpisodeDate.getTime() || !lastEpisodeDate.getTime()) {
     throw new Error(`Could not upload metadata for ${podcast.title}: ` +
                     'Invalid date found for one of its episodes.');
   }

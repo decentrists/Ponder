@@ -1,14 +1,9 @@
 import getPodcastFeed from '../get-podcast-feed';
 // eslint-disable-next-line import/named
 import { transactions, api } from '../client';
+import { toTag } from '../utils';
 
 jest.mock('../client');
-
-const TAG_EXCLUDES = ['Content-Type', 'Unix-Time'];
-
-function toTag(name) {
-  return TAG_EXCLUDES.includes(name) ? name : `${process.env.TAG_PREFIX}-${name}`;
-}
 
 function emptyGqlResponse() {
   return {
@@ -120,10 +115,10 @@ describe('Successful fetch', () => {
 
       await expect(getPodcastFeed('https://server.dummy/rss'))
         .resolves.toEqual(mergedBatchesResult(0, ep1date, ep4date));
-      expect(transactions.getData).toHaveBeenCalledWith('mockId', {
-        decode: true,
-        string: true,
-      });
+
+      expect(api.post).toHaveBeenCalledTimes(2);
+      expect(transactions.getData).toHaveBeenCalledTimes(1);
+      expect(transactions.getData).toHaveBeenCalledWith('mockId', { decode: true, string: true });
     });
   });
 
@@ -139,10 +134,10 @@ describe('Successful fetch', () => {
 
       await expect(getPodcastFeed('https://server.dummy/rss'))
         .resolves.toEqual(mergedBatchesResult(1, ep1date, ep4date));
-      expect(transactions.getData).toHaveBeenCalledWith('mockId', {
-        decode: true,
-        string: true,
-      });
+
+      expect(api.post).toHaveBeenCalledTimes(3);
+      expect(transactions.getData).toHaveBeenCalledTimes(2);
+      expect(transactions.getData).toHaveBeenCalledWith('mockId', { decode: true, string: true });
     });
   });
 
@@ -164,10 +159,10 @@ describe('Successful fetch', () => {
 
       await expect(getPodcastFeed('https://server.dummy/rss'))
         .resolves.toEqual(mergedBatchesResult(2, ep1date, ep4date));
-      expect(transactions.getData).toHaveBeenCalledWith('mockId', {
-        decode: true,
-        string: true,
-      });
+
+      expect(api.post).toHaveBeenCalledTimes(4);
+      expect(transactions.getData).toHaveBeenCalledTimes(3);
+      expect(transactions.getData).toHaveBeenCalledWith('mockId', { decode: true, string: true });
     });
   });
 });
@@ -190,19 +185,22 @@ describe('Error handling', () => {
 
       await expect(getPodcastFeed('https://server.dummy/rss'))
         .resolves.toEqual(mergedBatchesResult(2, ep1date, ep4date));
-      expect(transactions.getData).toHaveBeenCalledWith('mockId', {
-        decode: true,
-        string: true,
-      });
+
+      expect(api.post).toHaveBeenCalledTimes(4);
+      expect(transactions.getData).toHaveBeenCalledTimes(3);
+      expect(transactions.getData).toHaveBeenCalledWith('mockId', { decode: true, string: true });
     });
   });
 
-  it('catches GraphQL request error and returns {}', async () => {
+  it('catches the GraphQL request error and returns {}', async () => {
     const mockError = new Error('GraphQL Error');
+
     api.post.mockRejectedValue(mockError);
     transactions.getData.mockResolvedValue(getDataJson(0, 4));
+
     await expect(getPodcastFeed('https://server.dummy/rss')).resolves.toEqual({});
-    expect(api.post).toHaveBeenCalled();
+
+    expect(api.post).toHaveBeenCalledTimes(1);
     expect(transactions.getData).not.toHaveBeenCalled();
   });
 });

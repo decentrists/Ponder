@@ -11,30 +11,55 @@ export function toISOString(date) {
   }
 }
 
-export function toDate(dateString) {
-  if (!dateString) return null;
-  // TODO: not sure how to make this play nice with TypeScript:
-  if (dateString instanceof Date) return dateString;
+/**
+ * @param {(string|Date)} date
+ * @return {(Date|null)} One of the following:
+ *   - A new Date object, if `date` is a valid date string.
+ *   - null, if `date` is not a valid date string.
+ *   - `date`, if `date` is already a Date object.
+ */
+export function toDate(date) {
+  if (!date) return null;
+  if (date instanceof Date) return date;
 
-  const dateObj = new Date(dateString);
-  return Number.isNaN(dateObj.getYear()) ? null : dateObj;
+  const dateObj = new Date(date);
+  return dateObj.getTime() ? dateObj : null;
 }
 
-export function withDateObjects(podcasts) {
-  return podcasts.filter(podcast => !isEmpty(podcast)).map(podcast => ({
-    ...podcast,
-    episodes: podcast.episodes.map(episode => ({
+export function podcastWithDateObjects(podcast, sortEpisodes = true) {
+  const conditionalSort = episodes => (sortEpisodes ?
+    episodes.sort((a, b) => b.publishedAt - a.publishedAt) : episodes);
+  const episodes = conditionalSort(
+    (podcast.episodes || []).map(episode => ({
       ...episode,
       publishedAt: toDate(episode.publishedAt),
     })),
-    firstEpisodeDate: toDate(podcast.firstEpisodeDate),
-    lastEpisodeDate: toDate(podcast.lastEpisodeDate),
-  }));
+  );
+
+  return Object.assign(
+    { ...podcast, episodes },
+    podcast.firstEpisodeDate ? { firstEpisodeDate: toDate(podcast.firstEpisodeDate) } : null,
+    podcast.lastEpisodeDate ? { lastEpisodeDate: toDate(podcast.lastEpisodeDate) } : null,
+  );
+}
+
+export function podcastsWithDateObjects(podcasts, sortEpisodes = true) {
+  return podcasts.filter(podcast => !isEmpty(podcast))
+    .map(podcast => podcastWithDateObjects(podcast, sortEpisodes));
 }
 
 /* Returns true if the given array or object is empty or not an object */
 export function isEmpty(obj) {
   return (typeof obj !== 'object' || Object.keys(obj).length === 0);
+}
+
+/* Returns true if the given arrays or objects' values are equal */
+export function valuesEqual(a = {}, b = {}) {
+  if (a === b) return true;
+  if (!a || !b) return false;
+
+  return (Object.values(a).every(x => b.includes(x)) &&
+    Object.values(b).every(x => a.includes(x)));
 }
 
 export function corsApiHeaders() {

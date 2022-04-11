@@ -3,14 +3,14 @@ import PropTypes from 'prop-types';
 import { ToastContext } from './toast';
 import useRerenderEffect from '../hooks/use-rerender-effect';
 import { getPodcast, getAllPodcasts } from '../client';
-import { withDateObjects } from '../utils';
+import { podcastsWithDateObjects } from '../utils';
 
 export const SubscriptionsContext = createContext();
 
 function readCachedPodcasts() {
   const podcasts = JSON.parse(localStorage.getItem('subscriptions')) || [];
 
-  return withDateObjects(podcasts);
+  return podcastsWithDateObjects(podcasts);
 }
 
 function SubscriptionsProvider({ children }) {
@@ -42,7 +42,7 @@ function SubscriptionsProvider({ children }) {
     setIsRefreshing(true);
     try {
       const newSubscriptions = await getAllPodcasts(subscriptions);
-      setSubscriptions(withDateObjects(newSubscriptions));
+      setSubscriptions(podcastsWithDateObjects(newSubscriptions));
       toast('Refresh Success!', { variant: 'success' });
     } catch (ex) {
       console.error(ex);
@@ -77,7 +77,7 @@ function SubscriptionsProvider({ children }) {
         unsubscribe,
         refresh,
         isRefreshing,
-        subscriptions: withDateObjects(subscriptions),
+        subscriptions: podcastsWithDateObjects(subscriptions),
       }}
     >
       {children}

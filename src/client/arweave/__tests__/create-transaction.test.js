@@ -2,10 +2,13 @@ import { advanceTo } from 'jest-date-mock';
 import { postPodcastMetadata } from '../create-transaction';
 // eslint-disable-next-line import/named
 import { addTag, createTransaction } from '../client';
-// TODO: mock unixTimestamp()
-import { unixTimestamp } from '../../../utils';
 import { toTag } from '../utils';
 
+const MOCK_TIMESTAMP = '1234001234';
+jest.mock('../../../utils', () => ({
+  ...jest.requireActual('../../../utils'),
+  unixTimestamp: jest.fn().mockImplementation(() => MOCK_TIMESTAMP),
+}));
 jest.mock('../client');
 
 const ep4date = '2021-11-10T15:06:18.000Z';
@@ -94,10 +97,15 @@ afterAll(() => {
 });
 
 describe('postPodcastMetadata', () => {
+  beforeEach(() => {
+    expect(createTransaction).not.toHaveBeenCalled();
+    expect(addTag).not.toHaveBeenCalled();
+  });
+
   function assertAddTagCalls(expectedTags) {
     const formattedExpectedTags = [
       ['Content-Type', 'application/json'],
-      ['Unix-Time', unixTimestamp()],
+      ['Unix-Time', MOCK_TIMESTAMP],
       [toTag('version'), 'testVersion'],
     ].concat(expectedTags.map(([k, v]) => [toTag(k), v]));
 
@@ -106,9 +114,6 @@ describe('postPodcastMetadata', () => {
 
   describe('When there is no cached metadata yet for the podcast to be posted to Arweave', () => {
     it('creates a transaction with the expected metadata and tags', async () => {
-      expect(createTransaction).not.toHaveBeenCalled();
-      expect(addTag).not.toHaveBeenCalled();
-
       const expectedMetadata = newMetadata();
       const expectedTags = [
         ['subscribeUrl', 'https://example.com/foo'],
@@ -132,9 +137,6 @@ describe('postPodcastMetadata', () => {
 
   describe('When 1 cached batch of older metadata exists', () => {
     it('creates a transaction with the expected metadata and tags', async () => {
-      expect(createTransaction).not.toHaveBeenCalled();
-      expect(addTag).not.toHaveBeenCalled();
-
       const currentBatchFields = {
         firstEpisodeDate: ep1date,
         lastEpisodeDate: ep2date,
@@ -171,9 +173,6 @@ describe('postPodcastMetadata', () => {
 
   describe('When 2 aggregated cached batches of older metadata exist', () => {
     it('creates a transaction with the expected metadata and tags', async () => {
-      expect(createTransaction).not.toHaveBeenCalled();
-      expect(addTag).not.toHaveBeenCalled();
-
       const currentBatchFields = {
         firstEpisodeDate: ep1date,
         lastEpisodeDate: ep3date,
@@ -201,6 +200,37 @@ describe('postPodcastMetadata', () => {
       expect(createTransaction)
         .toHaveBeenCalledWith({ data: JSON.stringify(expectedMetadata) }, stubbedWallet);
       assertAddTagCalls(expectedTags);
+    });
+  });
+
+  describe('Error handling', () => {
+    const assertThrow = async badlyDatedEpisodes => {
+      const erroneousNewMetadata = newMetadata({ episodes: badlyDatedEpisodes });
+      await expect(postPodcastMetadata(stubbedWallet, erroneousNewMetadata, {})).rejects.toThrow();
+
+      expect(createTransaction).not.toHaveBeenCalled();
+      expect(addTag).not.toHaveBeenCalled();
+    };
+
+    it('raises an error if the newest episode has a null date', async () => {
+      assertThrow([
+        { ...allEpisodes[0], publishedAt: null },
+        allEpisodes[1],
+      ]);
+    });
+
+    it('raises an error if the oldest episode has an invalid date', async () => {
+      assertThrow([
+        allEpisodes[0],
+        { ...allEpisodes[1], publishedAt: new Date(undefined) },
+      ]);
+    });
+
+    it('raises an error if the oldest episode has an zero date', async () => {
+      assertThrow([
+        allEpisodes[0],
+        { ...allEpisodes[1], publishedAt: new Date(0) },
+      ]);
     });
   });
 });
