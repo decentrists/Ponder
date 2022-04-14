@@ -1,10 +1,10 @@
 import React, { useContext } from 'react';
 import { FaBacon } from 'react-icons/fa';
 import SpinButton from './spin-button';
-import { ArweaveSyncContext } from '../../providers/arweave-sync';
+import { ArweaveContext } from '../../providers/arweave';
 
 function SyncButton() {
-  const { sync, isSyncing } = useContext(ArweaveSyncContext);
+  const { sync, isSyncing } = useContext(ArweaveContext);
 
   return (
     <SpinButton disabled={isSyncing} onClick={sync}>

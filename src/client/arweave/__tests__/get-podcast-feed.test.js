@@ -1,4 +1,4 @@
-import getPodcastFeed from '../get-podcast-feed';
+import { getPodcastFeed } from '../get-podcast-feed';
 // eslint-disable-next-line import/named
 import { transactions, api } from '../client';
 import { toTag } from '../utils';
