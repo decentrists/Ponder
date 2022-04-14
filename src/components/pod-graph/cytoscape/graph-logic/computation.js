@@ -4,9 +4,12 @@ import {
   removeDuplicateElements,
 } from './utils';
 
-/* @param [<Object>] nodes
-   @param [<<Object>>] disjointGraphs The intermediate result through recursion
-   @return [<<Object>>] An array of graph representations grouped by shared keywords & categories */
+/**
+ * @param {Array.<Object>} nodes
+ * @param {Array.<Array.<Object>>} disjointGraphs The intermediate result through recursion
+ * @returns {Array.<Array.<Object>>}
+ *   An array of graph representations grouped by shared keywords & categories
+ */
 export const findAllDisjointGraphs = (nodes, disjointGraphs = []) => {
   const firstUnvisitedNode = nodes.find(item => item.visited !== true);
   if (!firstUnvisitedNode) return disjointGraphs;
@@ -33,14 +36,21 @@ export const findAllDisjointGraphs = (nodes, disjointGraphs = []) => {
   return findAllDisjointGraphs(nodes, disjointGraphs);
 };
 
-/* @return [<<Object>>] The findAllDisjointGraphs result mapped onto the subscriptions metadata */
+/**
+ * @param {Array.<Object>} subscriptions
+ * @param {Array.<Array.<Object>>} disjointGraphs
+ * @returns {Array.<Array.<Object>>}
+ *   The findAllDisjointGraphs result mapped onto the subscriptions metadata
+ */
 const finalizeDisjointGraphsObject = (subscriptions, disjointGraphs) => disjointGraphs
   .map(graph => graph.map(node => subscriptions.find(subscription => subscription.subscribeUrl ===
       node.subscribeUrl)));
 
-/* @param [<Object>] subscriptions
-   @return [<<Object>>] An array of graphs grouped by shared keywords & categories, where each
-     graph comprises an array of subscription metadata (nodes) */
+/**
+ * @param {Array.<Object>} subscriptions
+ * @returns {Array.<Array.<Object>>} An array of graphs grouped by shared keywords & categories,
+ *   where each graph comprises an array of subscription metadata (nodes)
+ */
 export const groupSubscriptionsBySharedKeywords = subscriptions => {
   const nodes = subscriptions.map(subscription => ({
     subscribeUrl: subscription.subscribeUrl,

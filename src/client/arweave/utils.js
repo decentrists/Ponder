@@ -26,14 +26,14 @@ export function fromTag(tagName) {
 }
 
 /**
- * @return {Array.<String>}
+ * @returns {Array.<String>}
  *   The given arrays, concatenated, omitting duplicate as well as falsy elements */
 const mergeArrays = (arr1, arr2) => [...new Set((arr1 || []).concat(arr2 || []))].filter(x => x);
 
 /**
  * @param {Array.<Object>} oldEpisodes assumed-DATE_DESC-sorted array of episodes metadata
  * @param {Array.<Object>} newEpisodes assumed-DATE_DESC-sorted array of newer episodes metadata
- * @return {Array.<Object>} An array of merged episodes metadata, where newer properties of
+ * @returns {Array.<Object>} An array of merged episodes metadata, where newer properties of
  *   duplicate episodes take precedence, except for categories and keywords, which are merged.
  */
 function mergeEpisodesMetadata(oldEpisodes, newEpisodes) {
@@ -88,7 +88,7 @@ function mergeEpisodesMetadata(oldEpisodes, newEpisodes) {
 
 /**
  * @param {Array.<Array.<Object>>} episodeBatches
- * @return {Array.<Object>}
+ * @returns {Array.<Object>}
  */
 export function mergeEpisodeBatches(episodeBatches) {
   if (episodeBatches.length < 2) return episodeBatches.flat();
@@ -121,7 +121,7 @@ export function mergeBatchMetadata(metadataBatches) {
 
 /**
  * @param {Array.<Object>} tagBatches
- * @return {Object} A new object with all tags merged, where newer batches take precedence, but:
+ * @returns {Object} A new object with all tags merged, where newer batches take precedence, but:
  *   - min holds for firstEpisodeDate
  *   - max holds for lastEpisodeDate and metadataBatch
  *   - metadataBatch maps to an Integer

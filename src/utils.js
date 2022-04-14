@@ -11,9 +11,17 @@ export function toISOString(date) {
   }
 }
 
+export function isValidInteger(number) {
+  return typeof number === 'number' && Number.isInteger(number);
+}
+
+export function isValidDate(date) {
+  return date instanceof Date && date.getTime();
+}
+
 /**
  * @param {(string|Date)} date
- * @return {(Date|null)} One of the following:
+ * @returns {(Date|null)} One of the following:
  *   - A new Date object, if `date` is a valid date string.
  *   - null, if `date` is not a valid date string.
  *   - `date`, if `date` is already a Date object.
