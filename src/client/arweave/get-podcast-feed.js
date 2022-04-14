@@ -1,16 +1,12 @@
 /* eslint-disable no-await-in-loop */
 import client from './client';
 import { isEmpty, toDate, podcastWithDateObjects } from '../../utils';
-import {
-  toTag,
-  fromTag,
-  mergeBatchMetadata,
-  mergeBatchTags,
-} from './utils';
+import { toTag, fromTag } from './utils';
+import { mergeBatchMetadata, mergeBatchTags } from './sync/merge-logic';
 
 const MAX_BATCH_NUMBER = 100;
 
-export default async function getPodcastFeed(subscribeUrl) {
+export async function getPodcastFeed(subscribeUrl) {
   const metadataBatches = [];
   const tagBatches = [];
   // TODO: negative batch numbers
@@ -124,6 +120,6 @@ async function getPodcastFeedForBatch(subscribeUrl, batch) {
   }
   if (isEmpty(podcastMetadata)) return [{}, tags];
 
-  // TODO: Safeguard against malformed metadata => reject episodes where publishedAt == null
+  // TODO: Anti-spam: sanity check podcastMetadata => reject episodes where publishedAt == null
   return [podcastWithDateObjects(podcastMetadata, true), tags];
 }

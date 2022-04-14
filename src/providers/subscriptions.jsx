@@ -3,13 +3,12 @@ import PropTypes from 'prop-types';
 import { ToastContext } from './toast';
 import useRerenderEffect from '../hooks/use-rerender-effect';
 import { getPodcast, getAllPodcasts } from '../client';
-import { podcastsWithDateObjects } from '../utils';
+import { unixTimestamp, podcastsWithDateObjects } from '../utils';
 
 export const SubscriptionsContext = createContext();
 
 function readCachedPodcasts() {
   const podcasts = JSON.parse(localStorage.getItem('subscriptions')) || [];
-
   return podcastsWithDateObjects(podcasts);
 }
 
@@ -17,23 +16,28 @@ function SubscriptionsProvider({ children }) {
   const toast = useContext(ToastContext);
   const [subscriptions, setSubscriptions] = useState(readCachedPodcasts());
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [isSyncing, setIsSyncing] = useState(false);
+  const [lastRefreshTime, setLastRefreshTime] = useState(0);
+  // const [isSyncing, setIsSyncing] = useState(false);
 
   async function subscribe(subscribeUrl) {
     // TODO: subscribeUrl validation
     if (subscriptions.some(subscription => subscription.subscribeUrl === subscribeUrl)) {
-      throw new Error('Already subscribed');
+      toast(`You are already subscribed to ${subscribeUrl}.`, { variant: 'danger' });
     }
-    const newPodcast = await getPodcast(subscribeUrl);
-    setSubscriptions(prev => prev.concat(newPodcast));
+    else {
+      const newPodcast = await getPodcast(subscribeUrl);
+      setSubscriptions(prev => prev.concat(newPodcast));
+    }
   }
 
   async function unsubscribe(subscribeUrl) {
     if (subscriptions.every(subscription => subscription.subscribeUrl !== subscribeUrl)) {
-      throw new Error('Not subscribed.');
+      toast(`You are not subscribed to ${subscribeUrl}.`, { variant: 'danger' });
     }
-    setSubscriptions(prev => prev
-      .filter(subscription => subscription.subscribeUrl !== subscribeUrl));
+    else {
+      setSubscriptions(prev => prev
+        .filter(subscription => subscription.subscribeUrl !== subscribeUrl));
+    }
   }
 
   async function refresh() {
@@ -42,25 +46,15 @@ function SubscriptionsProvider({ children }) {
     setIsRefreshing(true);
     try {
       const newSubscriptions = await getAllPodcasts(subscriptions);
+      // TODO: merge (subscriptions, newSubscriptions)
       setSubscriptions(podcastsWithDateObjects(newSubscriptions));
+      setLastRefreshTime(unixTimestamp());
       toast('Refresh Success!', { variant: 'success' });
     } catch (ex) {
       console.error(ex);
       toast(`Failed to refresh subscriptions: ${ex}`, { variant: 'danger' });
     } finally {
       setIsRefreshing(false);
-    }
-  }
-
-  async function sync() {
-    setIsSyncing(true);
-    try {
-      // const toSync = JSON.parse(localStorage.getItems('subscriptions'));
-    } catch (ex) {
-      console.error(ex);
-      toast('Failed to sync with Arweave.', { variant: 'danger' });
-    } finally {
-      setIsSyncing(false);
     }
   }
 
@@ -71,12 +65,12 @@ function SubscriptionsProvider({ children }) {
   return (
     <SubscriptionsContext.Provider
       value={{
-        sync,
-        isSyncing,
+        // isSyncing,
+        isRefreshing,
+        lastRefreshTime,
         subscribe,
         unsubscribe,
         refresh,
-        isRefreshing,
         subscriptions: podcastsWithDateObjects(subscriptions),
       }}
     >

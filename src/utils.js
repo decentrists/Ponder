@@ -20,6 +20,13 @@ export function isValidDate(date) {
 }
 
 /**
+ * @returns {Array.<String>}
+ *   The given arrays, concatenated, omitting duplicate as well as falsy elements */
+export function mergeArrays(arr1, arr2) {
+  return [...new Set((arr1 || []).concat(arr2 || []))].filter(x => x);
+}
+
+/**
  * @param {(string|Date)} date
  * @returns {(Date|null)} One of the following:
  *   - A new Date object, if `date` is a valid date string.
