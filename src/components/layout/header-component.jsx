@@ -6,7 +6,7 @@ import RssButton from '../buttons/rss-button';
 import SyncButton from '../buttons/sync-button';
 import RefreshButton from '../buttons/refresh-button';
 import {
-  HeaderContainer, ImageWrapper, ImageLogo,
+  HeaderContainer, ImageWrapper,
   FormLayer, PodAlert, FormWrapper,
   CallToActions,
 } from './index-elements';
@@ -36,12 +36,7 @@ function HeaderComponent({ onSubmit }) {
   return (
     <HeaderContainer>
       <ImageWrapper>
-        <ImageLogo
-          alt=""
-          src={PotIcon}
-          width="52"
-          height="54"
-        />{' '}
+        <PotIcon />
       </ImageWrapper>
       <FormLayer>
         <PodAlert>

@@ -5,8 +5,8 @@ export const PotIcon = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     xmlnsXlink="http://www.w3.org/1999/xlink"
-    width="132.962"
-    height="148.711"
+    width="52"
+    height="54"
     version="1.1"
     viewBox="0 0 35.18 39.346"
   >
