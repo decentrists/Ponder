@@ -1,7 +1,5 @@
 module.exports = {
-  root: true,
-  parser: '@babel/eslint-parser',
-  extends: ['airbnb'],
+  extends: ['airbnb-typescript'],
   env: {
     browser: true,
   },
@@ -14,11 +12,11 @@ module.exports = {
     'react/static-property-placement': [2, 'static public field'],
     'consistent-return': 0,
     'no-console': 0,
-    'no-use-before-define': 'off',
+    '@typescript-eslint/brace-style': 'off',
+    '@typescript-eslint/no-use-before-define': 'off',
     'no-plusplus': 'off',
     'no-underscore-dangle': 'off',
     'operator-linebreak': 'off',
-    'brace-style': 'off',
     'no-continue': 'off',
     'prefer-object-spread': 'off',
     'object-curly-newline': ['error', {
@@ -29,12 +27,14 @@ module.exports = {
       },
     }],
   },
+  parserOptions: {
+    project: './tsconfig.json',
+    createDefaultProgram: true,
+  },
   overrides: [
     {
       files: [
         '.eslintrc.js',
-        'babel.config.js',
-        'webpack.config.js',
         'jest.config.js',
         'seeders/**/*.js',
         'cypress/plugins/**/*',

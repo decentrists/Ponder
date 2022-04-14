@@ -1,5 +1,6 @@
 export default function applyNodeGroups(cy) {
   initializeZoomExtrema(cy);
+  // eslint-disable-next-line @typescript-eslint/no-use-before-define
   fitGraph(cy);
 }
 // function to center the graph by default

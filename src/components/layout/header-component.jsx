@@ -3,7 +3,6 @@ import PropTypes from 'prop-types';
 import { InputGroup, Form } from 'react-bootstrap';
 import { ToastContext } from '../../providers/toast';
 import RssButton from '../buttons/rss-button';
-import Logo from '../assets/img/pot.svg';
 import SyncButton from '../buttons/sync-button';
 import RefreshButton from '../buttons/refresh-button';
 import {
@@ -11,6 +10,7 @@ import {
   FormLayer, PodAlert, FormWrapper,
   CallToActions,
 } from './index-elements';
+import { PotIcon } from '../assets/img/pot';
 
 function HeaderComponent({ onSubmit }) {
   const toast = useContext(ToastContext);
@@ -38,7 +38,7 @@ function HeaderComponent({ onSubmit }) {
       <ImageWrapper>
         <ImageLogo
           alt=""
-          src={Logo}
+          src={PotIcon}
           width="52"
           height="54"
         />{' '}
