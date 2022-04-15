@@ -66,6 +66,10 @@ yarn-error.log
 
 # Built assets
 /dist
-/ponder-kagz
 /cypress/videos
 /cypress/screenshots
+/cypress/**/__image_snapshots__/*.actual.???
+/cypress/**/__image_snapshots__/*.diff.???
+
+# IDE caches/configs
+.vscode
