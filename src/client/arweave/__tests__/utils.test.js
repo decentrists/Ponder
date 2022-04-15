@@ -345,7 +345,7 @@ describe('toTag, fromTag', () => {
     expect(fromTag(toTag('foo'))).toBe('foo');
   });
 
-  describe('sanity checks', () => {
+  xdescribe('sanity checks', () => {
     afterEach(() => {
       Object.assign(process.env, { TAG_PREFIX: testTag });
     });
