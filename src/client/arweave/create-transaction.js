@@ -11,7 +11,7 @@ import {
 async function sendTransaction(wallet, newMetadata, tags) {
   const trx = await client.createTransaction({ data: JSON.stringify(newMetadata) }, wallet);
   trx.addTag('Content-Type', 'application/json');
-  trx.addTag('Unix-Time', unixTimestamp());
+  trx.addTag('Unix-Time', `${unixTimestamp()}`);
   trx.addTag(toTag('version'), process.env.VERSION);
   tags.forEach(([k, v]) => {
     trx.addTag(toTag(k), `${v}`);

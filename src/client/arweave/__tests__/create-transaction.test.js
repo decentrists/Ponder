@@ -4,7 +4,7 @@ import { postPodcastMetadata } from '../create-transaction';
 import { addTag, createTransaction } from '../client';
 import { toTag } from '../utils';
 
-const MOCK_TIMESTAMP = '1234001234';
+const MOCK_TIMESTAMP = 1234001234;
 jest.mock('../../../utils', () => ({
   ...jest.requireActual('../../../utils'),
   unixTimestamp: jest.fn().mockImplementation(() => MOCK_TIMESTAMP),
@@ -105,7 +105,7 @@ describe('postPodcastMetadata', () => {
   function assertAddTagCalls(expectedTags) {
     const formattedExpectedTags = [
       ['Content-Type', 'application/json'],
-      ['Unix-Time', MOCK_TIMESTAMP],
+      ['Unix-Time', `${MOCK_TIMESTAMP}`],
       [toTag('version'), 'testVersion'],
     ].concat(expectedTags.map(([k, v]) => [toTag(k), v]));
 
