@@ -78,12 +78,12 @@ function newMetadata(additionalFields = {}) {
 
 const stubbedWallet = {};
 
-const originalVersion = process.env.VERSION;
-const originalTagPrefix = process.env.TAG_PREFIX;
+const originalVersion = process.env.REACT_APP_VERSION;
+const originalTagPrefix = process.env.REACT_APP_TAG_PREFIX;
 beforeAll(() => {
   Object.assign(process.env, {
-    VERSION: 'testVersion',
-    TAG_PREFIX: 'abc',
+    REACT_APP_VERSION: 'testVersion',
+    REACT_APP_TAG_PREFIX: 'abc',
   });
 });
 
@@ -92,8 +92,8 @@ beforeEach(() => {
 });
 
 afterAll(() => {
-  process.env.VERSION = originalVersion;
-  process.env.TAG_PREFIX = originalTagPrefix;
+  process.env.REACT_APP_VERSION = originalVersion;
+  process.env.REACT_APP_TAG_PREFIX = originalTagPrefix;
 });
 
 describe('postPodcastMetadata', () => {

@@ -96,13 +96,13 @@ function getDataJson(firstEpisodeIndex, numEpisodes) {
   });
 }
 
-const originalTagPrefix = process.env.TAG_PREFIX;
+const originalTagPrefix = process.env.REACT_APP_TAG_PREFIX;
 beforeAll(() => {
-  process.env.TAG_PREFIX = 'bestPrefix';
+  process.env.REACT_APP_TAG_PREFIX = 'bestPrefix';
 });
 
 afterAll(() => {
-  process.env.TAG_PREFIX = originalTagPrefix;
+  process.env.REACT_APP_TAG_PREFIX = originalTagPrefix;
 });
 
 describe('Successful fetch', () => {

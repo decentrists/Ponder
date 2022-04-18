@@ -35,7 +35,7 @@ module.exports = async function seed(seeds, ms = 5000) {
       .then(trx => {
         trx.addTag('Content-Type', 'application/json');
         trx.addTag('Unix-Time', Math.floor(Date.now() / 1000));
-        trx.addTag(`${process.env.TAG_PREFIX}-version`, process.env.VERSION);
+        trx.addTag(`${process.env.REACT_APP_TAG_PREFIX}-version`, process.env.REACT_APP_VERSION);
         Object.entries(tags)
           .reduce(
             (acc, [k, v]) => (['categories', 'keywords'].includes(k)
@@ -44,7 +44,7 @@ module.exports = async function seed(seeds, ms = 5000) {
             [],
           )
           .forEach(([k, v]) => {
-            trx.addTag(`${process.env.TAG_PREFIX}-${k}`, v);
+            trx.addTag(`${process.env.REACT_APP_TAG_PREFIX}-${k}`, v);
           });
         return client.transactions.sign(trx, wallet)
           .then(() => client.transactions.post(trx));
