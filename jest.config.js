@@ -10,6 +10,6 @@ module.exports = {
   setupFilesAfterEnv: [path.resolve('jest.setup.js')],
   testURL: 'https://thejimmydoreshow.libsyn.com/',
   transform: {
-    '\\.jsx?$': 'babel-jest',
+    '^.+\\.[t|j]sx?$': 'babel-jest',
   },
 };

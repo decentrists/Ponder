@@ -1,3 +1,4 @@
+import 'regenerator-runtime/runtime';
 import { clear } from 'jest-date-mock';
 
 global.console = {
