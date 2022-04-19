@@ -19,6 +19,10 @@ export function isValidDate(date) {
   return date instanceof Date && date.getTime();
 }
 
+export function datesEqual(a, b) {
+  return a instanceof Date && b instanceof Date && a.getTime() === b.getTime();
+}
+
 /**
  * @returns {Array.<String>}
  *   The given arrays, concatenated, omitting duplicate as well as falsy elements */
@@ -39,6 +43,25 @@ export function toDate(date) {
 
   const dateObj = new Date(date);
   return dateObj.getTime() ? dateObj : null;
+}
+
+/**
+ * @param {Object} metadata
+ * @returns {boolean}
+ *   true if `metadata` has specific metadata other than subscribeUrl and an empty episodes list
+ */
+export function hasMetadata(metadata) {
+  if (isEmpty(metadata)) return false;
+  if (metadata.title) return true;
+
+  const { subscribeUrl, episodes, ...specificMetadata } = { ...metadata };
+  if (episodes?.length) return true;
+
+  return !!Object.values(specificMetadata).flat().filter(x => x).length;
+}
+
+export function findMetadata(subscribeUrl, arrayOfMetadata = []) {
+  return arrayOfMetadata.find(podcast => podcast.subscribeUrl === subscribeUrl) || {};
 }
 
 export function podcastWithDateObjects(podcast, sortEpisodes = true) {
@@ -65,7 +88,7 @@ export function podcastsWithDateObjects(podcasts, sortEpisodes = true) {
 
 /* Returns true if the given array or object is empty or not an object */
 export function isEmpty(obj) {
-  return (typeof obj !== 'object' || Object.keys(obj).length === 0);
+  return (!obj || typeof obj !== 'object' || Object.keys(obj).length === 0);
 }
 
 /* Returns true if the given arrays or objects' values are equal */

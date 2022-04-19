@@ -2,7 +2,7 @@
 import client from './client';
 import { isEmpty, toDate, podcastWithDateObjects } from '../../utils';
 import { toTag, fromTag } from './utils';
-import { mergeBatchMetadata, mergeBatchTags } from './sync/merge-logic';
+import { mergeBatchMetadata, mergeBatchTags } from './sync/diff-merge-logic';
 
 const MAX_BATCH_NUMBER = 100;
 

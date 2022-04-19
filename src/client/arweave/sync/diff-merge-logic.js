@@ -125,3 +125,28 @@ export function mergeBatchTags(tagBatches) {
     return acc;
   }, {});
 }
+
+/**
+ * @param {Object} oldMetadata
+ * @param {Object} newMetadata
+ * @returns {Object} The newMetadata omitting episodes whose timestamps exist in oldMetadata.
+ *   If there are no new episodes, return an empty metadata object: { episodes: [] }
+ */
+export function simpleDiff(oldMetadata, newMetadata) {
+  const emptyDiff = { episodes: [] };
+  if (isEmpty(oldMetadata)) return { ...emptyDiff, ...newMetadata };
+  if (isEmpty(newMetadata)) return emptyDiff;
+
+  const oldEpisodeTimestamps =
+    (oldMetadata.episodes || []).map(episode => episode.publishedAt.getTime());
+  const newEpisodes = (newMetadata.episodes || [])
+    .filter(newEpisode => !oldEpisodeTimestamps.includes(newEpisode.publishedAt.getTime()));
+
+  if (newEpisodes.length) {
+    return {
+      ...newMetadata,
+      episodes: newEpisodes,
+    };
+  }
+  return emptyDiff;
+}

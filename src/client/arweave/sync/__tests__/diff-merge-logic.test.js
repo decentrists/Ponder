@@ -1,4 +1,8 @@
-import { mergeEpisodeBatches, mergeBatchMetadata, mergeBatchTags } from '../merge-logic';
+import {
+  mergeEpisodeBatches,
+  mergeBatchMetadata,
+  mergeBatchTags,
+} from '../diff-merge-logic';
 
 const originalTagPrefix = process.env.TAG_PREFIX;
 const testTag = 'testPonder';
