@@ -11,8 +11,6 @@ import GlobalProviders from './providers';
 const history = createBrowserHistory();
 
 function App() {
-  console.log(process.env);
-  console.log(process.env.NODE_ENV);
   return (
     <GlobalProviders>
       <Router history={history}>
