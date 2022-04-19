@@ -55,7 +55,9 @@ export const groupSubscriptionsBySharedKeywords = subscriptions => {
   const nodes = subscriptions.map(subscription => ({
     subscribeUrl: subscription.subscribeUrl,
     keywordsAndCategories: removeDuplicateElements([
-      ...subscription.keywords, ...subscription.categories]),
+      ...(subscription.keywords || []),
+      ...(subscription.categories || []),
+    ]),
   }));
   return finalizeDisjointGraphsObject(subscriptions, findAllDisjointGraphs(nodes));
 };
@@ -79,8 +81,8 @@ export const generateNodes = disjointGraphs => {
       data: {
         id: podcast.subscribeUrl,
         label: podcast.title,
-        categories: podcast.categories,
-        keywords: podcast.keywords,
+        categories: podcast.categories || [],
+        keywords: podcast.keywords || [],
         episodes: podcast.episodes,
         description: podcast.description,
         title: podcast.title,

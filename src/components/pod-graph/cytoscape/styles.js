@@ -50,7 +50,7 @@ export default function styles(cy) {
     'text-transform': 'uppercase',
     'text-wrap': 'none',
     'text-max-width': '75px',
-    'text-overflow-wrap': 'ellipsis',
+    // 'text-overflow-wrap': 'ellipsis',
     'padding-top': '16px',
     'padding-left': '16px',
     'padding-bottom': '16px',

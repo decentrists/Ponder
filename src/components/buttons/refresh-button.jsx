@@ -1,13 +1,19 @@
 import React, { useContext } from 'react';
 import { FaSync } from 'react-icons/fa';
-import { SubscriptionsContext } from '../../providers/subscriptions';
 import SpinButton from './spin-button';
+import { SubscriptionsContext } from '../../providers/subscriptions';
+import { ArweaveContext } from '../../providers/arweave';
 
 function RefreshButton() {
-  const { refresh, isRefreshing } = useContext(SubscriptionsContext);
+  const { isRefreshing, refresh } = useContext(SubscriptionsContext);
+  const { isSyncing } = useContext(ArweaveContext);
 
   return (
-    <SpinButton disabled={isRefreshing} onClick={refresh}>
+    <SpinButton
+      disabled={isRefreshing || isSyncing}
+      className={isRefreshing ? 'spinning' : ''}
+      onClick={() => refresh(false)}
+    >
       <FaSync />
     </SpinButton>
   );

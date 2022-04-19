@@ -29,6 +29,7 @@ function ToastProvider({ children }) {
   const [messages, setMessages] = useState([]);
 
   function dispatchToastMessage(text, options) {
+    console.debug(text);
     setMessages(prev => prev.concat({
       ...options,
       text,
@@ -48,7 +49,7 @@ function ToastProvider({ children }) {
           <li key={message.id}>
             <Toast
               autohide
-              delay={3000}
+              delay={10000}
               variant={message.variant || 'primary'}
               onClose={() => handleClose(message.id)}
             >

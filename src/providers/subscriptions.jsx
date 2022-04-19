@@ -2,8 +2,13 @@ import React, { createContext, useContext, useState } from 'react';
 import PropTypes from 'prop-types';
 import { ToastContext } from './toast';
 import useRerenderEffect from '../hooks/use-rerender-effect';
-import { getPodcast, getAllPodcasts } from '../client';
-import { unixTimestamp, podcastsWithDateObjects } from '../utils';
+import { getPodcast, refreshSubscriptions } from '../client';
+import {
+  unixTimestamp,
+  podcastsWithDateObjects,
+  hasMetadata,
+  concatMessages,
+} from '../utils';
 
 export const SubscriptionsContext = createContext();
 
@@ -12,66 +17,109 @@ function readCachedPodcasts() {
   return podcastsWithDateObjects(podcasts);
 }
 
+function readMetadataToSync() {
+  const podcasts = JSON.parse(localStorage.getItem('metadataToSync')) || [];
+  return podcastsWithDateObjects(podcasts);
+}
+
 function SubscriptionsProvider({ children }) {
   const toast = useContext(ToastContext);
   const [subscriptions, setSubscriptions] = useState(readCachedPodcasts());
+  const [metadataToSync, setMetadataToSync] = useState(readMetadataToSync());
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastRefreshTime, setLastRefreshTime] = useState(0);
-  // const [isSyncing, setIsSyncing] = useState(false);
 
   async function subscribe(subscribeUrl) {
     // TODO: subscribeUrl validation
     if (subscriptions.some(subscription => subscription.subscribeUrl === subscribeUrl)) {
       toast(`You are already subscribed to ${subscribeUrl}.`, { variant: 'danger' });
+      return true;
     }
-    else {
-      const newPodcast = await getPodcast(subscribeUrl);
-      setSubscriptions(prev => prev.concat(newPodcast));
+
+    const { errorMessage, newPodcastMetadata, newPodcastMetadataToSync } =
+      await getPodcast(subscribeUrl, metadataToSync);
+    if (hasMetadata(newPodcastMetadata)) {
+      toast(`Successfully subscribed to ${newPodcastMetadata.title}.`);
+
+      setMetadataToSync(prev => prev.filter(podcast => podcast.subscribeUrl !== subscribeUrl)
+        .concat(hasMetadata(newPodcastMetadataToSync) ? newPodcastMetadataToSync : []));
+      setSubscriptions(prev => prev.concat(newPodcastMetadata));
+
+      return true;
     }
+    if (errorMessage) toast(`${errorMessage}`, { variant: 'danger' });
+
+    return false; // TODO: don't clear text field if returns false
   }
 
   async function unsubscribe(subscribeUrl) {
+    // TODO: warn if subscribeUrl has pending metadataToSync
+    //       currently, any pending metadataToSync is left but does not survive a refresh
     if (subscriptions.every(subscription => subscription.subscribeUrl !== subscribeUrl)) {
       toast(`You are not subscribed to ${subscribeUrl}.`, { variant: 'danger' });
     }
     else {
-      setSubscriptions(prev => prev
-        .filter(subscription => subscription.subscribeUrl !== subscribeUrl));
+      setSubscriptions(prev => prev.filter(podcast => podcast.subscribeUrl !== subscribeUrl));
     }
   }
 
-  async function refresh() {
-    if (isRefreshing) return;
+  async function refresh(silent = false) {
+    if (isRefreshing) return [null, null];
 
     setIsRefreshing(true);
     try {
-      const newSubscriptions = await getAllPodcasts(subscriptions);
-      // TODO: merge (subscriptions, newSubscriptions)
-      setSubscriptions(podcastsWithDateObjects(newSubscriptions));
+      // TODO: T250 ArSync v1.2, include `ArweaveProvider.unconfirmedArSyncTxs.map(x => x.metadata)`
+      // in newSubscriptions and exclude it from newMetadataToSync
+      const { errorMessages, newSubscriptions, newMetadataToSync } =
+        await refreshSubscriptions(subscriptions, metadataToSync);
+
       setLastRefreshTime(unixTimestamp());
-      toast('Refresh Success!', { variant: 'success' });
-    } catch (ex) {
+      setSubscriptions(newSubscriptions);
+      setMetadataToSync(newMetadataToSync);
+      setIsRefreshing(false);
+
+      if (!silent) {
+        if (errorMessages.length) {
+          toast(`Refresh completed with some errors:\n${concatMessages(errorMessages)}`,
+            { variant: 'warning' });
+        }
+        else toast('Refresh successful.', { variant: 'success' });
+      }
+
+      return [newSubscriptions, newMetadataToSync];
+    }
+    catch (ex) {
       console.error(ex);
-      toast(`Failed to refresh subscriptions: ${ex}`, { variant: 'danger' });
-    } finally {
+      if (!silent) {
+        toast(`Failed to refresh subscriptions, please try again; ${ex}`, { variant: 'danger' });
+      }
+    }
+    finally {
       setIsRefreshing(false);
     }
+    return [null, null];
   }
 
   useRerenderEffect(() => {
+    console.debug('subscriptions have been updated to:', subscriptions);
     localStorage.setItem('subscriptions', JSON.stringify(subscriptions));
   }, [subscriptions]);
+
+  useRerenderEffect(() => {
+    console.debug('metadataToSync has been updated to:', metadataToSync);
+    localStorage.setItem('metadataToSync', JSON.stringify(metadataToSync));
+  }, [metadataToSync]);
 
   return (
     <SubscriptionsContext.Provider
       value={{
-        // isSyncing,
+        subscriptions,
         isRefreshing,
         lastRefreshTime,
         subscribe,
         unsubscribe,
         refresh,
-        subscriptions: podcastsWithDateObjects(subscriptions),
+        setMetadataToSync,
       }}
     >
       {children}

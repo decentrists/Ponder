@@ -89,6 +89,6 @@ function PodcastList({ subscriptions, unsubscribe }) {
 }
 PodcastList.propTypes = {
   subscriptions: PropTypes.arrayOf(PropTypes.shape(podcastPropType).isRequired).isRequired,
-  unsubscribe: PropTypes.arrayOf(PropTypes.shape(podcastPropType).isRequired).isRequired,
+  unsubscribe: PropTypes.func.isRequired,
 };
 export default PodcastList;

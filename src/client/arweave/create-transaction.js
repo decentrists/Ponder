@@ -4,25 +4,58 @@ import {
   unixTimestamp,
   toISOString,
   isEmpty,
+  hasMetadata,
   isValidDate,
   isValidInteger,
 } from '../../utils';
 
-async function sendTransaction(wallet, newMetadata, tags) {
-  const trx = await client.createTransaction({ data: JSON.stringify(newMetadata) }, wallet);
-  trx.addTag('Content-Type', 'application/json');
-  trx.addTag('Unix-Time', `${unixTimestamp()}`);
-  trx.addTag(toTag('version'), process.env.VERSION);
-  tags.forEach(([k, v]) => {
-    trx.addTag(toTag(k), `${v}`);
-  });
-
-  await client.transactions.sign(trx, wallet);
-  return client.transactions.post(trx);
+async function newTransaction(wallet, newMetadata, tags = []) {
+  try {
+    const trx = await client.createTransaction({ data: JSON.stringify(newMetadata) }, wallet);
+    trx.addTag('Content-Type', 'application/json');
+    trx.addTag('Unix-Time', `${unixTimestamp()}`);
+    trx.addTag(toTag('version'), process.env.VERSION);
+    tags.forEach(([k, v]) => {
+      trx.addTag(toTag(k), `${v}`);
+    });
+    return trx;
+  }
+  catch (error) {
+    console.error(error);
+    return new Error('Creating transaction failed: please try reloading your wallet.');
+  }
 }
 
-export async function postPodcastMetadata(wallet, newMetadata, cachedMetadata = {}) {
+export async function signAndPostTransaction(trx, wallet) {
+  let postResponse;
+  try {
+    await client.transactions.sign(trx, wallet); // has no return value
+    postResponse = await client.transactions.post(trx);
+  }
+  catch (error) {
+    console.error(error);
+    if (!postResponse) {
+      return new Error('Signing transaction failed: please try reloading your wallet.');
+    }
+    return new Error('Posting transaction failed: please try reloading your wallet.');
+  }
+
+  if (!isEmpty(postResponse.data.error)) {
+    return new Error(`${postResponse.data.error.code}. Posting transaction failed: ` +
+      `${postResponse.data.error.msg}`);
+  }
+  return trx;
+}
+
+/**
+ * @param {Object} wallet
+ * @param {Object} newMetadata Assumed to already be a diff vs `cachedMetadata`
+ * @param {Object} cachedMetadata
+ * @returns {Object} an Arweave Transaction or an Error object
+ */
+export async function newMetadataTransaction(wallet, newMetadata, cachedMetadata = {}) {
   const optionalPodcastTags = [
+    // TODO: expand this list to be as complete as possible.
     // imgUrl and imageTitle are optional metadata as well, but these do not belong in the tags,
     // as they do not have to be GraphQL-searchable.
     'language',
@@ -34,7 +67,7 @@ export async function postPodcastMetadata(wallet, newMetadata, cachedMetadata = 
   ];
   mandatoryPodcastTags.forEach(([name, value]) => {
     if (!value) {
-      throw new Error('Could not upload metadata for ' +
+      return new Error('Could not upload metadata for ' +
         `${mandatoryPodcastTags.title || mandatoryPodcastTags.subscribeUrl}: ` +
         `${name} is missing`);
     }
@@ -51,7 +84,7 @@ export async function postPodcastMetadata(wallet, newMetadata, cachedMetadata = 
 
   const episodeBatchTags = episodeTags(newMetadata.episodes, cachedMetadata);
 
-  return sendTransaction(wallet, newMetadata, podcastTags.concat(episodeBatchTags));
+  return newTransaction(wallet, newMetadata, podcastTags.concat(episodeBatchTags));
 }
 
 /**
@@ -82,13 +115,13 @@ function episodeTags(newEpisodes, cachedMetadata) {
  */
 function getMetadataBatchNumber(cachedMetadata, firstNewEpisodeDate, lastNewEpisodeDate) {
   if (!isValidDate(firstNewEpisodeDate) || !isValidDate(lastNewEpisodeDate)) {
-    throw new Error(`Could not upload metadata for ${cachedMetadata.title}: ` +
-                    'Invalid date found for one of its episodes.');
+    return new Error(`Could not upload metadata for ${cachedMetadata.title}: ` +
+                     'Invalid date found for one of its episodes.');
   }
   const cachedBatchNumber = Number.parseInt(cachedMetadata.metadataBatch, 10);
 
   /* First metadata batch for this podcast */
-  if (isEmpty(cachedMetadata) || !isValidInteger(cachedBatchNumber)) {
+  if (!hasMetadata(cachedMetadata) || !isValidInteger(cachedBatchNumber)) {
     return 0;
   }
 

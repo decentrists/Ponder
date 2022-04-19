@@ -2,10 +2,28 @@ import {
   mergeEpisodeBatches,
   mergeBatchMetadata,
   mergeBatchTags,
+  rightDiff,
 } from '../diff-merge-logic';
+
+const cloneDeep = require('lodash.clonedeep');
 
 const originalTagPrefix = process.env.TAG_PREFIX;
 const testTag = 'testPonder';
+
+/* Array of deep cloned objects, which should be set in beforeAll() through saveDeepClones(),
+ * if assertUnmutatedParams() is called in afterEach()
+ * NOTE: this is not a LUT, so do not nest saveDeepClones() */
+let deepClonedParams;
+
+function assertUnmutatedParams(params) {
+  params.forEach((param, index) => {
+    expect(param).toEqual(deepClonedParams[index]);
+  });
+}
+
+function saveDeepClones(params) {
+  deepClonedParams = params.map(cloneDeep);
+}
 
 beforeAll(() => {
   Object.assign(process.env, { TAG_PREFIX: testTag });
@@ -158,8 +176,23 @@ describe('mergeEpisodeBatches', () => {
     });
 
     describe('When given 1 older batch + 1 newer batch + 1 batch with updated metadata', () => {
+      const batches = [{}, oldEpisodes, newEpisodes, updatedEpisodes];
+
+      beforeAll(() => {
+        saveDeepClones([batches]);
+      });
+
+      afterEach(() => {
+        assertUnmutatedParams([batches]);
+      });
+
       it('returns a sorted array of merged episodes', () => {
-        assertMergedResult(mergeEpisodeBatches([oldEpisodes, newEpisodes, updatedEpisodes]));
+        assertMergedResult(mergeEpisodeBatches(batches));
+      });
+
+      it('does not mutate the batch list', () => {
+        assertMergedResult(mergeEpisodeBatches(batches));
+        assertMergedResult(mergeEpisodeBatches(batches));
       });
     });
 
@@ -201,6 +234,14 @@ describe('mergeBatchMetadata', () => {
     },
   ];
 
+  beforeAll(() => {
+    saveDeepClones([metadataBatches]);
+  });
+
+  afterEach(() => {
+    assertUnmutatedParams([metadataBatches]);
+  });
+
   describe('When given 1 empty batch of podcast metadata', () => {
     it('returns an empty object', () => {
       expect(mergeBatchMetadata([{}])).toStrictEqual({});
@@ -210,6 +251,15 @@ describe('mergeBatchMetadata', () => {
   describe('When given 1 batch of podcast metadata', () => {
     it('returns the same batch', () => {
       expect(mergeBatchMetadata([metadataBatches[0]])).toStrictEqual(metadataBatches[0]);
+    });
+  });
+
+  describe('When given 1 batch of podcast metadata and 1 or 2 empty batches', () => {
+    it('returns the non-empty batch', () => {
+      const validBatch = metadataBatches[0];
+      expect(mergeBatchMetadata([validBatch, {}])).toStrictEqual(validBatch);
+      expect(mergeBatchMetadata([{}, validBatch, {}], true)).toStrictEqual(validBatch);
+      expect(mergeBatchMetadata([{}, validBatch, {}], false)).toStrictEqual(validBatch);
     });
   });
 
@@ -235,6 +285,13 @@ describe('mergeBatchMetadata', () => {
         unknownField: 'unknownFieldValue',
         language: 'en-us',
         episodes: [],
+      });
+    });
+
+    describe('When parameter applyMergeSpecialTags = true', () => {
+      xit('categories of the latest batch holds, unless they are empty', () => {
+        // TODO: test merging of categories
+        // expect(mergeBatchMetadata(metadataBatches, true)).toStrictEqual({});
       });
     });
   });
@@ -271,6 +328,14 @@ describe('mergeBatchTags', () => {
       lastEpisodeDate: newestDate,
     },
   ];
+
+  beforeAll(() => {
+    saveDeepClones([tagBatches]);
+  });
+
+  afterEach(() => {
+    assertUnmutatedParams([tagBatches]);
+  });
 
   describe('When given 1 empty batch of tags', () => {
     it('returns an empty object', () => {
@@ -329,6 +394,98 @@ describe('mergeBatchTags', () => {
         keywords: ['key0', 'key1'],
         firstEpisodeDate: oldestDate,
         lastEpisodeDate: newestDate,
+      });
+    });
+  });
+});
+
+// TODO: add more tests
+describe('rightDiff', () => {
+  const ep4date = new Date('2021-11-10T15:06:18.000Z');
+  const ep3date = new Date('2021-11-09T15:06:18.000Z');
+  const ep2date = new Date('2021-11-08T05:00:00.000Z');
+  const ep1date = new Date('2021-11-08T04:00:00.000Z');
+  const oldEpisodes = [
+    {
+      title: 'Ep3',
+      url: 'https://server.dummy/ep3',
+      publishedAt: ep3date,
+      categories: [],
+      keywords: ['key3'],
+    },
+    {
+      title: 'Ep2',
+      url: 'https://server.dummy/ep2',
+      publishedAt: ep2date,
+      categories: [],
+      keywords: ['key2'],
+    },
+    {
+      title: 'Ep1',
+      url: 'https://server.dummy/ep1',
+      publishedAt: ep1date,
+      categories: ['cat1'],
+      keywords: [],
+    },
+  ];
+  const newEpisodes = [
+    {
+      title: 'Ep2',
+      url: 'https://server.dummy/ep2',
+      publishedAt: ep2date,
+      categories: ['newcat2'],
+      keywords: ['key2'],
+    },
+    {
+      title: 'Ep1',
+      url: 'https://server.dummy/ep1',
+      publishedAt: ep1date,
+      categories: ['cat1'],
+      keywords: [],
+    },
+    {
+      title: 'Ep4',
+      url: 'https://server.dummy/ep4',
+      publishedAt: ep4date,
+      categories: ['cat4'],
+      keywords: [],
+    },
+  ];
+  const oldMetadata = {
+    description: 'description',
+    subscribeUrl: 'https://server.dummy/feed',
+    imageUrl: 'https://imgurl/img.png?ver=0',
+    imageTitle: 'imageTitle',
+    unknownField: 'unknownFieldValue',
+    episodes: oldEpisodes,
+  };
+  const newMetadata = {
+    description: 'description',
+    subscribeUrl: 'https://server.dummy/feed',
+    imageUrl: 'https://imgurl/img.png?ver=1',
+    imageTitle: 'imageTitle',
+    episodes: newEpisodes,
+  };
+
+  describe('When given 2 different sets of podcast metadata', () => {
+    it('returns the right diff where primary key subscribeUrl persists for the podcast diff ' +
+       'and publishedAt for each episode diff', () => {
+      expect(rightDiff(oldMetadata, newMetadata)).toStrictEqual({
+        imageUrl: 'https://imgurl/img.png?ver=1',
+        episodes: [
+          {
+            title: 'Ep4',
+            url: 'https://server.dummy/ep4',
+            publishedAt: ep4date,
+            categories: ['cat4'],
+            keywords: [],
+          },
+          {
+            categories: ['newcat2'],
+            publishedAt: ep2date,
+          },
+        ],
+        subscribeUrl: 'https://server.dummy/feed',
       });
     });
   });

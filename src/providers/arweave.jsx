@@ -3,23 +3,32 @@ import React, {
 } from 'react';
 import PropTypes from 'prop-types';
 import { ToastContext } from './toast';
-// import { SubscriptionsContext } from './subscriptions';
+import useRerenderEffect from '../hooks/use-rerender-effect';
+import { SubscriptionsContext } from './subscriptions';
 import * as arweave from '../client/arweave';
-// import * as arsync from '../client/arweave/sync';
-import { valuesEqual } from '../utils';
+import * as arsync from '../client/arweave/sync';
+import { isEmpty, valuesEqual, concatMessages } from '../utils';
 
 export const ArweaveContext = createContext();
 
 function ArweaveProvider({ children }) {
-  // const { subscriptions } = useContext(SubscriptionsContext);
+  const { refresh, setMetadataToSync } = useContext(SubscriptionsContext);
   const toast = useContext(ToastContext);
   const [wallet, setWallet] = useState(null);
   const [walletAddress, setWalletAddress] = useState('');
   const [isSyncing, setIsSyncing] = useState(false);
   const loadingWallet = useRef(false);
 
-  /* TODO: clear value within 10mins (?) of setting, as the pendingTxs may have become stale. */
-  const pendingTxs = useRef([]);
+  // TODO: clear value within 10mins (?) of setting, as the pendingTxsToSync may have become stale
+  const [pendingArSyncTxs, setPendingArSyncTxs] = useState([]);
+
+  // TODO: Determine transaction status after pendingArSyncTxs have been posted and signed.
+  // https://github.com/ArweaveTeam/arweave-js#get-a-transaction-status
+  // const [unconfirmedArSyncTxs, setUnconfirmedArSyncTxs] = useState([]);
+
+  function hasPendingTxs() {
+    return !!pendingArSyncTxs.length;
+  }
 
   /**
    * Loads the state variables `wallet` and `walletAddress` for the given `newWallet`.
@@ -31,71 +40,108 @@ function ArweaveProvider({ children }) {
       loadingWallet.current = true;
 
       const userOrDevWallet = newWallet || await arweave.createNewDevWallet();
-      if (!valuesEqual(wallet, newWallet)) {
+      if (!valuesEqual(wallet, userOrDevWallet)) {
         setWalletAddress(await arweave.getWalletAddress(userOrDevWallet));
         setWallet(userOrDevWallet);
+        window.arWallet = userOrDevWallet;
       }
 
       loadingWallet.current = false;
     }
   }
 
-  async function sync() {
-    if (isSyncing) return;
+  async function prepareSync() {
+    if (isSyncing || hasPendingTxs()) return;
 
     setIsSyncing(true);
-    try {
-      const podcastsToSync = JSON.parse(localStorage.getItem('podcastsToSync'));
-      console.log('podcastsToBeSynced', podcastsToSync);
 
-      if (!podcastsToSync.length) toast('There are no podcasts to sync.');
-      else {
-        // TODO: this is for debugging in ArSync v0.5-1.0
-        console.log('walletAddress', walletAddress);
-        // await Promise.all(podcastsToSync.map(podcast => postPodcastMetadata(wallet, podcast)));
-      }
+    const [newSubscriptions, newMetadataToSync] = await refresh(true);
+
+    if (isEmpty(newSubscriptions)) {
+      // TODO: make toast dynamic based on activeSyncTypes
+      return cancelSync('Failed to refresh subscriptions.');
+    }
+    if (isEmpty(newMetadataToSync)) {
+      // TODO: make toast dynamic based on activeSyncTypes
+      return cancelSync('Subscribed podcasts are already up-to-date.', 'info');
+    }
+
+    let result;
+    try {
+      result = await arsync.initArSyncTxs(newSubscriptions, newMetadataToSync, wallet);
     }
     catch (ex) {
       console.error(ex);
-      toast('Failed to sync with Arweave.', { variant: 'danger' });
+      return cancelSync(`Failed to sync with Arweave: ${ex}`);
     }
-    finally {
-      setIsSyncing(false);
+    const { txs, failedTxs } = result;
+
+    if (isEmpty(txs) && isEmpty(failedTxs)) {
+      return cancelSync('Subscribed podcasts are already up-to-date.', 'info');
     }
 
-    // setIsSyncing(true);
-    // try {
-    //   const podcastsToSync = await getNewEpisodes(subscriptions);
-    //   podcastsToSync
-    //   await Promise.all(podcastsWithNewEpisodes.map(podcast => postPodcastMetadata()));
-    //   toast('Sync Complete', { variant: 'success' });
-    // } catch (ex) {
-    //   console.error(ex);
-    //   toast('Failed to sync to Arweave.', { variant: 'danger' });
-    // } finally {
-    //   setIsSyncing(true);
-    // }
+    // TODO: pending T252, add txs to transaction cache
+    // TODO: check that each txs.resultObj is a valid Arweave Transaction object
+    setPendingArSyncTxs(txs);
   }
 
-  // async function initSyncTxs() {
-  //   const result = [];
-  //   const metadataToSync = await arsync.getMetadataToSync();
-  //   result.push();
-  //   pendingTxs.current = result.flat();
-  //   console.log('pendingTxs.current', pendingTxs.current);
-  // }
+  async function cancelSync(toastMessage = '', variant = 'danger') {
+    setIsSyncing(false);
 
-  // async function initMetadataToSync() {
+    let firstMessage = toastMessage;
+    if (firstMessage) {
+      if (variant === 'danger') firstMessage += '\nPlease try to sync again.';
+      toast(firstMessage, { variant });
+    }
+    if (hasPendingTxs()) {
+      toast('Pending transactions have been cleared, but their data is still cached.',
+        { variant: 'warning' });
+      setPendingArSyncTxs([]);
+    }
+  }
 
-  // }
+  async function startSync() {
+    if (!hasPendingTxs()) return cancelSync();
 
-  async function hasPendingTxs() {
-    return !!pendingTxs.length;
+    let result;
+    try {
+      result = await arsync.startSync(pendingArSyncTxs, wallet);
+    }
+    catch (ex) {
+      console.error(ex);
+      return cancelSync(`Failed to sync with Arweave: ${ex}`);
+    }
+    const { txs, failedTxs } = result;
+
+    if (!isEmpty(txs)) {
+      // TODO: conditional plural 'Transactions'
+      const successMessage = concatMessages(txs.map(elem => elem.title));
+      toast(`Transaction(s) successfully posted to Arweave with metadata for:\n${successMessage}`,
+        { variant: 'success' });
+    }
+    if (!isEmpty(failedTxs)) {
+      const failMessage =
+        concatMessages(failedTxs.map(elem => `${elem.title}, reason:\n${elem.resultObj}\n`));
+      toast(`Transaction(s) failed to post to Arweave with metadata for:\n${failMessage}`,
+        { variant: 'danger' });
+    }
+    setMetadataToSync(arsync.formatNewMetadataToSync(failedTxs));
+    // setUnconfirmedArSyncTxs(prev => prev.concat(txs));
   }
 
   useEffect(() => {
     loadNewWallet(wallet);
   }, [wallet]);
+
+  useRerenderEffect(() => {
+    // Temporary wrapper for startSync(). TODO: remove in ArSync v1.2+, when intermediate user
+    // confirmation of `pendingArSyncTxs` is implemented.
+    const _startSync = async () => {
+      await startSync();
+    };
+    // TODO: , ask for user approval of `pendingArSyncTxs` costs first
+    _startSync();
+  }, [pendingArSyncTxs]);
 
   return (
     <ArweaveContext.Provider
@@ -104,16 +150,8 @@ function ArweaveProvider({ children }) {
         wallet,
         walletAddress,
         loadNewWallet,
-        sync,
-        // initSyncTxs,
-        // initMetadataToSync,
+        prepareSync,
         hasPendingTxs,
-
-        // async getPodcastFeed(rssUrl) {
-        //   console.log(`ArweaveProvider.getPodcastFeed(${rssUrl})`);
-        //   const result = arweave.getPodcastFeed(rssUrl);
-        //   return result; // TODO
-        // },
       }}
     >
       {children}

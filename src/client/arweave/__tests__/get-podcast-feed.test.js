@@ -198,7 +198,8 @@ describe('Error handling', () => {
     api.post.mockRejectedValue(mockError);
     transactions.getData.mockResolvedValue(getDataJson(0, 4));
 
-    await expect(getPodcastFeed('https://server.dummy/rss')).resolves.toEqual({});
+    await expect(getPodcastFeed('https://server.dummy/rss')).resolves
+      .toMatchObject({ errorMessage: expect.stringMatching(/GraphQL/) });
 
     expect(api.post).toHaveBeenCalledTimes(1);
     expect(transactions.getData).not.toHaveBeenCalled();
