@@ -1,5 +1,5 @@
 module.exports = {
-  extends: ['airbnb-typescript', 'react-app', 'react-app/jest'],
+  extends: ['airbnb-typescript', 'react-app'],
   env: {
     browser: true,
   },
@@ -14,7 +14,7 @@ module.exports = {
       },
     }],
   },
-  'parser': '@typescript-eslint/parser',
+  parser: '@typescript-eslint/parser',
   parserOptions: {
     project: './tsconfig.json',
     createDefaultProgram: true,
@@ -35,6 +35,18 @@ module.exports = {
       rules: {
         strict: [2, 'global'],
         'import/no-extraneous-dependencies': [2, { devDependencies: true }],
+      },
+    },
+    {
+      files: [
+        '**/*.test.js',
+        './tests/**/*',
+        '**/__mocks__/**/*.js',
+        'jest.setup.js',
+      ],
+      extends: ['react-app/jest'],
+      env: {
+        jest: true,
       },
     },
     {

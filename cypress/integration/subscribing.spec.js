@@ -24,5 +24,5 @@ it('Can subscribe via RSS URL and changes are reflected in pod graph', () => {
 it('Should record RSS response in localStorage', () => {
   console.log(window.localStorage.getItem('subscriptions'));
   const podcasts = JSON.parse(window.localStorage.getItem('subscriptions'));
-  expect(podcasts).toEqual([seeds.podcasts[0]]);
+  expect(podcasts).to.deep.equal([seeds.podcasts[0]]);
 });
