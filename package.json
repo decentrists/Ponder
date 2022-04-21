@@ -15,7 +15,7 @@
     "seed:some": "node ./seeders/some-episodes",
     "eject": "react-scripts eject",
     "test": "npm run jest && npm run cy:run",
-    "jest": "react-scripts test -- --config jest.config.js",
+    "jest": "jest -i",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "cy:run": "npm run cy -- run",
     "cy:open": "npm run cy -- open",
@@ -72,7 +72,7 @@
     "eslint-config-airbnb-typescript": "^17.0.0",
     "eslint-plugin-cypress": "^2.12.1",
     "husky": "^7.0.4",
-    "jest-date-mock": "^1.0.8",
+    "jest": "^27.5.1",
     "regenerator-runtime": "^0.13.9"
   },
   "browserslist": {

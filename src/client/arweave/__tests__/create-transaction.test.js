@@ -1,4 +1,3 @@
-import { advanceTo } from 'jest-date-mock';
 import { postPodcastMetadata } from '../create-transaction';
 // eslint-disable-next-line import/named
 import { addTag, createTransaction } from '../client';
@@ -85,15 +84,13 @@ beforeAll(() => {
     REACT_APP_VERSION: 'testVersion',
     REACT_APP_TAG_PREFIX: 'abc',
   });
-});
-
-beforeEach(() => {
-  advanceTo(new Date('2019-11-05'));
+  jest.useFakeTimers().setSystemTime(new Date('2019-11-05'));
 });
 
 afterAll(() => {
   process.env.REACT_APP_VERSION = originalVersion;
   process.env.REACT_APP_TAG_PREFIX = originalTagPrefix;
+  jest.useRealTimers();
 });
 
 describe('postPodcastMetadata', () => {

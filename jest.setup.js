@@ -1,5 +1,5 @@
 import 'regenerator-runtime/runtime';
-import { clear } from 'jest-date-mock';
+import '@testing-library/jest-dom';
 
 global.console = {
   ...console,
@@ -12,6 +12,5 @@ global.console = {
 };
 
 afterEach(() => {
-  clear();
   jest.clearAllMocks();
 });
