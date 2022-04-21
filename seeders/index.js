@@ -1,3 +1,4 @@
+require('dotenv').config();
 const Arweave = require('arweave');
 
 const TAG_MAP = {
