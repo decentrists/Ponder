@@ -65,13 +65,19 @@ export async function newMetadataTransaction(wallet, newMetadata, cachedMetadata
     ['title', newMetadata.title || cachedMetadata.title],
     ['description', newMetadata.description || cachedMetadata.description],
   ];
-  mandatoryPodcastTags.forEach(([name, value]) => {
-    if (!value) {
-      return new Error('Could not upload metadata for ' +
-        `${mandatoryPodcastTags.title || mandatoryPodcastTags.subscribeUrl}: ` +
-        `${name} is missing`);
-    }
-  });
+
+  try {
+    mandatoryPodcastTags.forEach(([name, value]) => {
+      if (!value) {
+        throw new Error('Could not upload metadata for ' +
+          `${mandatoryPodcastTags.title || mandatoryPodcastTags.subscribeUrl}: ` +
+          `${name} is missing`);
+      }
+    });
+  }
+  catch (ex) {
+    return ex;
+  }
 
   const podcastTags = [...mandatoryPodcastTags];
   optionalPodcastTags.forEach(tagName => {
@@ -82,7 +88,13 @@ export async function newMetadataTransaction(wallet, newMetadata, cachedMetadata
   (newMetadata.categories || []).forEach(cat => podcastTags.push(['category', cat]));
   (newMetadata.keywords || []).forEach(key => podcastTags.push(['keyword', key]));
 
-  const episodeBatchTags = episodeTags(newMetadata.episodes, cachedMetadata);
+  let episodeBatchTags;
+  try {
+    episodeBatchTags = episodeTags(newMetadata.episodes, cachedMetadata);
+  }
+  catch (ex) {
+    return ex;
+  }
 
   return newTransaction(wallet, newMetadata, podcastTags.concat(episodeBatchTags));
 }
@@ -115,7 +127,7 @@ function episodeTags(newEpisodes, cachedMetadata) {
  */
 function getMetadataBatchNumber(cachedMetadata, firstNewEpisodeDate, lastNewEpisodeDate) {
   if (!isValidDate(firstNewEpisodeDate) || !isValidDate(lastNewEpisodeDate)) {
-    return new Error(`Could not upload metadata for ${cachedMetadata.title}: ` +
+    throw new Error(`Could not upload metadata for ${cachedMetadata.title}: ` +
                      'Invalid date found for one of its episodes.');
   }
   const cachedBatchNumber = Number.parseInt(cachedMetadata.metadataBatch, 10);

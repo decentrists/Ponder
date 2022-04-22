@@ -6,13 +6,18 @@ export async function initArSyncTxs(subscriptions, metadataToSync, wallet) {
   const failedTxs = [];
 
   await Promise.all(metadataToSync.map(async podcastToSync => {
-    try {
-      if (hasMetadata(podcastToSync)) {
-        const { subscribeUrl } = podcastToSync;
-        const cachedMetadata = findMetadata(subscribeUrl, subscriptions);
-        const newTxResult =
-          await arweave.newMetadataTransaction(wallet, podcastToSync, cachedMetadata);
-
+    if (hasMetadata(podcastToSync)) {
+      const { subscribeUrl } = podcastToSync;
+      const cachedMetadata = findMetadata(subscribeUrl, subscriptions);
+      let newTxResult;
+      try {
+        newTxResult = await arweave.newMetadataTransaction(wallet, podcastToSync, cachedMetadata);
+      }
+      catch (ex) {
+        console.warn(`${ex}`);
+        newTxResult = ex;
+      }
+      finally {
         (newTxResult instanceof Error ? failedTxs : txs).push({
           subscribeUrl,
           title: cachedMetadata.title,
@@ -20,10 +25,6 @@ export async function initArSyncTxs(subscriptions, metadataToSync, wallet) {
           metadata: podcastToSync,
         });
       }
-    }
-    catch (ex) {
-      console.warn(`${ex}`);
-      failedTxs.push({ subscribeUrl: podcastToSync.subscribeUrl, resultObj: ex });
     }
   }));
   console.debug('initArSyncTxs txs=', txs);

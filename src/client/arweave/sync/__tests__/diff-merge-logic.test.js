@@ -417,7 +417,6 @@ describe('rightDiff', () => {
       title: 'Ep2',
       url: 'https://server.dummy/ep2',
       publishedAt: ep2date,
-      categories: [],
       keywords: ['key2'],
     },
     {
@@ -425,7 +424,6 @@ describe('rightDiff', () => {
       url: 'https://server.dummy/ep1',
       publishedAt: ep1date,
       categories: ['cat1'],
-      keywords: [],
     },
   ];
   const newEpisodes = [

@@ -178,6 +178,8 @@ export function rightDiff(oldMetadata = {}, newMetadata = {}, primaryKey = 'subs
 
   const result = {};
   Object.entries(newMetadata).forEach(([prop, value]) => {
+    const oldValue = oldMetadata[prop];
+
     switch (prop) {
       case 'firstEpisodeDate':
       case 'lastEpisodeDate':
@@ -189,16 +191,13 @@ export function rightDiff(oldMetadata = {}, newMetadata = {}, primaryKey = 'subs
         break;
       default:
         if (Array.isArray(value)) {
-          const oldValue = Array.isArray(oldMetadata[prop]) ? oldMetadata[prop] : [];
-          const diff = arrayDiff(oldValue, value);
+          const diff = arrayDiff(oldValue || [], value);
           if (diff.length) result[prop] = diff;
         }
         else if (isValidDate(value)) {
-          if (!datesEqual(oldMetadata[prop], value)) result[prop] = value;
+          if (!datesEqual(value, oldValue)) result[prop] = value;
         }
-        else if (typeof value === typeof oldMetadata[prop]) {
-          if (value !== oldMetadata[prop]) result[prop] = value;
-        }
+        else if (value !== oldValue) result[prop] = value;
     }
   });
 
