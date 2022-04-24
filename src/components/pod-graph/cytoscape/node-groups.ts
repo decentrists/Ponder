@@ -1,3 +1,5 @@
+import { Core } from 'cytoscape';
+
 export default function applyNodeGroups(cy) {
   initializeZoomExtrema(cy);
   fitGraph(cy);
@@ -6,7 +8,7 @@ export default function applyNodeGroups(cy) {
 function fitGraph(cy) {
   return cy.fit();
 }
-function initializeZoomExtrema(cy) {
+function initializeZoomExtrema(cy: Core) {
   // find a good MAXIMUM_ZOOM_LEVEL and DEFAULT_LAYOUT_ZOOM_LEVEL
   const DEFAULT_LAYOUT_ZOOM_LEVEL = 0.5;
   const MAXIMUM_ZOOM_LEVEL = 3;
