@@ -1,5 +1,5 @@
 import React, {
-  createContext, useState, useContext, useRef, useEffect,
+  createContext, useState, useContext, useRef, useEffect, useCallback,
 } from 'react';
 import PropTypes from 'prop-types';
 import { ToastContext } from './toast';
@@ -35,7 +35,7 @@ function ArweaveProvider({ children }) {
    * If !newWallet, a new developer wallet is created and some AR tokens are minted.
    * @param {(Object|null)} newWallet
    */
-  async function loadNewWallet(newWallet) {
+  const loadNewWallet = useCallback(async (newWallet) => {
     if (!loadingWallet.current) {
       loadingWallet.current = true;
 
@@ -48,7 +48,7 @@ function ArweaveProvider({ children }) {
 
       loadingWallet.current = false;
     }
-  }
+  }, [wallet]);
 
   async function prepareSync() {
     if (isSyncing || hasPendingTxs()) return;
@@ -131,7 +131,7 @@ function ArweaveProvider({ children }) {
 
   useEffect(() => {
     loadNewWallet(wallet);
-  }, [wallet]);
+  }, [wallet, loadNewWallet]);
 
   useRerenderEffect(() => {
     // Temporary wrapper for startSync(). TODO: remove in ArSync v1.2+, when intermediate user
