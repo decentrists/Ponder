@@ -1,14 +1,14 @@
 import { toTag, fromTag } from '../utils';
 
-const originalTagPrefix = process.env.TAG_PREFIX;
+const originalTagPrefix = process.env.REACT_APP_TAG_PREFIX;
 const testTag = 'testPonder';
 
 beforeAll(() => {
-  Object.assign(process.env, { TAG_PREFIX: testTag });
+  Object.assign(process.env, { REACT_APP_TAG_PREFIX: testTag });
 });
 
 afterAll(() => {
-  process.env.TAG_PREFIX = originalTagPrefix;
+  process.env.REACT_APP_TAG_PREFIX = originalTagPrefix;
 });
 
 describe('toTag, fromTag', () => {
@@ -22,17 +22,17 @@ describe('toTag, fromTag', () => {
 
   xdescribe('sanity checks', () => {
     afterEach(() => {
-      Object.assign(process.env, { TAG_PREFIX: testTag });
+      Object.assign(process.env, { REACT_APP_TAG_PREFIX: testTag });
     });
 
-    it('raises an error if the TAG_PREFIX is empty', () => {
-      Object.assign(process.env, { TAG_PREFIX: '' });
+    it('raises an error if the REACT_APP_TAG_PREFIX is empty', () => {
+      Object.assign(process.env, { REACT_APP_TAG_PREFIX: '' });
       expect(() => toTag('foo')).toThrow();
       expect(() => fromTag('foo')).toThrow();
     });
 
-    it('raises an error if the TAG_PREFIX is undefined', () => {
-      Object.assign(process.env, { TAG_PREFIX: undefined });
+    it('raises an error if the REACT_APP_TAG_PREFIX is undefined', () => {
+      Object.assign(process.env, { REACT_APP_TAG_PREFIX: undefined });
       expect(() => toTag('foo')).toThrow();
       expect(() => fromTag('undefined-foo')).toThrow();
     });

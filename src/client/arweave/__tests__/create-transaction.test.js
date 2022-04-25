@@ -1,4 +1,3 @@
-import { advanceTo } from 'jest-date-mock';
 import { newMetadataTransaction } from '../create-transaction';
 // eslint-disable-next-line import/named
 import { addTag, createTransaction } from '../client';
@@ -79,22 +78,20 @@ function newMetadata(additionalFields = {}) {
 
 const stubbedWallet = {};
 
-const originalVersion = process.env.VERSION;
-const originalTagPrefix = process.env.TAG_PREFIX;
+const originalVersion = process.env.REACT_APP_VERSION;
+const originalTagPrefix = process.env.REACT_APP_TAG_PREFIX;
 beforeAll(() => {
   Object.assign(process.env, {
-    VERSION: 'testVersion',
-    TAG_PREFIX: 'abc',
+    REACT_APP_VERSION: 'testVersion',
+    REACT_APP_TAG_PREFIX: 'abc',
   });
-});
-
-beforeEach(() => {
-  advanceTo(new Date('2019-11-05'));
+  jest.useFakeTimers().setSystemTime(new Date('2019-11-05'));
 });
 
 afterAll(() => {
-  process.env.VERSION = originalVersion;
-  process.env.TAG_PREFIX = originalTagPrefix;
+  process.env.REACT_APP_VERSION = originalVersion;
+  process.env.REACT_APP_TAG_PREFIX = originalTagPrefix;
+  jest.useRealTimers();
 });
 
 describe('newMetadataTransaction', () => {

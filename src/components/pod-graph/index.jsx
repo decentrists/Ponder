@@ -26,7 +26,7 @@ const PodGraphInnerContainer = styled.div`
 
 function PodGraph({ subscriptions }) {
   const el = useRef();
-  // eslint-disable-next-line no-unused-vars
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [cy, setCy] = useState(null);
   const [selectedPodcastId, setSelectedPodcastId] = useState(null);
   const selectedPodcast = subscriptions

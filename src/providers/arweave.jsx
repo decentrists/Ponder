@@ -136,11 +136,11 @@ function ArweaveProvider({ children }) {
   useRerenderEffect(() => {
     // Temporary wrapper for startSync(). TODO: remove in ArSync v1.2+, when intermediate user
     // confirmation of `pendingArSyncTxs` is implemented.
-    const _startSync = async () => {
+    const startSyncIfPending = async () => {
       await startSync();
     };
     // TODO: , ask for user approval of `pendingArSyncTxs` costs first
-    _startSync();
+    startSyncIfPending();
   }, [pendingArSyncTxs]);
 
   return (

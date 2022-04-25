@@ -7,7 +7,7 @@ import {
 
 const cloneDeep = require('lodash.clonedeep');
 
-const originalTagPrefix = process.env.TAG_PREFIX;
+const originalTagPrefix = process.env.REACT_APP_TAG_PREFIX;
 const testTag = 'testPonder';
 
 /* Array of deep cloned objects, which should be set in beforeAll() through saveDeepClones(),
@@ -26,11 +26,11 @@ function saveDeepClones(params) {
 }
 
 beforeAll(() => {
-  Object.assign(process.env, { TAG_PREFIX: testTag });
+  Object.assign(process.env, { REACT_APP_TAG_PREFIX: testTag });
 });
 
 afterAll(() => {
-  process.env.TAG_PREFIX = originalTagPrefix;
+  process.env.REACT_APP_TAG_PREFIX = originalTagPrefix;
 });
 
 describe('mergeEpisodeBatches', () => {

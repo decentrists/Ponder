@@ -20,7 +20,7 @@ export const findAllDisjointGraphs = (nodes, disjointGraphs = []) => {
   const graph = [firstUnvisitedNode];
   let relatedPodcast;
   do {
-    // eslint-disable-next-line no-loop-func
+    // eslint-disable-next-line @typescript-eslint/no-loop-func
     relatedPodcast = nodes.find(item => item.visited !== true
         && haveSharedElements(keywordsAndCategoriesInCommon, item.keywordsAndCategories));
     if (!relatedPodcast) break;
