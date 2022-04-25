@@ -117,6 +117,7 @@ export function omitEmptyMetadata(metadata = {}) {
   Object.entries(metadata).forEach(([prop, value]) => {
     let newValue = value;
     if (Array.isArray(newValue)) newValue = newValue.filter(elem => !isValueless(elem));
+
     if (!isValueless(newValue)) result[prop] = newValue;
   });
 

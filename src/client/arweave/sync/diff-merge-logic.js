@@ -5,8 +5,29 @@ import {
   datesEqual,
   mergeArrays,
   hasMetadata,
+  isValueless,
   omitEmptyMetadata,
 } from '../../../utils';
+
+/**
+ *
+ * @param {Object} oldEpisode
+ * @param {Object} newEpisode
+ * @returns {Object} The merged episodes metadata, where newer non-empty properties of duplicate
+ *   episodes take precedence, except for categories and keywords, which are merged.
+ */
+function mergeEpisodeMetadata(oldEpisode, newEpisode) {
+  const result = { ...oldEpisode };
+
+  Object.entries(newEpisode).forEach(([prop, value]) => {
+    let newValue = value;
+    if (Array.isArray(newValue)) newValue = mergeArrays(oldEpisode[prop], newValue);
+
+    if (!isValueless(newValue)) result[prop] = newValue;
+  });
+
+  return result;
+}
 
 /**
  * @param {Array.<Object>} oldEpisodes assumed-DATE_DESC-sorted array of episodes metadata
@@ -46,13 +67,7 @@ function mergeEpisodesMetadata(oldEpisodes, newEpisodes) {
       const newEpisode = newEpisodes[duplicateNewEpisodeIndex];
 
       // Replace duplicate oldEpisode with merged episode metadata
-      const categories = mergeArrays(oldEpisode.categories, newEpisode.categories);
-      const keywords = mergeArrays(oldEpisode.keywords, newEpisode.keywords);
-      oldEpisodesWithMerges[oldEpisodeIndex] = Object.assign(
-        { ...oldEpisode, ...newEpisode },
-        categories.length ? { categories } : null,
-        keywords.length ? { keywords } : null,
-      );
+      oldEpisodesWithMerges[oldEpisodeIndex] = mergeEpisodeMetadata(oldEpisode, newEpisode);
     }
   }
   return newEpisodes
@@ -66,10 +81,6 @@ function mergeEpisodesMetadata(oldEpisodes, newEpisodes) {
  * @returns {Array.<Object>}
  */
 export function mergeEpisodeBatches(episodeBatches) {
-  // TODO: ArSync v1.1, apply batch.map(episode => omitEmptyMetadata(episode))
-  //       requires refactoring a lot of tests
-  if (episodeBatches.length < 2) return episodeBatches.flat();
-
   return episodeBatches.reduce((mergedEps, batch) => mergeEpisodesMetadata(mergedEps, batch), {});
 }
 
@@ -145,7 +156,7 @@ export function mergeBatchTags(tagBatches) {
   return tagBatches.reduce((acc, batch) => mergeSpecialTags(acc, batch), {});
 }
 
-function episodesDiff(oldEpisodes = [], newEpisodes = []) {
+function episodesRightDiff(oldEpisodes = [], newEpisodes = []) {
   const result = [];
   newEpisodes.forEach(newEpisode => {
     const oldEpisodeMatch =
@@ -161,7 +172,7 @@ function episodesDiff(oldEpisodes = [], newEpisodes = []) {
   return result.sort((a, b) => b.publishedAt - a.publishedAt);
 }
 
-function arrayDiff(oldArray = [], newArray = []) {
+function arrayRightDiff(oldArray = [], newArray = []) {
   return newArray.filter(x => x && !oldArray.includes(x));
 }
 
@@ -171,6 +182,7 @@ function arrayDiff(oldArray = [], newArray = []) {
  * @param {string} primaryKey Primary key to survive the diff; see hasMetadata().
  *   TODO: pending T244, change to 'id'.
  * @returns {Object} The newMetadata omitting each { prop: value } already present in oldMetadata
+ *   and empty props are ignored.
  */
 export function rightDiff(oldMetadata = {}, newMetadata = {}, primaryKey = 'subscribeUrl') {
   if (!hasMetadata(oldMetadata)) return newMetadata;
@@ -187,17 +199,18 @@ export function rightDiff(oldMetadata = {}, newMetadata = {}, primaryKey = 'subs
         // These should be excluded from the diff, as they are recomputed in their relevant context
         break;
       case 'episodes':
-        result.episodes = episodesDiff(oldMetadata.episodes, value);
+        const episodesDiff = episodesRightDiff(oldValue, value);
+        if (hasMetadata(episodesDiff)) result.episodes = episodesDiff;
         break;
       default:
         if (Array.isArray(value)) {
-          const diff = arrayDiff(oldValue || [], value);
+          const diff = arrayRightDiff(oldValue, value);
           if (diff.length) result[prop] = diff;
         }
         else if (isValidDate(value)) {
           if (!datesEqual(value, oldValue)) result[prop] = value;
         }
-        else if (value !== oldValue) result[prop] = value;
+        else if (value !== oldValue && !isValueless(value)) result[prop] = value;
     }
   });
 

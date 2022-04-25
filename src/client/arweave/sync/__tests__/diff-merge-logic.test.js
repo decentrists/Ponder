@@ -62,7 +62,6 @@ describe('mergeEpisodeBatches', () => {
       url: 'https://server.dummy/ep1',
       publishedAt: new Date('2021-11-08T04:00:00.000Z'),
       categories: ['cat1'],
-      keywords: [],
     },
   ];
   const oldEpisodes = [episodes[2], episodes[3]];
@@ -71,22 +70,6 @@ describe('mergeEpisodeBatches', () => {
   const episodes4and2 = [episodes[0], episodes[2]];
   const episodes421 = [episodes[0], episodes[2], episodes[3]];
   const episode3 = episodes[1];
-  const updatedEpisodes = [
-    {
-      title: 'Ep4',
-      url: 'https://server.dummy/ep4',
-      publishedAt: new Date('2021-11-10T15:06:18.000Z'),
-      categories: ['newcat4'],
-      keywords: [],
-    },
-    {
-      title: 'NewEp1',
-      url: 'https://server.dummy/ep1',
-      publishedAt: new Date('2021-11-08T04:00:00.000Z'),
-      categories: ['newcat1'],
-      keywords: [],
-    },
-  ];
 
   describe('Without duplicate episodes metadata', () => {
     describe('When given 1 empty batch of episodes metadata', () => {
@@ -136,6 +119,23 @@ describe('mergeEpisodeBatches', () => {
   });
 
   describe('When some batches contain duplicate episodes metadata', () => {
+    const updatedEpisodes = [
+      {
+        title: 'Ep4',
+        url: 'https://server.dummy/ep4',
+        publishedAt: new Date('2021-11-10T15:06:18.000Z'),
+        categories: ['newcat4'],
+        keywords: [],
+      },
+      {
+        title: 'NewEp1',
+        url: '',
+        publishedAt: new Date('2021-11-08T04:00:00.000Z'),
+        categories: [''],
+        keywords: ['newkey1'],
+      },
+    ];
+
     const assertMergedResult = result => {
       expect(result).toEqual([
         {
@@ -163,8 +163,8 @@ describe('mergeEpisodeBatches', () => {
           title: 'NewEp1',
           url: 'https://server.dummy/ep1',
           publishedAt: episodes[3].publishedAt,
-          categories: ['cat1', 'newcat1'],
-          keywords: [],
+          categories: ['cat1'],
+          keywords: ['newkey1'],
         },
       ]);
     };
@@ -186,11 +186,7 @@ describe('mergeEpisodeBatches', () => {
         assertUnmutatedParams([batches]);
       });
 
-      it('returns a sorted array of merged episodes', () => {
-        assertMergedResult(mergeEpisodeBatches(batches));
-      });
-
-      it('does not mutate the batch list', () => {
+      it('returns a sorted array of merged episodes and does not mutate the batch list', () => {
         assertMergedResult(mergeEpisodeBatches(batches));
         assertMergedResult(mergeEpisodeBatches(batches));
       });
@@ -217,6 +213,7 @@ describe('mergeBatchMetadata', () => {
       imageTitle: 'imageTitle0',
       unknownField: 'unknownFieldValue',
       episodes: [], // left empty, because tested separately
+      categories: ['cat0'],
     },
     {
       description: 'description1',
@@ -224,13 +221,16 @@ describe('mergeBatchMetadata', () => {
       imageTitle: 'imageTitle1',
       language: 'en-us',
       episodes: [],
+      categories: ['cat1'],
     },
     {
-      description: 'description2',
+      description: '',
       imageUrl: 'https://imgurl/img.png?ver=2',
       imageTitle: 'imageTitle2',
       language: 'en-us',
       episodes: [],
+      categories: [],
+      keywords: [],
     },
   ];
 
@@ -272,26 +272,35 @@ describe('mergeBatchMetadata', () => {
         unknownField: 'unknownFieldValue',
         language: 'en-us',
         episodes: [],
+        categories: ['cat1'],
       });
     });
   });
 
-  describe('When given 3 batches of podcast metadata', () => {
-    it('returns the merged podcast metadata where the later batches take precedence', () => {
+  describe('When given multiple batches and parameter applyMergeSpecialTags = false', () => {
+    it('categories of the latest batch holds, unless they are empty', () => {
       expect(mergeBatchMetadata(metadataBatches)).toStrictEqual({
-        description: 'description2',
+        description: 'description1',
         imageUrl: 'https://imgurl/img.png?ver=2',
         imageTitle: 'imageTitle2',
         unknownField: 'unknownFieldValue',
         language: 'en-us',
         episodes: [],
+        categories: ['cat1'],
       });
     });
+  });
 
-    describe('When parameter applyMergeSpecialTags = true', () => {
-      xit('categories of the latest batch holds, unless they are empty', () => {
-        // TODO: test merging of categories
-        // expect(mergeBatchMetadata(metadataBatches, true)).toStrictEqual({});
+  describe('When given multiple batches and parameter applyMergeSpecialTags = true', () => {
+    it('categories are merged', () => {
+      expect(mergeBatchMetadata(metadataBatches, true)).toStrictEqual({
+        description: 'description1',
+        imageUrl: 'https://imgurl/img.png?ver=2',
+        imageTitle: 'imageTitle2',
+        unknownField: 'unknownFieldValue',
+        language: 'en-us',
+        episodes: [],
+        categories: ['cat0', 'cat1'],
       });
     });
   });
@@ -399,13 +408,12 @@ describe('mergeBatchTags', () => {
   });
 });
 
-// TODO: add more tests
 describe('rightDiff', () => {
   const ep4date = new Date('2021-11-10T15:06:18.000Z');
   const ep3date = new Date('2021-11-09T15:06:18.000Z');
   const ep2date = new Date('2021-11-08T05:00:00.000Z');
   const ep1date = new Date('2021-11-08T04:00:00.000Z');
-  const oldEpisodes = [
+  const oldEpisodes = [ // sorted
     {
       title: 'Ep3',
       url: 'https://server.dummy/ep3',
@@ -426,7 +434,7 @@ describe('rightDiff', () => {
       categories: ['cat1'],
     },
   ];
-  const newEpisodes = [
+  const newEpisodes = [ // unsorted
     {
       title: 'Ep2',
       url: 'https://server.dummy/ep2',
@@ -449,25 +457,104 @@ describe('rightDiff', () => {
       keywords: [],
     },
   ];
-  const oldMetadata = {
-    description: 'description',
-    subscribeUrl: 'https://server.dummy/feed',
-    imageUrl: 'https://imgurl/img.png?ver=0',
-    imageTitle: 'imageTitle',
-    unknownField: 'unknownFieldValue',
-    episodes: oldEpisodes,
-  };
-  const newMetadata = {
-    description: 'description',
-    subscribeUrl: 'https://server.dummy/feed',
-    imageUrl: 'https://imgurl/img.png?ver=1',
-    imageTitle: 'imageTitle',
-    episodes: newEpisodes,
-  };
 
-  describe('When given 2 different sets of podcast metadata', () => {
-    it('returns the right diff where primary key subscribeUrl persists for the podcast diff ' +
-       'and publishedAt for each episode diff', () => {
+  describe('When the left set encloses the right set', () => {
+    const oldMetadata = {
+      description: 'description',
+      subscribeUrl: 'https://server.dummy/feed',
+      imageUrl: 'https://imgurl/img.png?ver=0',
+      imageTitle: 'imageTitle',
+      episodes: oldEpisodes,
+    };
+    const newMetadata = {
+      description: '',
+      episodes: oldEpisodes,
+    };
+
+    it('returns an empty diff', () => {
+      expect(rightDiff(oldMetadata, newMetadata)).toEqual({});
+    });
+  });
+
+  describe('When the left set is disjoint from the right set', () => {
+    const oldMetadata = {
+      keywords: ['key1'],
+      episodes: [],
+    };
+    const newMetadata = {
+      description: 'description',
+      subscribeUrl: 'https://server.dummy/feed',
+      imageUrl: 'https://imgurl/img.png?ver=0',
+      imageTitle: 'imageTitle',
+      episodes: oldEpisodes,
+    };
+
+    beforeAll(() => {
+      saveDeepClones([oldMetadata, newMetadata]);
+    });
+
+    afterEach(() => {
+      assertUnmutatedParams([oldMetadata, newMetadata]);
+    });
+
+    it('returns the right set and does not mutate either set', () => {
+      expect(rightDiff(oldMetadata, newMetadata)).toStrictEqual(newMetadata);
+      expect(rightDiff(oldMetadata, newMetadata)).toStrictEqual(newMetadata);
+    });
+
+    it('returns the right set (when the left set is empty)', () => {
+      expect(rightDiff({}, newMetadata)).toStrictEqual(newMetadata);
+    });
+
+    it('returns the right set (when the right set is empty)', () => {
+      expect(rightDiff(oldMetadata, {})).toEqual({});
+    });
+  });
+
+  describe('When the right set contains 1 new metadatum', () => {
+    const oldMetadata = {
+      description: 'description',
+      subscribeUrl: 'https://server.dummy/feed',
+      imageUrl: 'https://imgurl/img.png?ver=0',
+      imageTitle: 'imageTitle',
+      episodes: oldEpisodes,
+    };
+    const newMetadata = {
+      description: 'new description',
+      imageTitle: '',
+      episodes: oldEpisodes,
+    };
+
+    it('returns the right diff including the primary key subscribeUrl', () => {
+      expect(rightDiff(oldMetadata, newMetadata)).toStrictEqual({
+        description: 'new description',
+        subscribeUrl: 'https://server.dummy/feed',
+      });
+    });
+  });
+
+  describe('When given 2 overlapping sets of podcast metadata', () => {
+    const oldMetadata = {
+      description: 'description',
+      subscribeUrl: 'https://server.dummy/feed',
+      imageUrl: 'https://imgurl/img.png?ver=0',
+      imageTitle: 'imageTitle',
+      unknownField: 'unknownFieldValue',
+      episodes: oldEpisodes,
+      categories: ['samecat', 'oldcat'],
+    };
+    const newMetadata = {
+      description: 'description',
+      subscribeUrl: 'https://server.dummy/feed',
+      imageUrl: 'https://imgurl/img.png?ver=1',
+      imageTitle: 'imageTitle',
+      episodes: newEpisodes,
+      categories: ['samecat', 'diffcat'],
+      keywords: [''],
+    };
+
+    it('returns the right diff where primary key subscribeUrl persists for the podcast diff, ' +
+       'publishedAt persists for each episode diff and the episodes diff is sorted', () => {
       expect(rightDiff(oldMetadata, newMetadata)).toStrictEqual({
         imageUrl: 'https://imgurl/img.png?ver=1',
         episodes: [
@@ -483,6 +570,7 @@ describe('rightDiff', () => {
             publishedAt: ep2date,
           },
         ],
+        categories: ['diffcat'],
         subscribeUrl: 'https://server.dummy/feed',
       });
     });
