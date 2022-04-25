@@ -14,7 +14,6 @@ export async function initArSyncTxs(subscriptions, metadataToSync, wallet) {
         newTxResult = await arweave.newMetadataTransaction(wallet, podcastToSync, cachedMetadata);
       }
       catch (ex) {
-        console.warn(`${ex}`);
         newTxResult = ex;
       }
       finally {
@@ -36,18 +35,20 @@ export async function initArSyncTxs(subscriptions, metadataToSync, wallet) {
 export async function startSync(pendingTxs, wallet) {
   const txs = [];
   const failedTxs = [];
+
   await Promise.all(pendingTxs.map(async pendingTx => {
+    let postedTxResult;
     try {
-      const tx = pendingTx.resultObj;
-      const postedTxResult = await arweave.signAndPostTransaction(tx, wallet);
+      postedTxResult = await arweave.signAndPostTransaction(pendingTx.resultObj, wallet);
+    }
+    catch (ex) {
+      postedTxResult = ex;
+    }
+    finally {
       (postedTxResult instanceof Error ? failedTxs : txs).push({
         ...pendingTx,
         resultObj: postedTxResult,
       });
-    }
-    catch (ex) {
-      console.warn(`${ex}`);
-      failedTxs.push({ ...pendingTx, resultObj: ex });
     }
   }));
   console.debug('startSync txs=', txs);

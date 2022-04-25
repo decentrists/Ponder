@@ -76,8 +76,12 @@ function ArweaveProvider({ children }) {
     }
     const { txs, failedTxs } = result;
 
-    if (isEmpty(txs) && isEmpty(failedTxs)) {
-      return cancelSync('Subscribed podcasts are already up-to-date.', 'info');
+    if (isEmpty(txs)) {
+      if (isEmpty(failedTxs)) {
+        return cancelSync('Subscribed podcasts are already up-to-date.', 'info');
+      }
+      // Rare situation where all transactions failed to create; probably due to invalid wallet
+      return cancelSync(`Failed to sync with Arweave: ${failedTxs[0].resultObj}`);
     }
 
     // TODO: pending T252, add txs to transaction cache
@@ -101,7 +105,7 @@ function ArweaveProvider({ children }) {
   }
 
   async function startSync() {
-    if (!hasPendingTxs()) return cancelSync();
+    if (!isSyncing || !hasPendingTxs()) return cancelSync();
 
     let result;
     try {
@@ -127,6 +131,8 @@ function ArweaveProvider({ children }) {
     }
     setMetadataToSync(arsync.formatNewMetadataToSync(failedTxs));
     // setUnconfirmedArSyncTxs(prev => prev.concat(txs));
+    setIsSyncing(false);
+    setPendingArSyncTxs([]);
   }
 
   useEffect(() => {
@@ -139,7 +145,6 @@ function ArweaveProvider({ children }) {
     const startSyncIfPending = async () => {
       await startSync();
     };
-    // TODO: , ask for user approval of `pendingArSyncTxs` costs first
     startSyncIfPending();
   }, [pendingArSyncTxs]);
 

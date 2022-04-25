@@ -206,52 +206,51 @@ describe('newMetadataTransaction', () => {
 
   // TODO: Add more tests
   describe('Error handling', () => {
-    const assertError = async (erroneousMetadata, errorRegex) => {
-      const result = await newMetadataTransaction(stubbedWallet, erroneousMetadata, {});
-      expect(result).toBeInstanceOf(Error);
-      expect(result.message).toMatch(errorRegex);
+    const assertThrow = async (erroneousMetadata, errorRegex) => {
+      await expect(newMetadataTransaction(stubbedWallet, erroneousMetadata, {}))
+        .rejects.toThrow(errorRegex);
 
       expect(createTransaction).not.toHaveBeenCalled();
       expect(addTag).not.toHaveBeenCalled();
     };
 
-    it('returns an Error object if the newest episode has a null date', async () => {
+    it('throws an Error if the newest episode has a null date', async () => {
       const erroneousMetadata = newMetadata({
         episodes: [
           { ...allEpisodes[0], publishedAt: null },
           allEpisodes[1],
         ],
       });
-      assertError(erroneousMetadata, /Invalid date/);
+      assertThrow(erroneousMetadata, /Invalid date/);
     });
 
-    it('returns an Error object if the oldest episode has an invalid date', async () => {
+    it('throws an Error if the oldest episode has an invalid date', async () => {
       const erroneousMetadata = newMetadata({
         episodes: [
           allEpisodes[0],
           { ...allEpisodes[1], publishedAt: new Date(undefined) },
         ],
       });
-      assertError(erroneousMetadata, /Invalid date/);
+      assertThrow(erroneousMetadata, /Invalid date/);
     });
 
-    it('returns an Error object if the oldest episode has an zero date', async () => {
+    it('throws an Error if the oldest episode has an zero date', async () => {
       const erroneousMetadata = newMetadata({
         episodes: [
           allEpisodes[0],
           { ...allEpisodes[1], publishedAt: new Date(0) },
         ],
       });
-      assertError(erroneousMetadata, /Invalid date/);
+      assertThrow(erroneousMetadata, /Invalid date/);
     });
 
-    it('returns an Error object if a mandatory podcast tag is missing', async () => {
+    it('throws an Error if a mandatory podcast tag is missing', async () => {
       const erroneousMetadata = {
         subscribeUrl: 'https://example.com/foo',
         description: 'newDescription',
         episodes: allEpisodes,
       };
-      assertError(erroneousMetadata, /title is missing/);
+      assertThrow(erroneousMetadata, /title is missing/);
     });
   });
 });
