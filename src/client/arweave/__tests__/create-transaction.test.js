@@ -1,4 +1,4 @@
-import { postPodcastMetadata } from '../create-transaction';
+import { newMetadataTransaction } from '../create-transaction';
 // eslint-disable-next-line import/named
 import { addTag, createTransaction } from '../client';
 import { toTag } from '../utils';
@@ -10,6 +10,7 @@ jest.mock('../../../utils', () => ({
 }));
 jest.mock('../client');
 
+const mockResult = { addTag };
 const ep4date = '2021-11-10T15:06:18.000Z';
 const ep3date = '2021-11-09T15:06:18.000Z';
 const ep2date = '2021-11-08T05:00:00.000Z';
@@ -52,9 +53,9 @@ const BASE_CACHED_METADATA = {
   imageUrl: 'https://cached.imgurl/img.png?ver=0',
   imageTitle: 'cachedImageTitle',
   unknownField: 'cachedUnknownField',
-  categories: ['cached cat'], // ignored by postPodcastMetadata
-  keywords: ['cached key'], // ignored by postPodcastMetadata
-  episodes: [], // ignored by postPodcastMetadata
+  categories: ['cached cat'], // ignored by newMetadataTransaction
+  keywords: ['cached key'], // ignored by newMetadataTransaction
+  episodes: [], // ignored by newMetadataTransaction
 };
 
 const BASE_NEW_METADATA = {
@@ -93,7 +94,7 @@ afterAll(() => {
   jest.useRealTimers();
 });
 
-describe('postPodcastMetadata', () => {
+describe('newMetadataTransaction', () => {
   beforeEach(() => {
     expect(createTransaction).not.toHaveBeenCalled();
     expect(addTag).not.toHaveBeenCalled();
@@ -125,7 +126,8 @@ describe('postPodcastMetadata', () => {
         ['lastEpisodeDate', ep4date],
         ['metadataBatch', '0'],
       ];
-      await postPodcastMetadata(stubbedWallet, expectedMetadata, {});
+      const result = await newMetadataTransaction(stubbedWallet, expectedMetadata, {});
+      expect(result).toEqual(mockResult);
       expect(createTransaction)
         .toHaveBeenCalledWith({ data: JSON.stringify(expectedMetadata) }, stubbedWallet);
       assertAddTagCalls(expectedTags);
@@ -153,11 +155,12 @@ describe('postPodcastMetadata', () => {
         ['lastEpisodeDate', ep4date],
         ['metadataBatch', '1'],
       ];
-      await postPodcastMetadata(
+      const result = await newMetadataTransaction(
         stubbedWallet,
         expectedMetadata,
         cachedMetadata(currentBatchFields),
       );
+      expect(result).toEqual(mockResult);
       expect(createTransaction)
         .toHaveBeenCalledWith({ data: JSON.stringify(expectedMetadata) }, stubbedWallet);
       assertAddTagCalls(expectedTags);
@@ -189,45 +192,65 @@ describe('postPodcastMetadata', () => {
         ['lastEpisodeDate', ep4date],
         ['metadataBatch', '2'],
       ];
-      await postPodcastMetadata(
+      const result = await newMetadataTransaction(
         stubbedWallet,
         expectedMetadata,
         cachedMetadata(currentBatchFields),
       );
+      expect(result).toEqual(mockResult);
       expect(createTransaction)
         .toHaveBeenCalledWith({ data: JSON.stringify(expectedMetadata) }, stubbedWallet);
       assertAddTagCalls(expectedTags);
     });
   });
 
+  // TODO: Add more tests
   describe('Error handling', () => {
-    const assertThrow = async badlyDatedEpisodes => {
-      const erroneousNewMetadata = newMetadata({ episodes: badlyDatedEpisodes });
-      await expect(postPodcastMetadata(stubbedWallet, erroneousNewMetadata, {})).rejects.toThrow();
+    const assertThrow = async (erroneousMetadata, errorRegex) => {
+      await expect(newMetadataTransaction(stubbedWallet, erroneousMetadata, {}))
+        .rejects.toThrow(errorRegex);
 
       expect(createTransaction).not.toHaveBeenCalled();
       expect(addTag).not.toHaveBeenCalled();
     };
 
-    it('raises an error if the newest episode has a null date', async () => {
-      assertThrow([
-        { ...allEpisodes[0], publishedAt: null },
-        allEpisodes[1],
-      ]);
+    it('throws an Error if the newest episode has a null date', async () => {
+      const erroneousMetadata = newMetadata({
+        episodes: [
+          { ...allEpisodes[0], publishedAt: null },
+          allEpisodes[1],
+        ],
+      });
+      assertThrow(erroneousMetadata, /Invalid date/);
     });
 
-    it('raises an error if the oldest episode has an invalid date', async () => {
-      assertThrow([
-        allEpisodes[0],
-        { ...allEpisodes[1], publishedAt: new Date(undefined) },
-      ]);
+    it('throws an Error if the oldest episode has an invalid date', async () => {
+      const erroneousMetadata = newMetadata({
+        episodes: [
+          allEpisodes[0],
+          { ...allEpisodes[1], publishedAt: new Date(undefined) },
+        ],
+      });
+      assertThrow(erroneousMetadata, /Invalid date/);
     });
 
-    it('raises an error if the oldest episode has an zero date', async () => {
-      assertThrow([
-        allEpisodes[0],
-        { ...allEpisodes[1], publishedAt: new Date(0) },
-      ]);
+    it('throws an Error if the oldest episode has an zero date', async () => {
+      const erroneousMetadata = newMetadata({
+        episodes: [
+          allEpisodes[0],
+          { ...allEpisodes[1], publishedAt: new Date(0) },
+        ],
+      });
+      assertThrow(erroneousMetadata, /Invalid date/);
+    });
+
+    it('throws an Error if a mandatory podcast tag is missing', async () => {
+      const erroneousMetadata = {
+        subscribeUrl: 'https://example.com/foo',
+        description: 'newDescription',
+        episodes: allEpisodes,
+      };
+      assertThrow(erroneousMetadata, /title is missing/);
     });
   });
 });

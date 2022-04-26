@@ -1,3 +1,6 @@
+// TODO: group similar utils into separate modules, such as
+// omitEmptyMetadata() --> src/client/metadata-filtering/utils
+
 export function unixTimestamp(date = null) {
   return Math.floor(date ? date.getTime() : Date.now() / 1000);
 }
@@ -16,7 +19,7 @@ export function isValidInteger(number) {
 }
 
 export function isValidDate(date) {
-  return date instanceof Date && date.getTime();
+  return date instanceof Date && !!date.getTime();
 }
 
 export function datesEqual(a, b) {
@@ -24,10 +27,21 @@ export function datesEqual(a, b) {
 }
 
 /**
- * @returns {Array.<String>}
- *   The given arrays, concatenated, omitting duplicate as well as falsy elements */
+ * @returns {Array} The given arrays, concatenated, omitting duplicate as well as falsy elements
+ */
 export function mergeArrays(arr1, arr2) {
   return [...new Set((arr1 || []).concat(arr2 || []))].filter(x => x);
+}
+
+/**
+ * @param {Array.<string>} messages
+ * @param {boolean} filterDuplicates
+ * @returns {string}
+ */
+export function concatMessages(messages = [], filterDuplicates = false) {
+  return (filterDuplicates ? [...new Set(messages.flat())] : messages.flat())
+    .filter(x => x) // Filter out any null elements
+    .join('\n').trim();
 }
 
 /**
@@ -47,21 +61,21 @@ export function toDate(date) {
 
 /**
  * @param {Object} metadata
- * @returns {boolean}
- *   true if `metadata` has specific metadata other than subscribeUrl and an empty episodes list
+ * @returns {boolean} true if `metadata` has specific metadata other than:
+ *   `subscribeUrl`, `publishedAt` and an empty episodes list
  */
 export function hasMetadata(metadata) {
   if (isEmpty(metadata)) return false;
   if (metadata.title) return true;
 
-  const { subscribeUrl, episodes, ...specificMetadata } = { ...metadata };
+  const { subscribeUrl, publishedAt, episodes, ...specificMetadata } = { ...metadata };
   if (episodes?.length) return true;
 
   return !!Object.values(specificMetadata).flat().filter(x => x).length;
 }
 
 export function findMetadata(subscribeUrl, arrayOfMetadata = []) {
-  return arrayOfMetadata.find(podcast => podcast.subscribeUrl === subscribeUrl) || {};
+  return arrayOfMetadata.find(obj => !isEmpty(obj) && obj.subscribeUrl === subscribeUrl) || {};
 }
 
 export function podcastWithDateObjects(podcast, sortEpisodes = true) {
@@ -86,9 +100,51 @@ export function podcastsWithDateObjects(podcasts, sortEpisodes = true) {
     .map(podcast => podcastWithDateObjects(podcast, sortEpisodes));
 }
 
+/**
+ * @param {Object} metadata
+ * @returns {Object} The `metadata` exluding props where !valuePresent(value), @see valuePresent
+ */
+export function omitEmptyMetadata(metadata = {}) {
+  const result = {};
+  Object.entries(metadata).forEach(([prop, value]) => {
+    let newValue = value;
+    if (Array.isArray(newValue)) newValue = newValue.filter(elem => valuePresent(elem));
+
+    if (valuePresent(newValue)) result[prop] = newValue;
+  });
+
+  return result;
+}
+
+/**
+ * @param {Object} metadata
+ * @returns {Object} false iff `metadata` comprises one of these values:
+ *   - null
+ *   - undefined
+ *   - NaN
+ *   - an empty string
+ *   - an empty array
+ *   - an array comprised of only any of the above elements
+ */
+export function valuePresent(value) {
+  switch (typeof value) {
+    case 'number':
+      return !Number.isNaN(value);
+    case 'string':
+      return !!value.trim();
+    case 'object':
+      if (Array.isArray(value)) return !isEmpty(value.filter(elem => valuePresent(elem)));
+      if (value instanceof Date) return isValidDate(value);
+
+      return !isEmpty(value);
+    default:
+      return !!value;
+  }
+}
+
 /* Returns true if the given array or object is empty or not an object */
 export function isEmpty(obj) {
-  return (!obj || typeof obj !== 'object' || Object.keys(obj).length === 0);
+  return !obj || typeof obj !== 'object' || Object.keys(obj).length === 0;
 }
 
 /* Returns true if the given arrays or objects' values are equal */

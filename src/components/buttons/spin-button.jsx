@@ -29,9 +29,13 @@ const SpinButton = styled(BsButton)`
       }
     }
     animation: none;
+    opacity: 1;
   }
-  &:disabled svg {
+  &&.spinning svg {
     animation: spin 1s infinite;
+  }
+  &&:disabled svg {
+    opacity: 0.5;
   }
 `;
 

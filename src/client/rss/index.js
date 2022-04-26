@@ -8,6 +8,7 @@ function mergeItunesData(items, itunes) {
 }
 
 export async function getPodcastFeed(subscribeUrl) {
+  let errorMessage;
   try {
     const { items, ...podcast } = await parser.parseURL(withCorsProxy(subscribeUrl));
     const imageUrl = podcast.image?.url || podcast.itunes?.image || null;
@@ -31,9 +32,10 @@ export async function getPodcastFeed(subscribeUrl) {
       episodes,
     };
   }
-  catch (error) {
+  catch (ex) {
     /* TODO: Update error message after implementation of user-specified CORS-Proxies */
-    throw new Error('Could not fetch the given RSS feed. ' +
-                    `Is the corsProxyURL specified in src/utils.js working? ${error}`);
+    errorMessage = 'Could not fetch the given RSS feed. ' +
+                   `Is the corsProxyURL specified in src/utils.js working?\n ${ex}`;
   }
+  return { errorMessage };
 }

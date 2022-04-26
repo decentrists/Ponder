@@ -13,6 +13,7 @@ export default function useRerenderEffect(effect, dependencies) {
       return () => unmount && unmount();
     }
     Object.assign(mounted, { current: true });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, dependencies);
 
   // Cleanup on unmount

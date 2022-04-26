@@ -1,6 +1,33 @@
-import { isEmpty, toDate, mergeArrays } from '../../../utils';
+import {
+  isEmpty,
+  toDate,
+  isValidDate,
+  datesEqual,
+  mergeArrays,
+  hasMetadata,
+  valuePresent,
+  omitEmptyMetadata,
+} from '../../../utils';
 
-const cloneDeep = require('lodash.clonedeep');
+/**
+ *
+ * @param {Object} oldEpisode
+ * @param {Object} newEpisode
+ * @returns {Object} The merged episodes metadata, where newer non-empty properties of duplicate
+ *   episodes take precedence, except for categories and keywords, which are merged.
+ */
+function mergeEpisodeMetadata(oldEpisode, newEpisode) {
+  const result = { ...oldEpisode };
+
+  Object.entries(newEpisode).forEach(([prop, value]) => {
+    let newValue = value;
+    if (Array.isArray(newValue)) newValue = mergeArrays(oldEpisode[prop], newValue);
+
+    if (valuePresent(newValue)) result[prop] = newValue;
+  });
+
+  return result;
+}
 
 /**
  * @param {Array.<Object>} oldEpisodes assumed-DATE_DESC-sorted array of episodes metadata
@@ -9,7 +36,6 @@ const cloneDeep = require('lodash.clonedeep');
  *   duplicate episodes take precedence, except for categories and keywords, which are merged.
  */
 function mergeEpisodesMetadata(oldEpisodes, newEpisodes) {
-  // console.log('mergeEpisodesMetadata(oldEpisodes, newEpisodes)', [oldEpisodes, newEpisodes]);
   if (!oldEpisodes.length) return newEpisodes;
   if (!newEpisodes.length) return oldEpisodes;
 
@@ -41,17 +67,9 @@ function mergeEpisodesMetadata(oldEpisodes, newEpisodes) {
       const newEpisode = newEpisodes[duplicateNewEpisodeIndex];
 
       // Replace duplicate oldEpisode with merged episode metadata
-      const categories = mergeArrays(oldEpisode.categories, newEpisode.categories);
-      const keywords = mergeArrays(oldEpisode.keywords, newEpisode.keywords);
-      oldEpisodesWithMerges[oldEpisodeIndex] = Object.assign(
-        { ...oldEpisode, ...newEpisode },
-        categories.length ? { categories } : null,
-        keywords.length ? { keywords } : null,
-      );
+      oldEpisodesWithMerges[oldEpisodeIndex] = mergeEpisodeMetadata(oldEpisode, newEpisode);
     }
   }
-  // console.log('duplicateNewEpisodeIndices', duplicateNewEpisodeIndices);
-  // console.log('oldEpisodesWithMerges', oldEpisodesWithMerges);
   return newEpisodes
     .filter((_, index) => !duplicateNewEpisodeIndices.includes(index))
     .concat(oldEpisodesWithMerges)
@@ -63,67 +81,143 @@ function mergeEpisodesMetadata(oldEpisodes, newEpisodes) {
  * @returns {Array.<Object>}
  */
 export function mergeEpisodeBatches(episodeBatches) {
-  if (episodeBatches.length < 2) return episodeBatches.flat();
-
-  const episodeBatchesCopy = cloneDeep(episodeBatches);
-  let mergedEpisodes = episodeBatchesCopy.shift();
-  episodeBatchesCopy.forEach(currentBatch => {
-    mergedEpisodes = mergeEpisodesMetadata(mergedEpisodes, currentBatch);
-  });
-  return mergedEpisodes;
+  return episodeBatches.reduce((mergedEps, batch) => mergeEpisodesMetadata(mergedEps, batch), {});
 }
 
 /**
+ * NOTE: for the getPodcastFeed() caller, podcast categories & keywords are still in the tags,
+ * outside of this scope. Other use cases may want to enable `applyMergeSpecialTags` or refactor.
  * @param {Array.<Object>} metadataBatches
+ * @param {boolean} applyMergeSpecialTags
+ *   - If false, each non-empty metadatum of newer batches overrides the value from prior batches.
+ *     @see omitEmptyMetadata
+ *   - If true, the following additional exceptions apply: @see mergeSpecialTags
  * @returns {Object} A new object with merged podcast metadata, where newer batches take precedence
- *   and episodes are merged by @see mergeEpisodeBatches
+ *   (read above for exceptions) and episodes are merged by @see mergeEpisodeBatches
  */
-export function mergeBatchMetadata(metadataBatches) {
-  if (!metadataBatches.length || isEmpty(metadataBatches[0])) return {};
+export function mergeBatchMetadata(metadataBatches, applyMergeSpecialTags = false) {
+  if (isEmpty(metadataBatches) || metadataBatches.every(batch => !hasMetadata(batch))) return {};
 
-  const mergedEpisodes = mergeEpisodeBatches(metadataBatches.map(batch => batch.episodes));
-  // NOTE: at this point, podcast categories & keywords are still in the tags, outside of this scope
-  const { episodes, ...mergedMetadata } = {
-    ...metadataBatches.reduce((acc, batch) => ({ ...acc, ...batch })),
+  const mergedEpisodes = mergeEpisodeBatches(metadataBatches.map(batch => batch.episodes || []));
+  return {
+    ...metadataBatches.reduce((acc, batch) => {
+      if (applyMergeSpecialTags) return mergeSpecialTags(acc, batch);
+      // else: stack the non-empty metadata from newer batches on top of the acc metadata
+      return { ...acc, ...omitEmptyMetadata(batch) };
+    }, {}),
+    episodes: mergedEpisodes,
   };
-
-  mergedMetadata.episodes = mergedEpisodes;
-  return mergedMetadata;
 }
 
 /**
- * @param {Array.<Object>} tagBatches
- * @returns {Object} A new object with all tags merged, where newer batches take precedence, but:
+ * Helper function to run in the body of a reduce operation on an array of objects.
+ * @param {Object} acc
+ * @param {Object} batch
+ * @returns {Object}
+ *   `acc` with all non-empty tags merged, where newer batches take precedence, except for:
  *   - min holds for firstEpisodeDate
  *   - max holds for lastEpisodeDate and metadataBatch
  *   - metadataBatch maps to an Integer
- *   - categories and keywords are merged (Note: removal of categories and keywords can be
- *     accomplished by omitting the (e.g. downvoted) trx.id in preselection of GraphQL results)
+ *   - both categories and keywords are merged
+ *     NOTE: pending T251, removal of certain categories and keywords can still be accomplished
+ *           by omitting the (e.g. downvoted) tx.id in preselection of GraphQL results.
+ */
+const mergeSpecialTags = (acc, batch) => {
+  Object.entries(omitEmptyMetadata(batch)).forEach(([tag, value]) => {
+    switch (tag) {
+      case 'episodes':
+        break;
+      case 'firstEpisodeDate':
+        if (!acc.firstEpisodeDate || value < acc.firstEpisodeDate) acc[tag] = toDate(value);
+        break;
+      case 'lastEpisodeDate':
+        if (!acc.lastEpisodeDate || value > acc.lastEpisodeDate) acc[tag] = toDate(value);
+        break;
+      case 'metadataBatch':
+        acc[tag] = Math.max(acc.metadataBatch || 0, parseInt(value, 10));
+        break;
+      case 'categories':
+      case 'keywords':
+        acc[tag] = mergeArrays(acc[tag] || [], value);
+        break;
+      default:
+        acc[tag] = value;
+    }
+  });
+  return acc;
+};
+
+/**
+ * @param {Array.<Object>} tagBatches
+ * @returns {Object} A new object with all tags merged, where newer batches take precedence;
+ *   @see mergeSpecialTags for exceptions.
  */
 export function mergeBatchTags(tagBatches) {
-  // console.log('mergeBatchTags(tagBatches)', tagBatches);
-  return tagBatches.reduce((acc, batch) => {
-    Object.entries(batch).forEach(([tag, value]) => {
-      switch (tag) {
-        case 'firstEpisodeDate':
-          if (!acc.firstEpisodeDate || value < acc.firstEpisodeDate) acc[tag] = toDate(value);
-          break;
-        case 'lastEpisodeDate':
-          if (!acc.lastEpisodeDate || value > acc.lastEpisodeDate) acc[tag] = toDate(value);
-          break;
-        case 'metadataBatch':
-          acc[tag] = Math.max(acc.metadataBatch || 0, parseInt(value, 10));
-          break;
-        case 'categories':
-        case 'keywords':
-          acc[tag] = mergeArrays(acc[tag] || [], value);
-          break;
-        default:
-          acc[tag] = value;
-      }
-    });
-    return acc;
-  }, {});
+  return tagBatches.reduce((acc, batch) => mergeSpecialTags(acc, batch), {});
+}
+
+function episodesRightDiff(oldEpisodes = [], newEpisodes = []) {
+  const result = [];
+  newEpisodes.forEach(newEpisode => {
+    const oldEpisodeMatch =
+      oldEpisodes.find(oldEpisode => datesEqual(oldEpisode.publishedAt, newEpisode.publishedAt));
+    if (oldEpisodeMatch) {
+      const diff = rightDiff(oldEpisodeMatch, newEpisode, 'publishedAt');
+      if (hasMetadata(diff)) result.push(diff);
+    }
+    else {
+      result.push(newEpisode);
+    }
+  });
+  return result.sort((a, b) => b.publishedAt - a.publishedAt);
+}
+
+function arrayRightDiff(oldArray = [], newArray = []) {
+  return newArray.filter(x => x && !oldArray.includes(x));
+}
+
+/**
+ * @param {Object} oldMetadata
+ * @param {Object} newMetadata
+ * @param {string} primaryKey Primary key to survive the diff; see hasMetadata().
+ *   TODO: pending T244, change to 'id'.
+ * @returns {Object} The newMetadata omitting each { prop: value } already present in oldMetadata
+ *   and empty props are ignored.
+ */
+export function rightDiff(oldMetadata = {}, newMetadata = {}, primaryKey = 'subscribeUrl') {
+  if (!hasMetadata(oldMetadata)) return newMetadata;
+  if (!hasMetadata(newMetadata)) return {};
+
+  const result = {};
+  Object.entries(newMetadata).forEach(([prop, value]) => {
+    const oldValue = oldMetadata[prop];
+
+    switch (prop) {
+      case 'firstEpisodeDate':
+      case 'lastEpisodeDate':
+      case 'metadataBatch':
+        // These should be excluded from the diff, as they are recomputed in their relevant context
+        break;
+      case 'episodes':
+        const episodesDiff = episodesRightDiff(oldValue, value);
+        if (hasMetadata(episodesDiff)) result.episodes = episodesDiff;
+        break;
+      default:
+        if (Array.isArray(value)) {
+          const diff = arrayRightDiff(oldValue, value);
+          if (diff.length) result[prop] = diff;
+        }
+        else if (isValidDate(value)) {
+          if (!datesEqual(value, oldValue)) result[prop] = value;
+        }
+        else if (value !== oldValue && valuePresent(value)) result[prop] = value;
+    }
+  });
+
+  if (hasMetadata(result) && primaryKey) {
+    result[primaryKey] = newMetadata[primaryKey] || oldMetadata[primaryKey];
+  }
+  return result;
 }
 
 /**
@@ -134,8 +228,8 @@ export function mergeBatchTags(tagBatches) {
  */
 export function simpleDiff(oldMetadata, newMetadata) {
   const emptyDiff = { episodes: [] };
-  if (isEmpty(oldMetadata)) return { ...emptyDiff, ...newMetadata };
-  if (isEmpty(newMetadata)) return emptyDiff;
+  if (!hasMetadata(oldMetadata)) return { ...emptyDiff, ...newMetadata };
+  if (!hasMetadata(newMetadata)) return emptyDiff;
 
   const oldEpisodeTimestamps =
     (oldMetadata.episodes || []).map(episode => episode.publishedAt.getTime());
