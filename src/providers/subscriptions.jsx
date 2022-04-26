@@ -22,6 +22,7 @@ function readMetadataToSync() {
   return podcastsWithDateObjects(podcasts);
 }
 
+// TODO: ArSync v1.5+, test me
 function SubscriptionsProvider({ children }) {
   const toast = useContext(ToastContext);
   const [subscriptions, setSubscriptions] = useState(readCachedPodcasts());

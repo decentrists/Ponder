@@ -11,6 +11,7 @@ import { isEmpty, valuesEqual, concatMessages } from '../utils';
 
 export const ArweaveContext = createContext();
 
+// TODO: ArSync v1.5+, test me
 function ArweaveProvider({ children }) {
   const { refresh, setMetadataToSync } = useContext(SubscriptionsContext);
   const toast = useContext(ToastContext);
