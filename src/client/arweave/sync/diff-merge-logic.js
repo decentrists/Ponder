@@ -5,7 +5,7 @@ import {
   datesEqual,
   mergeArrays,
   hasMetadata,
-  isValueless,
+  valuePresent,
   omitEmptyMetadata,
 } from '../../../utils';
 
@@ -23,7 +23,7 @@ function mergeEpisodeMetadata(oldEpisode, newEpisode) {
     let newValue = value;
     if (Array.isArray(newValue)) newValue = mergeArrays(oldEpisode[prop], newValue);
 
-    if (!isValueless(newValue)) result[prop] = newValue;
+    if (valuePresent(newValue)) result[prop] = newValue;
   });
 
   return result;
@@ -210,7 +210,7 @@ export function rightDiff(oldMetadata = {}, newMetadata = {}, primaryKey = 'subs
         else if (isValidDate(value)) {
           if (!datesEqual(value, oldValue)) result[prop] = value;
         }
-        else if (value !== oldValue && !isValueless(value)) result[prop] = value;
+        else if (value !== oldValue && valuePresent(value)) result[prop] = value;
     }
   });
 

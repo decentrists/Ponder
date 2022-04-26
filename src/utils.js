@@ -102,41 +102,43 @@ export function podcastsWithDateObjects(podcasts, sortEpisodes = true) {
 
 /**
  * @param {Object} metadata
- * @returns {Object} the `metadata` exluding props that have one of these values:
- *   - null
- *   - undefined
- *   - NaN
- *   - an empty string
- *   - an empty array
- *   - an empty object (non-recursively)
- *   - any of the above elements nested within an array
- *   - an array comprised of only any of the above elements
+ * @returns {Object} The `metadata` exluding props where !valuePresent(value), @see valuePresent
  */
 export function omitEmptyMetadata(metadata = {}) {
   const result = {};
   Object.entries(metadata).forEach(([prop, value]) => {
     let newValue = value;
-    if (Array.isArray(newValue)) newValue = newValue.filter(elem => !isValueless(elem));
+    if (Array.isArray(newValue)) newValue = newValue.filter(elem => valuePresent(elem));
 
-    if (!isValueless(newValue)) result[prop] = newValue;
+    if (valuePresent(newValue)) result[prop] = newValue;
   });
 
   return result;
 }
 
-export function isValueless(value) {
+/**
+ * @param {Object} metadata
+ * @returns {Object} false iff `metadata` comprises one of these values:
+ *   - null
+ *   - undefined
+ *   - NaN
+ *   - an empty string
+ *   - an empty array
+ *   - an array comprised of only any of the above elements
+ */
+export function valuePresent(value) {
   switch (typeof value) {
     case 'number':
-      return Number.isNaN(value);
+      return !Number.isNaN(value);
     case 'string':
-      return !value.trim();
+      return !!value.trim();
     case 'object':
-      if (Array.isArray(value)) return isEmpty(value.filter(elem => !isValueless(elem)));
-      if (value instanceof Date) return !isValidDate(value);
+      if (Array.isArray(value)) return !isEmpty(value.filter(elem => valuePresent(elem)));
+      if (value instanceof Date) return isValidDate(value);
 
-      return isEmpty(value);
+      return !isEmpty(value);
     default:
-      return !value;
+      return !!value;
   }
 }
 

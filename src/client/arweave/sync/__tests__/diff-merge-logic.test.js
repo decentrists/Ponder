@@ -4,8 +4,7 @@ import {
   mergeBatchTags,
   rightDiff,
 } from '../diff-merge-logic';
-
-const cloneDeep = require('lodash.clonedeep');
+import cloneDeep from 'lodash.clonedeep';
 
 const originalTagPrefix = process.env.REACT_APP_TAG_PREFIX;
 const testTag = 'testPonder';
