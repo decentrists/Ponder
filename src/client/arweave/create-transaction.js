@@ -97,10 +97,10 @@ export async function newMetadataTransaction(wallet, newMetadata, cachedMetadata
 
 /**
  * @param {Array.<Object>} newEpisodes
- * @param {Array.<Object>} cachedMetadata
+ * @param {Object} cachedMetadata
  * @returns {[[string, string]]} The metadata transaction tags for the given list of newEpisodes
  */
-function episodeTags(newEpisodes, cachedMetadata) {
+function episodeTags(newEpisodes = [], cachedMetadata = {}) {
   if (!newEpisodes.length) { return []; }
 
   const firstEpisodeDate = newEpisodes[newEpisodes.length - 1].publishedAt;
@@ -115,7 +115,7 @@ function episodeTags(newEpisodes, cachedMetadata) {
 }
 
 /**
- * @param {Array.<Object>} cachedMetadata
+ * @param {Object} cachedMetadata
  * @param {Date} firstNewEpisodeDate
  * @param {Date} lastNewEpisodeDate
  * @returns {number}

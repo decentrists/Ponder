@@ -204,8 +204,8 @@ export function rightDiff(oldMetadata = {}, newMetadata = {}, primaryKey = 'subs
         break;
       default:
         if (Array.isArray(value)) {
-          const diff = arrayRightDiff(oldValue, value);
-          if (diff.length) result[prop] = diff;
+          const arrayDiff = arrayRightDiff(oldValue, value);
+          if (arrayDiff.length) result[prop] = arrayDiff;
         }
         else if (isValidDate(value)) {
           if (!datesEqual(value, oldValue)) result[prop] = value;
