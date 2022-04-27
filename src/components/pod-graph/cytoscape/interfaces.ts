@@ -39,8 +39,6 @@ interface ExtendedCyOptions {
   nodeHtmlLabel: (input: NodeHtmlLabelArgument[]) => void
 }
 
-// export type ExtendedCore = Core & Pick<ExtendedCyOptions, 'panzoom'>;
-
 export type ExtendedCore = Core & ExtendedCyOptions;
 
 export type CoreWithPanzoom = Core & Pick<ExtendedCyOptions, 'panzoom'>;

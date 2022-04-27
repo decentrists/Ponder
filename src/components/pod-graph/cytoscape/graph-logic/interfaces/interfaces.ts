@@ -4,14 +4,20 @@ export interface Podcast {
   label: string;
   categories: string[];
   keywords: string[];
-  episodes: Episode;
+  episodes: Episode[];
   description: string;
   title: string;
   imageUrl: string;
   imageTitle: string;
 }
 
-export type Episode = Record<string, string>;
+export type Episode = {
+  title: string;
+  url: string;
+  publishedAt:string;
+  categories: string[];
+  keywords: string[];
+};
 
 export interface DisjointGraphFunctionNode extends Pick<Podcast, 'subscribeUrl'> {
   keywordsAndCategories: string[];
