@@ -7,18 +7,8 @@ const SpinButton = styled(BsButton)`
   border-radius: 50%;
   background: transparent !important;
   border: 1px solid transparent !important;
-  color: #fff ;
+  color: #fff;
   box-shadow: none !important;
-  &:hover {
-    color: #4b9b73;
-    background: transparent;
-    border: 1px solid transparent !important;
-  }
-  &:focus {
-    color: #4b9b73;
-    background: transparent;
-    border: 1px solid transparent !important;
-  }
   svg {
     @keyframes spin {
       from {
@@ -28,8 +18,15 @@ const SpinButton = styled(BsButton)`
         transform: rotate(360deg);
       }
     }
-    animation: none;
+    transition: all .3s ease;
     opacity: 1;
+    fill: #fff;
+  }
+  &&:hover svg {
+    fill: #4b9b73;
+  }
+  &&:focus svg {
+    fill: #4b9b73;
   }
   &&.spinning svg {
     animation: spin 1s infinite;
