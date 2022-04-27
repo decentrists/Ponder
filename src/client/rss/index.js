@@ -35,7 +35,7 @@ export async function getPodcastFeed(subscribeUrl) {
   catch (ex) {
     /* TODO: Update error message after implementation of user-specified CORS-Proxies */
     errorMessage = 'Could not fetch the given RSS feed. ' +
-                   `Is the corsProxyURL specified in src/utils.js working?\n ${ex}`;
+                   `Is the corsProxyURL specified in src/utils.js working?\n${ex}`;
   }
   return { errorMessage };
 }

@@ -5,6 +5,7 @@ import { Toast } from 'react-bootstrap';
 import { v4 as uuid } from 'uuid';
 
 const ToastList = styled.ul`
+  z-index: 10000;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -17,11 +18,28 @@ const ToastList = styled.ul`
   margin-top: 0;
   margin-bottom: 0;
   padding-left: 0;
+  line-break: auto;
+  white-space: pre-wrap;
 
+  > li:first-child {
+    padding-top: 3.5rem;
+  }
   > li:not(:last-of-type) {
     margin-bottom: .5rem;
   }
 `;
+const CloseButton = styled.button`
+  float: right;
+  padding: 0.5rem;
+`;
+const CustomHeader = ({ closeToast }) => (
+  <CloseButton
+    type='button'
+    className='btn-close fa fa-times'
+    onClick={closeToast}
+  />
+);
+const TOAST_DELAY = 3500;
 
 export const ToastContext = createContext();
 
@@ -29,12 +47,14 @@ function ToastProvider({ children }) {
   const [messages, setMessages] = useState([]);
 
   function dispatchToastMessage(text, options) {
+    const id = uuid();
+    const { autohideDelay, ...otherOptions } = options;
+
+    // We autohide the toast by default unless autohideDelay=0 is specified in `options`
+    if (autohideDelay !== 0) setTimeout(() => handleClose(id), autohideDelay || TOAST_DELAY);
+
     console.debug(text);
-    setMessages(prev => prev.concat({
-      ...options,
-      text,
-      id: uuid(),
-    }));
+    setMessages(prev => prev.concat({ ...otherOptions, text, id }));
   }
 
   function handleClose(messageId) {
@@ -48,15 +68,14 @@ function ToastProvider({ children }) {
         {messages.map(message => (
           <li key={message.id}>
             <Toast
-              autohide
-              delay={10000}
+              delay={TOAST_DELAY}
               variant={message.variant || 'primary'}
               onClose={() => handleClose(message.id)}
             >
-              <Toast.Header closeButton>
+              <CustomHeader closeToast={() => handleClose(message.id)}>
                 {message.header}
-              </Toast.Header>
-              <Toast.Body>
+              </CustomHeader>
+              <Toast.Body className={`toast-${message.variant || 'primary'}`}>
                 {message.text}
               </Toast.Body>
             </Toast>

@@ -124,6 +124,7 @@ export function omitEmptyMetadata(metadata = {}) {
  *   - NaN
  *   - an empty string
  *   - an empty array
+ *   - an empty object (non-recursively)
  *   - an array comprised of only any of the above elements
  */
 export function valuePresent(value) {
