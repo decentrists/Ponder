@@ -1,9 +1,11 @@
 import cytoscape from 'cytoscape';
+// @ts-ignore
 import panzoom from 'cytoscape-panzoom';
+import { CoreWithPanzoom } from './interfaces';
 
 panzoom(cytoscape);
 
-export default function applyPanzoom(cy) {
+export default function applyPanzoom(cy: CoreWithPanzoom) {
   cy.panzoom({
     // fitPadding: 10,
     fitSelector: ':visible',

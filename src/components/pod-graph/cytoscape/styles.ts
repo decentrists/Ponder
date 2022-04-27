@@ -1,4 +1,6 @@
-export default function styles(cy) {
+import { Core } from 'cytoscape';
+
+export default function styles(cy: Core) {
   Object.entries({
     'background-color': '#020202',
     width: '160px',
