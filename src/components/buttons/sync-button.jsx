@@ -1,5 +1,5 @@
 import React, { useContext } from 'react';
-import { FaBacon } from 'react-icons/fa';
+import { ReactComponent as ArSyncIcon } from '../../assets/arsync-logo.svg';
 import SpinButton from './spin-button';
 import { SubscriptionsContext } from '../../providers/subscriptions';
 import { ArweaveContext } from '../../providers/arweave';
@@ -13,8 +13,13 @@ function SyncButton() {
       disabled={isRefreshing || isSyncing}
       className={isSyncing ? 'spinning' : ''}
       onClick={prepareSync}
+      title={'Upload pending metadata to Arweave'}
+      alt={'Upload pending metadata to Arweave'}
     >
-      <FaBacon />
+      <ArSyncIcon
+        width={'1.5rem'}
+        height={'1.5rem'}
+      />
     </SpinButton>
   );
 }
