@@ -11,7 +11,7 @@ import { ExtendedCore } from './interfaces';
 cytoscape.use(dagre);
 
 type Deps = {
-  setSelectedPodcastId: Function
+  setSelectedPodcastId: (id: string) => void;
 };
 
 export default function createCytoscape(container: CytoscapeOptions['container'],

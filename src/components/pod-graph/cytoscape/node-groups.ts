@@ -1,5 +1,5 @@
 import { Core } from 'cytoscape';
-import { CoreWithPanzoom, ExtendedCore } from './interfaces';
+import { CoreWithPanzoom } from './interfaces';
 
 export default function applyNodeGroups(cy: CoreWithPanzoom) {
   initializeZoomExtrema(cy);

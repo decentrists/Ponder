@@ -35,8 +35,8 @@ interface NodeHtmlLabelArgument {
 }
 
 interface ExtendedCyOptions {
-  panzoom: (options: PanzoomOptions) => {}
-  nodeHtmlLabel: (input: NodeHtmlLabelArgument[]) => {}
+  panzoom: (options: PanzoomOptions) => void
+  nodeHtmlLabel: (input: NodeHtmlLabelArgument[]) => void
 }
 
 // export type ExtendedCore = Core & Pick<ExtendedCyOptions, 'panzoom'>;

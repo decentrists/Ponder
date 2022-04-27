@@ -1,4 +1,6 @@
-const layout = {
+import { DagreLayoutOptions } from 'cytoscape-dagre';
+
+const layout : DagreLayoutOptions = {
   // whether to fit the viewport to the graph
   fit: true,
   // the padding on fit

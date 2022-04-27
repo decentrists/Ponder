@@ -6,6 +6,10 @@ export default function styles(cy: Core) {
     width: '160px',
     height: '160px',
   }).forEach(([k, v]) => {
+    // TODO: below code is indeed correct and should be supported
+    // by the package types but unfortunately it's not. it'll probably
+    // be fixed in a quick time though in its newer versions.
+    // @ts-ignore
     cy.style().selector('node').style(k, v).update();
   });
 
@@ -37,6 +41,7 @@ export default function styles(cy: Core) {
     'text-background-padding': '6px',
     width: 3,
   }).forEach(([k, v]) => {
+    // @ts-ignore
     cy.style().selector('edge').style(k, v).update();
   });
 
@@ -58,6 +63,7 @@ export default function styles(cy: Core) {
     'padding-bottom': '16px',
     'padding-right': '16px',
   }).forEach(([k, v]) => {
+    // @ts-ignore
     cy.style().selector('$node > node').style(k, v).update();
   });
 
@@ -66,6 +72,7 @@ export default function styles(cy: Core) {
     'text-valign': 'bottom',
     'text-halign': 'center',
   }).forEach(([k, v]) => {
+    // @ts-ignore
     cy.style().selector(':parent').style(k, v).update();
   });
 }

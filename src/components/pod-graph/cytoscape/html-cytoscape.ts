@@ -6,7 +6,13 @@ import { CoreWithNodeLabel } from './interfaces';
 // @ts-ignore
 nodeHtmlLabel(cytoscape);
 
-function cardElements(data, selected = '') {
+interface CardData {
+  id: string;
+  imageUrl: string;
+  title: string;
+}
+
+function cardElements(data: CardData, selected = '') {
   return `
     <div class="card-front ${selected}" data-id="${sanitizeHtml(data.id)}">
       <div class="card-front__tp">
@@ -38,7 +44,7 @@ export default function applyHtmlLabel(cy: CoreWithNodeLabel) {
       halignBox: 'center',
       valignBox: 'center',
       tpl(data) {
-        return cardElements(data);
+        return cardElements(data as CardData);
       },
     },
     {
@@ -48,7 +54,7 @@ export default function applyHtmlLabel(cy: CoreWithNodeLabel) {
       halignBox: 'center',
       valignBox: 'center',
       tpl(data) {
-        return cardElements(data, 'selected');
+        return cardElements(data as CardData, 'selected');
       },
     },
     // {

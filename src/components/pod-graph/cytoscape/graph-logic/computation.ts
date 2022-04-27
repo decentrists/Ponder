@@ -1,4 +1,4 @@
-import { NodeDefinition } from 'cytoscape';
+import { EdgeDefinition, NodeDefinition } from 'cytoscape';
 import { v4 as uuid } from 'uuid';
 import { DisjointGraphFunctionNode, Podcast } from './interfaces/interfaces';
 import {
@@ -12,7 +12,7 @@ import {
  * @returns
  *   An array of graph representations grouped by shared keywords & categories
  */
-export const findAllDisjointGraphs = (nodes : DisjointGraphFunctionNode[],
+export const findAllDisjointGraphs = (nodes: DisjointGraphFunctionNode[],
   disjointGraphs : DisjointGraphFunctionNode[][] = []) : DisjointGraphFunctionNode[][] => {
   const firstUnvisitedNode = nodes.find(item => item.visited !== true);
   if (!firstUnvisitedNode) return disjointGraphs;
@@ -47,8 +47,9 @@ export const findAllDisjointGraphs = (nodes : DisjointGraphFunctionNode[],
  */
 const finalizeDisjointGraphsObject = (subscriptions: Podcast[],
   disjointGraphs:DisjointGraphFunctionNode[][]) => disjointGraphs
-  .map(graph => graph.map(node => subscriptions.find(subscription => subscription.subscribeUrl ===
-      node.subscribeUrl)));
+  .map(graph => graph
+    .map(node => subscriptions
+      .find(subscription => subscription.subscribeUrl === node.subscribeUrl)!));
 
 /**
  * @param subscriptions
@@ -103,7 +104,7 @@ export const generateNodes = (disjointGraphs: Podcast[][]) => {
 
 export const generateEdges = (disjointGraphs: Podcast[][]) => {
   const eachDisjointGraphEdges = disjointGraphs.map(graph => graph
-    .reduce((acc, podcast, _, arrayReference) => {
+    .reduce((acc: EdgeDefinition[], podcast, _, arrayReference) => {
       // A match is any other podcast that has one same category or keyword
       let matches = arrayReference.filter(({ categories, keywords }) => (
         haveSharedElements(podcast.categories, categories)
@@ -126,7 +127,7 @@ export const generateEdges = (disjointGraphs: Podcast[][]) => {
       return [...acc, ...result];
     }, [])
   // remove duplicate edges since the graph is undirected.
-    .reduce((acc, edge) => (
+    .reduce((acc: EdgeDefinition[], edge) => (
       acc.some(item => item.data.target === edge.data.source &&
          item.data.source === edge.data.target)
         ? acc
