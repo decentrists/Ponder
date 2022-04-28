@@ -31,7 +31,7 @@ type TagsToFilter = {
   [key: string]: string | string[];
 };
 
-const MAX_BATCH_NUMBER = 100;
+const MAX_BATCHES = 100;
 const MAX_GRAPHQL_NODES = 100;
 
 /** Helper function mapping each {tag: value, ...} to [{name: tag, values: value}, ...] */
@@ -73,7 +73,7 @@ export async function getPodcastFeed(
 
     batch++;
   }
-  while (batch < MAX_BATCH_NUMBER);
+  while (batch < MAX_BATCHES);
 
   const mergedMetadata : Partial<Podcast> =
     { ...mergeBatchMetadata(metadataBatches), ...mergeBatchTags(tagBatches) };
