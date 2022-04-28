@@ -18,9 +18,7 @@ export default createGlobalStyle`
     background-color: var(--color-body);
   }
 
-
-
-  /* Toasts */
+  /* ====== Toasts ====== */
   .toast {
     width: max-content;
     min-width: 400px;
@@ -45,7 +43,7 @@ export default createGlobalStyle`
   }
 
 
-  /* ====== global bootstrap ====== */
+  /* ====== Global bootstrap ====== */
   .form-control {
     outline: 2px solid transparent;
     outline-offset: 2px;

@@ -4,7 +4,7 @@ import { Image } from 'react-bootstrap';
 export const Wrapper = styled.div`
   margin-top:  32px;
   min-width: 100%;
-  display: flex;
+  display: block;
   padding: 0 16px;
   @media only screen and (max-width: 960px) {
     flex-direction: column;
@@ -43,7 +43,6 @@ export const ListItem = styled.div`
     background-color: #030303;
   }
 `;
-
 
 export const TitleHeader = styled.div`
   color: rgba(255, 255, 255, 1);

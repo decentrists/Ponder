@@ -28,7 +28,6 @@ export interface ArSyncTx {
   // TODO: add `timestamp`
 }
 
-
 /** To reduce the size per transaction */
 const MAX_EPISODES_PER_BATCH = 50;
 /** Fail-safe through which we sync max 1000 episodes per podcast */
@@ -52,6 +51,7 @@ export const statusToString = (status: ArSyncTxStatus) => {
   }
 };
 
+// TODO: Refactor to implement high-order functions
 export const findErroredTxs = (txs: ArSyncTx[]) : ArSyncTx[] =>
   txs.filter(tx => tx.status === ArSyncTxStatus.ERRORED);
 

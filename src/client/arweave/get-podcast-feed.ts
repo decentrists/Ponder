@@ -19,6 +19,11 @@ import {
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { QueryTransactionsArgs, TagFilter } from 'arlocal/bin/graphql/types.d';
 
+<<<<<<< HEAD
+=======
+const MAX_BATCH_NUMBER = 100;
+const MAX_GRAPHQL_NODES = 100;
+>>>>>>> T250 ArSync v1.2: Show transaction status
 
 interface TransactionNode { id: string, tags: { name: string, value: string }[] }
 
@@ -32,9 +37,12 @@ type TagsToFilter = {
   [key: string]: string | string[];
 };
 
+<<<<<<< HEAD
 const MAX_BATCH_NUMBER = 100;
 const MAX_GRAPHQL_NODES = 100;
 
+=======
+>>>>>>> T250 ArSync v1.2: Show transaction status
 /** Helper function mapping each {tag: value, ...} to [{name: tag, values: value}, ...] */
 const toTagFilter = (tagsToFilter: TagsToFilter) : TagFilter[] => Object
   .entries(tagsToFilter).map(([tag, value]) => ({
@@ -42,8 +50,13 @@ const toTagFilter = (tagsToFilter: TagsToFilter) : TagFilter[] => Object
     values: Array.isArray(value) ? value : [value],
   }));
 
+<<<<<<< HEAD
 export async function getPodcastFeed(
   subscribeUrl: Podcast['subscribeUrl']) : Promise<Podcast | PodcastFeedError> {
+=======
+export async function getPodcastFeed(subscribeUrl: Podcast['subscribeUrl']) :
+Promise<Podcast | PodcastFeedError> {
+>>>>>>> T250 ArSync v1.2: Show transaction status
 
   const errorMessages : string[] = [];
   const metadataBatches = [];

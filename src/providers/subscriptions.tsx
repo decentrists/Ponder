@@ -34,8 +34,6 @@ export const SubscriptionsContext = createContext<SubscriptionContextType>({
 });
 
 function readCachedPodcasts() {
-  // TODO: use e.g. WebSQL instead of localStorage
-  // https://stackoverflow.com/questions/6116053/javascript-library-to-bridge-indexeddb-and-websql
   const cachedSubscriptions = localStorage.getItem('subscriptions');
   const podcasts = cachedSubscriptions ? JSON.parse(cachedSubscriptions) : [];
   return podcastsFromDTO(podcasts);
