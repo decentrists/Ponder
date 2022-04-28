@@ -18,6 +18,7 @@ export default createGlobalStyle`
     background-color: var(--color-body);
   }
 
+  /* Toasts */
   .toast {
     width: max-content;
     min-width: 400px;
@@ -39,6 +40,25 @@ export default createGlobalStyle`
 
   .toast-warning {
     background-color: #e9c98a;
+  }
+
+  /* ====== Material UI ====== */
+  // TODO: Remove the need for !important, see:
+  //       https://mui.com/material-ui/guides/interoperability/#global-css
+  .MuiTab-textColorPrimary {
+    color: white !important;
+  }
+
+  .MuiTabs-indicator {
+    background-color: #4b9b73 !important;
+  }
+
+  .Mui-selected {
+    color: #4b9b73 !important;
+  }
+
+  .MuiBox-root {
+    padding: 0.5rem 0 0 0 !important,
   }
 
   /* =================== global boot strap =========================*/
@@ -96,7 +116,7 @@ export default createGlobalStyle`
   /* =================== scroll bar =========================*/
   /* width */
   ::-webkit-scrollbar {
-    width: 1px;
+    width: 8px;
   }
 
   /* Track */
@@ -113,7 +133,7 @@ export default createGlobalStyle`
 
   /* Handle on hover */
   ::-webkit-scrollbar-thumb:hover {
-    background:#2b2c2b;
+    background: #2b2c2b;
   }
 
   /* =================== Modal =========================*/

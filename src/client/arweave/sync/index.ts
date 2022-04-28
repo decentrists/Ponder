@@ -1,106 +1,158 @@
+import { v4 as uuid } from 'uuid';
 import Transaction from 'arweave/node/lib/transaction';
 import { JWKInterface } from 'arweave/node/lib/wallet';
-import * as arweave from '..';
 import { Podcast } from '../../interfaces';
 import { findMetadata, hasMetadata } from '../../../utils';
 import { getMetadataBatchNumber } from '../create-transaction';
 import { rightDiff } from './diff-merge-logic';
+import * as arweave from '..';
+
+export enum ArSyncTxStatus {
+  ERRORED,
+  INITIALIZED,
+  POSTED,
+  CONFIRMED,
+  REJECTED, // If tx confirmation fails
+}
+
+export interface TransactionDTO extends Transaction {}
+
+export interface ArSyncTx {
+  id: string,
+  subscribeUrl: string, // TODO: pending T244, change to 'podcastId'
+  title?: string,
+  resultObj: Transaction | TransactionDTO | Error,
+  metadata: Partial<Podcast>,
+  status: ArSyncTxStatus,
+  // TODO: add `timestamp`
+}
+
+/** Helper function in order to retain numeric ArSyncTxStatus enums */
+export const statusToString = (status: ArSyncTxStatus) => {
+  switch (status) {
+    case ArSyncTxStatus.ERRORED:
+      return 'Error';
+    case ArSyncTxStatus.INITIALIZED:
+      return 'Initialized';
+    case ArSyncTxStatus.POSTED:
+      return 'Posted';
+    case ArSyncTxStatus.CONFIRMED:
+      return 'Confirmed';
+    case ArSyncTxStatus.REJECTED:
+      return 'Rejected';
+    default:
+      return 'Unknown';
+  }
+};
 
 /** To reduce the size per transaction */
 const MAX_EPISODES_PER_BATCH = 50;
 /** Fail-safe through which we sync max 1000 episodes per podcast */
 const MAX_BATCHES = 20;
 
-export interface ArSyncTransaction<T> {
-  subscribeUrl: string,
-  title?: string,
-  resultObj: T,
-  metadata: Podcast,
-}
+export const findErroredTxs = (txs: ArSyncTx[]) : ArSyncTx[] =>
+  txs.filter(tx => tx.status === ArSyncTxStatus.ERRORED);
 
-export async function initArSyncTxs(subscriptions: Podcast[],
-  metadataToSync: Partial<Podcast>[], wallet: JWKInterface) {
+export const findInitializedTxs = (txs: ArSyncTx[]) : ArSyncTx[] =>
+  txs.filter(tx => tx.status === ArSyncTxStatus.INITIALIZED);
 
-  const txs : ArSyncTransaction<Transaction>[] = [];
-  const failedTxs : ArSyncTransaction<Error>[] = [];
+export const findPostedTxs = (txs: ArSyncTx[]) : ArSyncTx[] =>
+  txs.filter(tx => tx.status === ArSyncTxStatus.POSTED);
+
+export const findConfirmedTxs = (txs: ArSyncTx[]) : ArSyncTx[] =>
+  txs.filter(tx => tx.status === ArSyncTxStatus.CONFIRMED);
+
+export async function initArSyncTxs(
+  subscriptions: Podcast[], metadataToSync: Partial<Podcast>[], wallet: JWKInterface)
+  : Promise<ArSyncTx[]> {
+
+  const result : ArSyncTx[] = [];
   const partitionedMetadataToSync : Partial<Podcast>[] = [];
 
   metadataToSync.forEach(podcastMetadataToSync => {
     let cachedMetadata : Partial<Podcast> = {};
     if (hasMetadata(podcastMetadataToSync)) {
-      const { subscribeUrl } = podcastMetadataToSync;
-      cachedMetadata = findMetadata(subscribeUrl!, subscriptions);
+      let subscribeUrl! : string;
+      try {
+        subscribeUrl = podcastMetadataToSync.subscribeUrl!;
+        cachedMetadata = findMetadata(subscribeUrl, subscriptions);
 
-      // A transaction will be created for each batchesToSync[i]
-      const batchesToSync = partitionMetadataBatches(cachedMetadata, podcastMetadataToSync);
-      partitionedMetadataToSync.push(...batchesToSync);
+        // A transaction will be created for each batchesToSync[i]
+        const batchesToSync = partitionMetadataBatches(cachedMetadata, podcastMetadataToSync);
+        partitionedMetadataToSync.push(...batchesToSync);
+      }
+      catch (ex) {
+        // This would only occur due to an unforeseen error in our code
+        console.error(`Failed to sync ${subscribeUrl} due to: ${ex}`);
+      }
     }
   });
 
   await Promise.all(partitionedMetadataToSync.map(async podcastToSync => {
     if (hasMetadata(podcastToSync)) {
-      const { subscribeUrl } = podcastToSync;
+      let subscribeUrl! : string;
       let cachedMetadata : Partial<Podcast> = {};
       let newTxResult : Transaction | Error;
       try {
-        cachedMetadata = findMetadata(subscribeUrl!, subscriptions);
+        subscribeUrl = podcastToSync.subscribeUrl!;
+        cachedMetadata = findMetadata(subscribeUrl, subscriptions);
         newTxResult = await arweave.newMetadataTransaction(wallet, podcastToSync, cachedMetadata);
       }
       catch (ex) {
         newTxResult = ex as Error;
       }
-      const status = {
+      const arSyncTx : ArSyncTx = {
+        id: uuid(),
         subscribeUrl,
-        title: cachedMetadata.title || '',
+        title: cachedMetadata.title || podcastToSync.title || '',
         resultObj: newTxResult,
         metadata: podcastToSync,
+        status: newTxResult instanceof Error ? ArSyncTxStatus.ERRORED : ArSyncTxStatus.INITIALIZED,
       };
-      status.resultObj instanceof Error ? failedTxs.push(status as ArSyncTransaction<Error>)
-        : txs.push(status as ArSyncTransaction<Transaction>);
+      result.push(arSyncTx);
     }
   }));
-  console.debug('initArSyncTxs txs=', txs);
-  console.debug('initArSyncTxs failedTxs=', failedTxs);
+  console.debug('initArSyncTxs result:', result);
 
-  return { txs, failedTxs };
+  return result;
 }
 
-export async function startSync(pendingTxs: ArSyncTransaction<Transaction>[],
-  wallet: JWKInterface) {
-
-  const txs : ArSyncTransaction<Transaction>[] = [];
-  const failedTxs : ArSyncTransaction<Error>[] = [];
-
-  await Promise.all(pendingTxs.map(async pendingTx => {
-    let postedTxResult;
-    try {
-      postedTxResult = await arweave.signAndPostTransaction(pendingTx.resultObj, wallet);
+export async function startSync(allTxs: ArSyncTx[], wallet: JWKInterface) : Promise<ArSyncTx[]> {
+  const result : ArSyncTx[] = [...allTxs];
+  await Promise.all(allTxs.map(async (tx, index) => {
+    if (tx.status === ArSyncTxStatus.INITIALIZED) {
+      let postedTxResult : Transaction | Error;
+      try {
+        postedTxResult =
+          await arweave.signAndPostTransaction(tx.resultObj as Transaction, wallet);
+      }
+      catch (ex) {
+        postedTxResult = ex as Error;
+      }
+      const arSyncTx : ArSyncTx = {
+        ...tx,
+        resultObj: postedTxResult,
+        status: postedTxResult instanceof Error ? ArSyncTxStatus.ERRORED : ArSyncTxStatus.POSTED,
+      };
+      result[index] = arSyncTx;
     }
-    catch (ex) {
-      postedTxResult = ex;
-    }
-    const status = {
-      ...pendingTx,
-      resultObj: postedTxResult,
-    };
-    postedTxResult instanceof Error ? failedTxs.push(status as ArSyncTransaction<Error>)
-      : txs.push(status as ArSyncTransaction<Transaction>);
+    else result[index] = tx;
   }));
-  console.debug('startSync txs=', txs);
-  console.debug('startSync failedTxs=', failedTxs);
+  console.debug('startSync result:', result);
 
-  return { txs, failedTxs };
+  return result;
 }
 
 /**
- * TODO: split by JSON.stringify(compress(batchMetadata)) instead of MAX_EPISODES_PER_BATCH
+ * TODO: T262, split by compress(JSON.stringify(batchMetadata)).length instead of
+ *       MAX_EPISODES_PER_BATCH.
  * @param cachedMetadata
  * @param podcastMetadataToSync
- * @returns {Array.<Object>}
- *   A array of partitioned `podcastMetadata`, which when merged should equal `podcastMetadata`.
+ * @returns An array of partitioned `podcastMetadataToSync`, which when merged should equal
+ *   `podcastMetadataToSync`.
  */
-function partitionMetadataBatches(cachedMetadata: Partial<Podcast>,
-  podcastMetadataToSync: Partial<Podcast>) {
+function partitionMetadataBatches(
+  cachedMetadata: Partial<Podcast>, podcastMetadataToSync: Partial<Podcast>) : Partial<Podcast>[] {
 
   const { episodes, ...mainMetadata } = { ...podcastMetadataToSync };
   if (!hasMetadata(episodes)) return [podcastMetadataToSync];
@@ -128,19 +180,20 @@ function partitionMetadataBatches(cachedMetadata: Partial<Podcast>,
   return batches.filter(batch => hasMetadata(batch));
 }
 
-export function formatNewMetadataToSync(txs: ArSyncTransaction<Transaction>[],
-  prevMetadataToSync: Partial<Podcast>[] = []) {
+export function formatNewMetadataToSync(
+  allTxs: ArSyncTx[], prevMetadataToSync: Partial<Podcast>[] = []) : Partial<Podcast>[] {
 
   let diffs = prevMetadataToSync;
+  allTxs.forEach(tx => {
+    if (tx.status === ArSyncTxStatus.POSTED || ArSyncTxStatus.CONFIRMED) {
+      const { subscribeUrl, metadata } = tx;
+      const prevPodcastToSyncDiff = findMetadata(subscribeUrl, diffs);
+      let newDiff : Partial<Podcast> = {};
+      if (hasMetadata(prevPodcastToSyncDiff)) newDiff = rightDiff(metadata, prevPodcastToSyncDiff);
 
-  txs.forEach(tx => {
-    const { subscribeUrl, metadata } = tx;
-    const prevSynchedPodcastDiff = findMetadata(subscribeUrl, diffs);
-    let newDiff : Partial<Podcast> = {};
-    if (hasMetadata(prevSynchedPodcastDiff)) newDiff = rightDiff(metadata, prevSynchedPodcastDiff);
-
-    diffs = diffs.filter(oldDiff => oldDiff.subscribeUrl !== subscribeUrl);
-    if (hasMetadata(newDiff)) diffs.push(newDiff);
+      diffs = diffs.filter(oldDiff => oldDiff.subscribeUrl !== subscribeUrl);
+      if (hasMetadata(newDiff)) diffs.push(newDiff);
+    }
   });
 
   return diffs;

@@ -1,4 +1,4 @@
-import { initArSyncTxs, startSync } from '..';
+import { initArSyncTxs, startSync, ArSyncTxStatus } from '..';
 import { addTag } from '../../client';
 import { newMetadataTransaction, signAndPostTransaction } from '../../create-transaction';
 
@@ -62,10 +62,14 @@ const podcast2 = {
 };
 const wallet = {};
 const mockTransaction = { addTag };
-const mockTransaction2 = { addTag, id: 'another transaction' };
+const mockTransaction2 = { addTag, id: 'transaction 2' };
+const mockTransaction3 = { addTag, id: 'transaction 3' };
 const mockError = new Error('mock error');
 const mockError2 = new Error('mock error 2');
-
+const mockMetadata1 = { subscribeUrl: 'https://example.com/podcast1' };
+const mockMetadata2 = { subscribeUrl: 'https://example.com/podcast2' };
+const mockMetadata3 = { subscribeUrl: 'https://example.com/podcast3' };
+const NON_EMPTY_STRING = expect.stringMatching(/.+/);
 /**
  * NOTE: newMetadataTransaction() is mocked here, as it's tested in create-transaction.test.js.
  * TODO: test partitionMetadataBatches()
@@ -76,9 +80,9 @@ describe('initArSyncTxs', () => {
   describe('When metadataToSync is empty', () => {
     const metadataToSync = [];
 
-    it('returns 0 txs and 0 failedTxs', async () => {
+    it('returns 0 txs', async () => {
       const result = await initArSyncTxs(subscriptions, metadataToSync, wallet);
-      expect(result).toStrictEqual({ txs: [], failedTxs: [] });
+      expect(result).toStrictEqual([]);
     });
   });
 
@@ -88,9 +92,9 @@ describe('initArSyncTxs', () => {
       episodes: [],
     }];
 
-    it('returns 0 txs and 0 failedTxs', async () => {
+    it('returns 0 txs', async () => {
       const result = await initArSyncTxs(subscriptions, metadataToSync, wallet);
-      expect(result).toStrictEqual({ txs: [], failedTxs: [] });
+      expect(result).toStrictEqual([]);
     });
   });
 
@@ -107,20 +111,19 @@ describe('initArSyncTxs', () => {
         },
       ];
 
-      it('returns 1 txs and 0 failedTxs', async () => {
+      it('returns 1 initialized tx', async () => {
         newMetadataTransaction.mockResolvedValueOnce(mockTransaction);
         const result = await initArSyncTxs(subscriptions, metadataToSync, wallet);
-        expect(result).toStrictEqual({
-          txs: [
-            {
-              subscribeUrl: 'https://example.com/podcast2',
-              title: 'podcast2 cachedTitle',
-              resultObj: mockTransaction,
-              metadata: { ...metadataToSync[1], metadataBatch: 0 },
-            },
-          ],
-          failedTxs: [],
-        });
+        expect(result).toStrictEqual([
+          {
+            id: NON_EMPTY_STRING,
+            subscribeUrl: 'https://example.com/podcast2',
+            title: 'podcast2 cachedTitle',
+            resultObj: mockTransaction,
+            metadata: { ...metadataToSync[1], metadataBatch: 0 },
+            status: ArSyncTxStatus.INITIALIZED,
+          },
+        ]);
       });
     });
 
@@ -139,78 +142,80 @@ describe('initArSyncTxs', () => {
       ];
 
       describe('When both podcasts to sync return a Transaction', () => {
-        it('returns 2 txs and 0 failedTxs', async () => {
+        it('returns 2 initialized txs', async () => {
           newMetadataTransaction.mockResolvedValueOnce(mockTransaction);
           newMetadataTransaction.mockResolvedValueOnce(mockTransaction2);
           const result = await initArSyncTxs(subscriptions, metadataToSync, wallet);
-          expect(result).toStrictEqual({
-            txs: [
-              {
-                subscribeUrl: 'https://example.com/podcast1',
-                title: 'cachedTitle',
-                resultObj: mockTransaction,
-                metadata: metadataToSync[0],
-              },
-              {
-                subscribeUrl: 'https://example.com/podcast2',
-                title: 'podcast2 cachedTitle',
-                resultObj: mockTransaction2,
-                metadata: { ...metadataToSync[1], metadataBatch: 0 },
-              },
-            ],
-            failedTxs: [],
-          });
+          expect(result).toStrictEqual([
+            {
+              id: NON_EMPTY_STRING,
+              subscribeUrl: 'https://example.com/podcast1',
+              title: 'cachedTitle',
+              resultObj: mockTransaction,
+              metadata: metadataToSync[0],
+              status: ArSyncTxStatus.INITIALIZED,
+            },
+            {
+              id: NON_EMPTY_STRING,
+              subscribeUrl: 'https://example.com/podcast2',
+              title: 'podcast2 cachedTitle',
+              resultObj: mockTransaction2,
+              metadata: { ...metadataToSync[1], metadataBatch: 0 },
+              status: ArSyncTxStatus.INITIALIZED,
+            },
+          ]);
         });
       });
 
       describe('When 1 podcast to sync throws an error', () => {
-        it('returns 1 txs and 1 failedTxs', async () => {
+        it('returns 1 initialized tx and 1 errored tx', async () => {
           newMetadataTransaction.mockRejectedValueOnce(mockError);
           newMetadataTransaction.mockResolvedValueOnce(mockTransaction);
           const result = await initArSyncTxs(subscriptions, metadataToSync, wallet);
-          expect(result).toStrictEqual({
-            txs: [
-              {
-                subscribeUrl: 'https://example.com/podcast2',
-                title: 'podcast2 cachedTitle',
-                resultObj: mockTransaction,
-                metadata: { ...metadataToSync[1], metadataBatch: 0 },
-              },
-            ],
-            failedTxs: [
-              {
-                subscribeUrl: 'https://example.com/podcast1',
-                title: 'cachedTitle',
-                resultObj: mockError,
-                metadata: metadataToSync[0],
-              },
-            ],
-          });
+          expect(result).toStrictEqual([
+            {
+              id: NON_EMPTY_STRING,
+              subscribeUrl: 'https://example.com/podcast1',
+              title: 'cachedTitle',
+              resultObj: mockError,
+              metadata: metadataToSync[0],
+              status: ArSyncTxStatus.ERRORED,
+            },
+            {
+              id: NON_EMPTY_STRING,
+              subscribeUrl: 'https://example.com/podcast2',
+              title: 'podcast2 cachedTitle',
+              resultObj: mockTransaction,
+              metadata: { ...metadataToSync[1], metadataBatch: 0 },
+              status: ArSyncTxStatus.INITIALIZED,
+            },
+          ]);
         });
       });
 
       describe('When both podcasts to sync throw an error', () => {
-        it('returns 0 txs and 2 failedTxs', async () => {
+        it('returns 2 errored txs', async () => {
           newMetadataTransaction.mockRejectedValueOnce(mockError);
           newMetadataTransaction.mockRejectedValueOnce(mockError2);
           const result = await initArSyncTxs(subscriptions, metadataToSync, wallet);
-          expect(result).toStrictEqual({
-            txs: [],
-            failedTxs: [
-              {
-                subscribeUrl: 'https://example.com/podcast1',
-                title: 'cachedTitle',
-                resultObj: mockError,
-                metadata: metadataToSync[0],
-              },
-              {
-                subscribeUrl: 'https://example.com/podcast2',
-                title: 'podcast2 cachedTitle',
-                resultObj: mockError2,
-                metadata: { ...metadataToSync[1], metadataBatch: 0 },
-              },
-            ],
-          });
+          expect(result).toStrictEqual([
+            {
+              id: NON_EMPTY_STRING,
+              subscribeUrl: 'https://example.com/podcast1',
+              title: 'cachedTitle',
+              resultObj: mockError,
+              metadata: metadataToSync[0],
+              status: ArSyncTxStatus.ERRORED,
+            },
+            {
+              id: NON_EMPTY_STRING,
+              subscribeUrl: 'https://example.com/podcast2',
+              title: 'podcast2 cachedTitle',
+              resultObj: mockError2,
+              metadata: { ...metadataToSync[1], metadataBatch: 0 },
+              status: ArSyncTxStatus.ERRORED,
+            },
+          ]);
         });
       });
     });
@@ -223,50 +228,112 @@ describe('startSync', () => {
 
     it('returns 0 txs and 0 failedTxs', async () => {
       const result = await startSync(pendingTxs, wallet);
-      expect(result).toStrictEqual({ txs: [], failedTxs: [] });
+      expect(result).toStrictEqual([]);
     });
   });
 
-  describe('When there are 2 pendingTxs and 1 fails', () => {
-    const mockMetadata1 = { subscribeUrl: 'https://example.com/podcast1' };
-    const mockMetadata2 = { subscribeUrl: 'https://example.com/podcast2' };
-    const pendingTxs = [
+  describe('When there are 2 initialized txs and 1 fails to post', () => {
+    const arSyncTxs = [
       {
+        id: '1',
         subscribeUrl: 'https://example.com/podcast1',
         title: 'cachedTitle',
         resultObj: mockTransaction,
         metadata: mockMetadata1,
+        status: ArSyncTxStatus.INITIALIZED,
       },
       {
+        id: '2',
         subscribeUrl: 'https://example.com/podcast2',
         title: 'podcast2 cachedTitle',
         resultObj: mockTransaction,
         metadata: mockMetadata2,
+        status: ArSyncTxStatus.INITIALIZED,
       },
     ];
 
-    it('returns 1 txs and 1 failedTxs', async () => {
+    it('returns 1 posted tx and 1 errored tx', async () => {
       signAndPostTransaction.mockRejectedValueOnce(mockError);
       signAndPostTransaction.mockResolvedValueOnce(mockTransaction);
-      const result = await startSync(pendingTxs, wallet);
-      expect(result).toStrictEqual({
-        txs: [
-          {
-            subscribeUrl: 'https://example.com/podcast2',
-            title: 'podcast2 cachedTitle',
-            resultObj: mockTransaction,
-            metadata: mockMetadata2,
-          },
-        ],
-        failedTxs: [
-          {
-            subscribeUrl: 'https://example.com/podcast1',
-            title: 'cachedTitle',
-            resultObj: mockError,
-            metadata: mockMetadata1,
-          },
-        ],
-      });
+      const result = await startSync(arSyncTxs, wallet);
+      expect(result).toStrictEqual([
+        {
+          id: '1',
+          subscribeUrl: 'https://example.com/podcast1',
+          title: 'cachedTitle',
+          resultObj: mockError,
+          metadata: mockMetadata1,
+          status: ArSyncTxStatus.ERRORED,
+        },
+        {
+          id: '2',
+          subscribeUrl: 'https://example.com/podcast2',
+          title: 'podcast2 cachedTitle',
+          resultObj: mockTransaction,
+          metadata: mockMetadata2,
+          status: ArSyncTxStatus.POSTED,
+        },
+      ]);
+    });
+  });
+
+  describe('When there are 1 initialized tx and 2 other txs', () => {
+    const arSyncTxs = [
+      {
+        id: '1',
+        subscribeUrl: 'https://example.com/podcast1',
+        title: 'cachedTitle',
+        resultObj: mockTransaction,
+        metadata: mockMetadata1,
+        status: ArSyncTxStatus.ERRORED,
+      },
+      {
+        id: '2',
+        subscribeUrl: 'https://example.com/podcast2',
+        title: 'podcast2 cachedTitle',
+        resultObj: mockTransaction2,
+        metadata: mockMetadata2,
+        status: ArSyncTxStatus.INITIALIZED,
+      },
+      {
+        id: '3',
+        subscribeUrl: 'https://example.com/podcast3',
+        title: 'podcast3 cachedTitle',
+        resultObj: mockTransaction3,
+        metadata: mockMetadata3,
+        status: ArSyncTxStatus.CONFIRMED,
+      },
+    ];
+
+    it('returns 1 posted tx along with the 2 other txs', async () => {
+      signAndPostTransaction.mockResolvedValueOnce(mockTransaction2);
+      const result = await startSync(arSyncTxs, wallet);
+      expect(result).toEqual([
+        {
+          id: '1',
+          subscribeUrl: 'https://example.com/podcast1',
+          title: 'cachedTitle',
+          resultObj: mockTransaction,
+          metadata: mockMetadata1,
+          status: ArSyncTxStatus.ERRORED,
+        },
+        {
+          id: '2',
+          subscribeUrl: 'https://example.com/podcast2',
+          title: 'podcast2 cachedTitle',
+          resultObj: mockTransaction2,
+          metadata: mockMetadata2,
+          status: ArSyncTxStatus.POSTED,
+        },
+        {
+          id: '3',
+          subscribeUrl: 'https://example.com/podcast3',
+          title: 'podcast3 cachedTitle',
+          resultObj: mockTransaction3,
+          metadata: mockMetadata3,
+          status: ArSyncTxStatus.CONFIRMED,
+        },
+      ]);
     });
   });
 });

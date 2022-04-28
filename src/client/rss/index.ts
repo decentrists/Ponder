@@ -168,7 +168,7 @@ Promise<Podcast | PodcastFeedError> {
   let feed;
   try {
     feed = await parser.parseURL(withCorsProxy(subscribeUrl));
-    return formatPodcastFeed(feed as RssPodcastFeed, subscribeUrl!);
+    return formatPodcastFeed(feed as RssPodcastFeed, subscribeUrl!) as Podcast;
   }
   catch (ex) {
     /* TODO: Update error message after implementation of user-specified CORS-Proxies */

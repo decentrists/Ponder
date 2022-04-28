@@ -4,7 +4,7 @@ import { findMetadata, hasMetadata } from '../utils';
 import { mergeBatchMetadata, simpleDiff, rightDiff } from './arweave/sync/diff-merge-logic';
 import { Podcast } from './interfaces';
 
-async function fetchFeeds(subscribeUrl: string) {
+async function fetchFeeds(subscribeUrl: Podcast['subscribeUrl']) {
   const [arweaveFeed, rssFeed] = await Promise.all([
     arweave.getPodcastFeed(subscribeUrl),
     rss.getPodcastFeed(subscribeUrl),
@@ -15,7 +15,9 @@ async function fetchFeeds(subscribeUrl: string) {
   };
 }
 
-export async function getPodcast(subscribeUrl: string, metadataToSync : Partial<Podcast>[] = []) {
+export async function getPodcast(
+  subscribeUrl: Podcast['subscribeUrl'], metadataToSync: Partial<Podcast>[] = []) {
+
   const feed = await fetchFeeds(subscribeUrl);
   if ('errorMessage' in feed.arweave) {
     return { errorMessage: feed.arweave.errorMessage };
@@ -42,8 +44,9 @@ export async function getPodcast(subscribeUrl: string, metadataToSync : Partial<
   return { newPodcastMetadata, newPodcastMetadataToSync };
 }
 
-export async function refreshSubscriptions(subscriptions: Podcast[],
-  metadataToSync : Partial<Podcast>[] = []) {
+export async function refreshSubscriptions(
+  subscriptions: Podcast[], metadataToSync: Partial<Podcast>[] = []) {
+
   const errorMessages : string[] = [];
   const newSubscriptions : Podcast[] = [];
   const newMetadataToSync : Partial<Podcast>[] = [];

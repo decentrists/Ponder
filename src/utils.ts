@@ -45,10 +45,14 @@ export type Primitive = string | boolean | number;
 
 export type EmptyTypes = null | undefined | {};
 
+export function episodesCount(metadata: Partial<Podcast>) : number {
+  return isNotEmpty(metadata.episodes) ? metadata.episodes.length : 0;
+}
+
 /**
  * @param messages
- * @param  filterDuplicates
- * @returns
+ * @param filterDuplicates
+ * @returns The `messages` concatenated by '\n'
  */
 export function concatMessages(messages : string[] = [], filterDuplicates = false) {
   return (filterDuplicates ? [...new Set(messages.flat())] : messages.flat())
@@ -76,9 +80,8 @@ export function toDate(date: string | Date | undefined) : Date {
  * @returns true if `metadata` has specific metadata other than:
  *   `subscribeUrl`, `publishedAt` and an empty episodes list
  */
-export function hasMetadata<T extends Partial<Podcast>[]
-| Partial<Episode>[], K extends Partial<Podcast>
-| Partial<Episode>>(metadata: K | T | EmptyTypes) : metadata is T | K {
+export function hasMetadata<T extends Partial<Podcast>[] | Partial<Episode>[],
+K extends Partial<Podcast> | Partial<Episode>>(metadata: K | T | EmptyTypes) : metadata is T | K {
 
   if (!isNotEmpty(metadata)) return false;
   if (Array.isArray(metadata)) return true;
@@ -91,8 +94,8 @@ export function hasMetadata<T extends Partial<Podcast>[]
   return !!Object.values(specificMetadata).flat().filter(x => x).length;
 }
 
-export function findMetadata(subscribeUrl: string,
-  arrayOfMetadata : Partial<Podcast>[] = []) : Partial<Podcast> {
+export function findMetadata(subscribeUrl: Podcast['subscribeUrl'],
+  arrayOfMetadata: Partial<Podcast>[] = []) : Partial<Podcast> {
   return arrayOfMetadata.find(obj => isNotEmpty(obj) && obj.subscribeUrl === subscribeUrl) || {};
 }
 
@@ -203,6 +206,7 @@ export function corsApiHeaders() {
 
 export function corsProxyURL() {
   return 'https://corsanywhere.herokuapp.com/';
+  // return 'https://cors-anywhere.herokuapp.com/';
 }
 
 export function withCorsProxy(url: string) {

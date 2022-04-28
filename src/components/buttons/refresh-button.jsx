@@ -6,11 +6,11 @@ import { ArweaveContext } from '../../providers/arweave';
 
 function RefreshButton() {
   const { isRefreshing, refresh } = useContext(SubscriptionsContext);
-  const { isSyncing } = useContext(ArweaveContext);
+  const { isSyncing, hasPendingTxs } = useContext(ArweaveContext);
 
   return (
     <SpinButton
-      disabled={isRefreshing || isSyncing}
+      disabled={isRefreshing || isSyncing || hasPendingTxs}
       className={isRefreshing ? 'spinning' : ''}
       onClick={() => refresh(false)}
       title={'Refresh subscriptions from RSS & Arweave'}

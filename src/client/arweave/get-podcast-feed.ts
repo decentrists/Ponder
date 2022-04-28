@@ -11,23 +11,40 @@ import {
 import { toTag, fromTag } from './utils';
 import { mergeBatchMetadata, mergeBatchTags } from './sync/diff-merge-logic';
 import {
+  PodcastFeedError,
   Podcast,
   PodcastTags,
   ALLOWED_ARWEAVE_TAGS,
 } from '../interfaces';
+// eslint-disable-next-line import/no-extraneous-dependencies
+import { QueryTransactionsArgs, TagFilter } from 'arlocal/bin/graphql/types.d';
 
 const MAX_BATCH_NUMBER = 100;
+const MAX_GRAPHQL_NODES = 100;
 
 interface TransactionNode { id: string, tags: { name: string, value: string }[] }
 
-type GetPodcastFeedForBatchReturnType = {
-  errorMessage?: string;
-  metadata: Podcast | {};
-  tags: PodcastTags | {};
+/** Type signature accepted by the Arweave API's '/graphql' endpoint */
+type GraphQLQuery = {
+  query: string,
+  variables: QueryTransactionsArgs,
 };
 type AllowedArweaveTags = typeof ALLOWED_ARWEAVE_TAGS[number];
+type TagsToFilter = {
+  [key: string]: string | string[];
+};
 
-export async function getPodcastFeed(subscribeUrl: string) {
+/** Helper function mapping each {tag: value, ...} to [{name: tag, values: value}, ...] */
+const toTagFilter = (tagsToFilter: TagsToFilter) : TagFilter[] => {
+  return Object.entries(tagsToFilter).map(([tag, value]) => ({
+    name: toTag(tag),
+    values: Array.isArray(value) ? value : [value],
+  }));
+};
+
+export async function getPodcastFeed(subscribeUrl: Podcast['subscribeUrl']) :
+Promise<Podcast | PodcastFeedError> {
+
   const errorMessages : string[] = [];
   const metadataBatches = [];
   const tagBatches : PodcastTags[] = [];
@@ -35,7 +52,8 @@ export async function getPodcastFeed(subscribeUrl: string) {
   let batch = 0;
   do {
     // console.debug(`getPodcastFeedForBatch(${subscribeUrl}, ${batch})`);
-    const { errorMessage, metadata, tags } = await getPodcastFeedForBatch(subscribeUrl, batch);
+    const gqlQuery = formatGqlQueryForTags({ subscribeUrl, metadataBatch: `${batch}` });
+    const { errorMessage, metadata, tags } = await getPodcastFeedForGqlQuery(gqlQuery);
     // console.debug('errorMessage=', errorMessage);
     // console.debug('metadata=', metadata);
     // console.debug('tags=', tags);
@@ -66,43 +84,22 @@ export async function getPodcastFeed(subscribeUrl: string) {
                            `metadata from Arweave:\n${concatMessages(errorMessages, true)}` };
   }
 
-  return mergedMetadata;
+  return mergedMetadata as Podcast;
 }
 
-async function getPodcastFeedForBatch(subscribeUrl: string,
-  batch: number) : Promise<GetPodcastFeedForBatchReturnType> {
-  const gqlQuery = {
-    query: `
-      query GetPodcast($tags: [TagFilter!]!) {
-        transactions(tags: $tags, first: 100, sort: HEIGHT_DESC) {
-          edges {
-            node {
-              id
-              tags {
-                name
-                value
-              }
-            }
-          }
-        }
-      }
-    `,
-    variables: {
-      tags: [
-        {
-          name: toTag('subscribeUrl'),
-          values: [subscribeUrl],
-        },
-        {
-          name: toTag('metadataBatch'),
-          // Here we could get multiple batches at the same time, but fetching one at a time
-          // allows us to select the best metadata from many (partial) copies of the same batch,
-          // without quickly exceeding the 100 transaction limit of the GraphQL response.
-          values: [`${batch}`],
-        },
-      ],
-    },
-  };
+export async function getPodcastFeedForTxIds(ids: string[]) {
+  // TODO: expand getPodcastFeedForGqlQuery to fetchData multiple nodes
+  return getPodcastFeedForGqlQuery(formatGqlQueryForIds(ids));
+}
+
+type GetPodcastFeedForGqlQueryReturnType = {
+  errorMessage?: string;
+  metadata: Podcast | {};
+  tags: PodcastTags | {};
+};
+
+async function getPodcastFeedForGqlQuery(gqlQuery: GraphQLQuery) :
+Promise<GetPodcastFeedForGqlQueryReturnType> {
 
   let edges;
   let errorMessage;
@@ -130,8 +127,8 @@ async function getPodcastFeedForBatch(subscribeUrl: string,
       .map(tag => ({
         ...tag,
         name: fromTag(tag.name),
-        value: ['firstEpisodeDate', 'lastEpisodeDate', 'lastBuildDate'].includes(
-          fromTag(tag.name)) ? toDate(tag.value) : tag.value,
+        value: (['firstEpisodeDate', 'lastEpisodeDate', 'lastBuildDate'].includes(
+          fromTag(tag.name)) ? toDate(tag.value) : tag.value),
       }))
       .reduce((acc, tag) => ({
         ...acc,
@@ -172,4 +169,56 @@ async function getPodcastFeedForBatch(subscribeUrl: string,
 
   // TODO: T251 sanity check podcastMetadata => reject episodes where !isValidDate(publishedAt)
   return { metadata, tags };
+}
+
+/**
+ * @param tagFilter
+ * @returns An Object with the query formatted for Arweave's '/graphql' endpoint
+ */
+function formatGqlQueryForTags(tagsToFilter: TagsToFilter) : GraphQLQuery {
+  const tags = toTagFilter(tagsToFilter);
+
+  return {
+    query: `
+      query GetPodcast($tags: [TagFilter!]!) {
+        transactions(tags: $tags, first: ${MAX_GRAPHQL_NODES}, sort: HEIGHT_DESC) {
+          edges {
+            node {
+              id
+              tags {
+                name
+                value
+              }
+            }
+          }
+        }
+      }
+    `,
+    variables: { tags },
+  };
+}
+
+/**
+ * @param ids
+ * @returns An Object with the query formatted for Arweave's '/graphql' endpoint
+ */
+function formatGqlQueryForIds(ids: string[]) : GraphQLQuery {
+  return {
+    query: `
+      query GetPodcast($ids: [ID!]!) {
+        transactions(ids: $ids, first: ${MAX_GRAPHQL_NODES}, sort: HEIGHT_DESC) {
+          edges {
+            node {
+              id
+              tags {
+                name
+                value
+              }
+            }
+          }
+        }
+      }
+    `,
+    variables: { ids },
+  };
 }
