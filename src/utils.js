@@ -117,8 +117,8 @@ export function omitEmptyMetadata(metadata = {}) {
 }
 
 /**
- * @param {Object} metadata
- * @returns {Object} false iff `metadata` comprises one of these values:
+ * @param {Object} value
+ * @returns {Object} false iff `value` comprises one of these values:
  *   - null
  *   - undefined
  *   - NaN
