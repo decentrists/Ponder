@@ -119,16 +119,17 @@ function ArweaveProvider({ children }) {
     const { txs, failedTxs } = result;
 
     if (!isEmpty(txs)) {
-      // TODO: conditional plural 'Transactions'
-      const successMessage = concatMessages(txs.map(elem => elem.title));
-      toast(`Transaction(s) successfully posted to Arweave with metadata for:\n${successMessage}`,
-        { variant: 'success' });
+      const message = concatMessages(txs.map(elem => elem.title));
+      const plural = txs.length > 1 ? 's' : '';
+      toast(`Transaction${plural} successfully posted to Arweave with metadata for:\n${message}`,
+        { autohideDelay: 10000, variant: 'success' });
     }
     if (!isEmpty(failedTxs)) {
-      const failMessage =
+      const message =
         concatMessages(failedTxs.map(elem => `${elem.title}, reason:\n${elem.resultObj}\n`));
-      toast(`Transaction(s) failed to post to Arweave with metadata for:\n${failMessage}`,
-        { variant: 'danger' });
+      const plural = failedTxs.length > 1 ? 's' : '';
+      toast(`Transaction${plural} failed to post to Arweave with metadata for:\n${message}`,
+        { autohideDelay: 0, variant: 'danger' });
     }
     setMetadataToSync(arsync.formatNewMetadataToSync(failedTxs));
     // setUnconfirmedArSyncTxs(prev => prev.concat(txs));

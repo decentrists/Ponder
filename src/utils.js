@@ -117,13 +117,14 @@ export function omitEmptyMetadata(metadata = {}) {
 }
 
 /**
- * @param {Object} metadata
- * @returns {Object} false iff `metadata` comprises one of these values:
+ * @param {Object} value
+ * @returns {Object} false iff `value` comprises one of these values:
  *   - null
  *   - undefined
  *   - NaN
  *   - an empty string
  *   - an empty array
+ *   - an empty object (non-recursively)
  *   - an array comprised of only any of the above elements
  */
 export function valuePresent(value) {

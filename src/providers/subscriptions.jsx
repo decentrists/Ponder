@@ -82,7 +82,7 @@ function SubscriptionsProvider({ children }) {
       if (!silent) {
         if (errorMessages.length) {
           toast(`Refresh completed with some errors:\n${concatMessages(errorMessages)}`,
-            { variant: 'warning' });
+            { autohideDelay: 10000, variant: 'warning' });
         }
         else toast('Refresh successful.', { variant: 'success' });
       }
@@ -92,7 +92,8 @@ function SubscriptionsProvider({ children }) {
     catch (ex) {
       console.error(ex);
       if (!silent) {
-        toast(`Failed to refresh subscriptions, please try again; ${ex}`, { variant: 'danger' });
+        toast(`Failed to refresh subscriptions, please try again; ${ex}`,
+          { autohideDelay: 10000, variant: 'danger' });
       }
     }
     finally {
