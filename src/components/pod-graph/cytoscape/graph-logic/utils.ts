@@ -1,19 +1,15 @@
 import { Primitive } from '../../../../utils';
 import { Podcast } from '../../../../client/interfaces';
 
-export const findSharedCategoriesAndKeywords = (podcast1: Podcast,
-  podcast2: Podcast) => {
-  const arr = [
-    ...podcast1.categories.filter(category => podcast2.categories.includes(category)),
-    ...podcast1.categories.filter(category => podcast2.keywords.includes(category)),
-    ...podcast1.keywords.filter(keyword => podcast2.keywords.includes(keyword)),
-    ...podcast1.keywords.filter(keyword => podcast2.categories.includes(keyword)),
-  ];
+export const findSharedCategoriesAndKeywords = (podcast1: Podcast, podcast2: Podcast) => {
+  const keywordsAndCategories1 = [...(podcast1.keywords || []), ...(podcast1.categories || [])];
+  const keywordsAndCategories2 = [...(podcast2.keywords || []), ...(podcast2.categories || [])];
+  const arr = [...keywordsAndCategories1.filter(x => keywordsAndCategories2.includes(x))];
   return removeDuplicateElements(arr);
 };
 
-export const haveSharedElements = <T extends Primitive>(arr1: T[],
-  arr2: T[]) => arr1.some(item => arr2.includes(item));
+export const haveSharedElements = <T extends Primitive>(arr1: T[] = [], arr2: T[] = []) =>
+  arr1.some(item => arr2.includes(item));
 
 /**
  * @param array

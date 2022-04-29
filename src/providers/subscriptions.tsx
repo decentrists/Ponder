@@ -17,6 +17,7 @@ interface SubscriptionContextType {
   subscribe: (id: string) => Promise<boolean>,
   unsubscribe: (id: string) => Promise<void>,
   refresh: (silent?: boolean) => Promise<[null, null] | [Podcast[], Partial<Podcast>[]]>,
+  metadataToSync: Partial<Podcast>[],
   setMetadataToSync: (value: Partial<Podcast>[]) => void,
 }
 
@@ -25,6 +26,7 @@ export const SubscriptionsContext = createContext<SubscriptionContextType>({
   isRefreshing: false,
   lastRefreshTime: 0,
   refresh: async () => [null, null],
+  metadataToSync: [],
   setMetadataToSync: () => {},
   subscribe: async () => false,
   unsubscribe: async () => {},
@@ -51,7 +53,7 @@ const SubscriptionsProvider : React.FC<{ children: React.ReactNode }> = ({ child
   const [lastRefreshTime, setLastRefreshTime] = useState(0);
 
   async function subscribe(subscribeUrl: string) {
-    // TODO: subscribeUrl validation
+    // TODO: sanitizeUri(subscribeUrl)
     if (subscriptions.some(subscription => subscription.subscribeUrl === subscribeUrl)) {
       toast(`You are already subscribed to ${subscribeUrl}.`, { variant: 'danger' });
       return true;
@@ -60,7 +62,7 @@ const SubscriptionsProvider : React.FC<{ children: React.ReactNode }> = ({ child
     const { errorMessage, newPodcastMetadata, newPodcastMetadataToSync } =
       await getPodcast(subscribeUrl, metadataToSync);
     if (hasMetadata(newPodcastMetadata)) {
-      toast(`Successfully subscribed to ${newPodcastMetadata.title}.`);
+      toast(`Successfully subscribed to ${newPodcastMetadata.title}.`, { variant: 'success' });
 
       setMetadataToSync(prev => prev.filter(podcast => podcast.subscribeUrl !== subscribeUrl)
         .concat(hasMetadata(newPodcastMetadataToSync) ? newPodcastMetadataToSync : []));
@@ -84,7 +86,7 @@ const SubscriptionsProvider : React.FC<{ children: React.ReactNode }> = ({ child
     }
   }
 
-  const refresh = async (silent = false) : Promise<[null, null] 
+  const refresh = async (silent = false) : Promise<[null, null]
   | [Podcast[], Partial<Podcast>[]]> => {
     if (isRefreshing) return [null, null];
 
@@ -146,6 +148,7 @@ const SubscriptionsProvider : React.FC<{ children: React.ReactNode }> = ({ child
         subscribe,
         unsubscribe,
         refresh,
+        metadataToSync,
         setMetadataToSync: handleMetadataToSync,
       }}
     >

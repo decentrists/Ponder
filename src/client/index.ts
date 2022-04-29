@@ -36,7 +36,8 @@ export async function getPodcast(subscribeUrl: string, metadataToSync : Partial<
 
   const newPodcastMetadata =
     mergeBatchMetadata([feed.arweave, metadataToSyncWithNewEpisodes], true);
-  const newPodcastMetadataToSync = rightDiff(feed.arweave, metadataToSyncWithNewEpisodes);
+  const newPodcastMetadataToSync =
+    rightDiff(feed.arweave, metadataToSyncWithNewEpisodes, ['subscribeUrl', 'title']);
 
   return { newPodcastMetadata, newPodcastMetadataToSync };
 }

@@ -46,8 +46,7 @@ export const findAllDisjointGraphs = (nodes: DisjointGraphFunctionNode[],
 /**
  * @param subscriptions
  * @param disjointGraphs
- * @returns 
- *   The findAllDisjointGraphs result mapped onto the subscriptions metadata
+ * @returns The findAllDisjointGraphs result mapped onto the subscriptions metadata
  */
 const finalizeDisjointGraphsObject = (subscriptions: Podcast[],
   disjointGraphs:DisjointGraphFunctionNode[][]) => disjointGraphs
