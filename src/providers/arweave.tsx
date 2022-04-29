@@ -10,7 +10,7 @@ import * as arsync from '../client/arweave/sync';
 import { isNotEmpty, valuesEqual, concatMessages } from '../utils';
 import { JWKInterface } from 'arweave/node/lib/wallet';
 import Transaction from 'arweave/node/lib/transaction';
-import { TransactionStatus } from '../client/arweave/sync';
+import { ArSyncTransaction } from '../client/arweave/sync';
 
 interface ArweaveContextType {
   isSyncing: boolean,
@@ -32,13 +32,13 @@ export const ArweaveContext = createContext<ArweaveContextType>({
 
 // TODO: ArSync v1.5+, test me
 const ArweaveProvider : React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { refresh, setMetadataToSync } = useContext(SubscriptionsContext);
+  const { refresh, metadataToSync, setMetadataToSync } = useContext(SubscriptionsContext);
   const toast = useContext(ToastContext);
   const [wallet, setWallet] = useState<JWKInterface>();
   const [walletAddress, setWalletAddress] = useState('');
   const [isSyncing, setIsSyncing] = useState(false);
   // TODO: clear value within 10mins (?) of setting, as the pendingTxsToSync may have become stale
-  const [pendingArSyncTxs, setPendingArSyncTxs] = useState<TransactionStatus<Transaction>[]>([]);
+  const [pendingArSyncTxs, setPendingArSyncTxs] = useState<ArSyncTransaction<Transaction>[]>([]);
   const loadingWallet = useRef(false);
 
   // TODO: Determine transaction status after pendingArSyncTxs have been posted and signed.
@@ -139,25 +139,34 @@ const ArweaveProvider : React.FC<{ children: React.ReactNode }> = ({ children })
       console.error(ex);
       return cancelSync(`Failed to sync with Arweave: ${ex}`);
     }
-    const { txs, failedTxs } = result;
 
-    if (isNotEmpty(txs)) {
-      const message = concatMessages(txs.map(elem => elem.title || ''));
-      const plural = txs.length > 1 ? 's' : '';
-      toast(`Transaction${plural} successfully posted to Arweave with metadata for:\n${message}`,
-        { autohideDelay: 10000, variant: 'success' });
+    try {
+      const { txs, failedTxs } = result;
+
+      if (isNotEmpty(txs)) {
+        const message = concatMessages(txs.map(elem =>
+          `${elem.title} (${elem.metadata.episodes?.length || '0'} new episodes)`));
+        const plural = txs.length > 1 ? 's' : '';
+        toast(`Transaction${plural} successfully posted to Arweave with metadata for:\n${message}`,
+          { autohideDelay: 10000, variant: 'success' });
+      }
+      if (isNotEmpty(failedTxs)) {
+        const message =
+          concatMessages(failedTxs.map(elem => `${elem.title}, reason:\n${elem.resultObj}\n`));
+        const plural = failedTxs.length > 1 ? 's' : '';
+        toast(`Transaction${plural} failed to post to Arweave with metadata for:\n${message}`,
+          { autohideDelay: 0, variant: 'danger' });
+      }
+      setMetadataToSync(arsync.formatNewMetadataToSync(txs, metadataToSync));
+      // setUnconfirmedArSyncTxs(prev => prev.concat(txs));
     }
-    if (isNotEmpty(failedTxs)) {
-      const message =
-        concatMessages(failedTxs.map(elem => `${elem.title}, reason:\n${elem.resultObj}\n`));
-      const plural = failedTxs.length > 1 ? 's' : '';
-      toast(`Transaction${plural} failed to post to Arweave with metadata for:\n${message}`,
-        { autohideDelay: 0, variant: 'danger' });
+    catch (ex) {
+      console.error(`An unexpected error occurred after synching: ${ex}`);
     }
-    setMetadataToSync(arsync.formatNewMetadataToSync(failedTxs));
-    // setUnconfirmedArSyncTxs(prev => prev.concat(txs));
-    setIsSyncing(false);
-    setPendingArSyncTxs([]);
+    finally {
+      setIsSyncing(false);
+      setPendingArSyncTxs([]);
+    }
   }
 
   useRerenderEffect(() => {

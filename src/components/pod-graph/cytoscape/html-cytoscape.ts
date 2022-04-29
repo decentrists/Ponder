@@ -1,6 +1,6 @@
 import cytoscape from 'cytoscape';
 import nodeHtmlLabel from 'cy-node-html-label';
-import sanitizeHtml from 'sanitize-html';
+import { sanitizeString, sanitizeUri } from '../../../client/metadata-filtering';
 import { CoreWithNodeLabel } from './interfaces';
 
 // @ts-ignore
@@ -14,11 +14,11 @@ interface CardData {
 
 function cardElements(data: CardData, selected = '') {
   return `
-    <div class="card-front ${selected}" data-id="${sanitizeHtml(data.id)}">
+    <div class="card-front ${selected}" data-id="${sanitizeString(data.id)}">
       <div class="card-front__tp">
-        <img class="image-bg" src="${sanitizeHtml(data.imageUrl)}" alt="" />
+        <img class="image-bg" src="${sanitizeUri(data.imageUrl)}" alt="" />
         <h2 class="card-front__heading">
-          ${sanitizeHtml(data.title)}
+          ${sanitizeString(data.title)}
         </h2>
       </div>
       <div class="card-front-btn">
@@ -67,9 +67,9 @@ export default function applyHtmlLabel(cy: CoreWithNodeLabel) {
     //     console.log('custom group data', data);
     //     return `
     //       <div style="border:1px solid red;" class="group ${data.collapsedChildren ?
-    //         'show' : 'hide'}" data-id="${sanitizeHtml(data.id)}">
+    //         'show' : 'hide'}" data-id="${sanitizeString(data.id)}">
     //       <h5 class="group-header">
-    //       ${sanitizeHtml(data.label)}
+    //       ${sanitizeString(data.label)}
     //       </h5>
     //         <span class="group-graphic ">
     //           <i class="fa fa-heart" aria-hidden="true"></i>

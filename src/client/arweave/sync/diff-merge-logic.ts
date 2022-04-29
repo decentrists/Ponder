@@ -1,7 +1,7 @@
 import {
-  Episode, 
+  Episode,
   Podcast,
-  PodcastTags, 
+  PodcastTags,
 } from '../../interfaces';
 import {
   isNotEmpty,
@@ -72,7 +72,7 @@ function mergeEpisodesMetadata(oldEpisodes: PartialEpisodeWithDate[],
     }
 
     const duplicateNewEpisodeIndex = newEpisodes
-      .findIndex(newEpisode => newEpisode.publishedAt.getTime() 
+      .findIndex(newEpisode => newEpisode.publishedAt.getTime()
       - oldEpisode.publishedAt.getTime() === 0);
     if (duplicateNewEpisodeIndex >= 0) {
       duplicateNewEpisodeIndices.push(duplicateNewEpisodeIndex);
@@ -110,7 +110,7 @@ export function mergeEpisodeBatches(episodeBatches: PartialEpisodeWithDate[][]) 
  */
 export function mergeBatchMetadata(metadataBatches: Partial<Podcast>[]
   , applyMergeSpecialTags = false) : Podcast | {} {
-  if (!isNotEmpty(metadataBatches) || 
+  if (!isNotEmpty(metadataBatches) ||
     metadataBatches.every(batch => !hasMetadata(batch))) return {};
 
   const mergedEpisodes = mergeEpisodeBatches(metadataBatches.map(batch => batch.episodes || []));
@@ -181,7 +181,7 @@ function episodesRightDiff(oldEpisodes : Episode[] = [], newEpisodes : Episode[]
     const oldEpisodeMatch =
       oldEpisodes.find(oldEpisode => datesEqual(oldEpisode.publishedAt, newEpisode.publishedAt));
     if (oldEpisodeMatch) {
-      const diff = rightDiff(oldEpisodeMatch, newEpisode, 'publishedAt');
+      const diff = rightDiff(oldEpisodeMatch, newEpisode, ['publishedAt']);
       if (hasMetadata(diff)) result.push(diff as PartialEpisodeWithDate);
     }
     else {
@@ -198,13 +198,13 @@ function arrayRightDiff<T extends Primitive>(oldArray : T[] = [], newArray : T[]
 /**
  * @param oldMetadata
  * @param newMetadata
- * @param primaryKey Primary key to survive the diff; see hasMetadata().
+ * @param persistentMetadata
+ *   Metadata props to survive the diff iff hasMetadata(diff) == true.
  *   TODO: pending T244, change to 'id'.
  * @returns The newMetadata omitting each { prop: value } already present in oldMetadata
- *   and empty props are ignored.
  */
 export function rightDiff<T extends Partial<Episode> | Partial<Podcast>>(oldMetadata : T,
-  newMetadata : T, primaryKey = 'subscribeUrl') : Partial<T> {
+  newMetadata : T, persistentMetadata = ['subscribeUrl']) : Partial<T> {
   if (!hasMetadata(oldMetadata)) return newMetadata;
   if (!hasMetadata(newMetadata)) return {} as T;
 
@@ -236,9 +236,13 @@ export function rightDiff<T extends Partial<Episode> | Partial<Podcast>>(oldMeta
 
   });
 
-  if (hasMetadata(result) && primaryKey) {
-    result = { ...result, [primaryKey]: newMetadata[primaryKey as keyof T]
-      || oldMetadata[primaryKey as keyof T] };
+  if (hasMetadata(result) && valuePresent(persistentMetadata)) {
+    persistentMetadata.forEach(prop => {
+      result = {
+        ...result,
+        [prop]: newMetadata[prop as keyof T] || oldMetadata[prop as keyof T],
+      };
+    });
   }
   return result;
 }

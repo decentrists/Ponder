@@ -9,14 +9,15 @@ import {
   isValidInteger,
 } from '../../utils';
 import {
-  Episode, 
-  Podcast, 
+  Episode,
+  Podcast,
 } from '../interfaces';
 import { JWKInterface } from 'arweave/node/lib/wallet';
 import Transaction from 'arweave/node/lib/transaction';
 
 async function newTransaction(wallet: JWKInterface, newMetadata: Partial<Podcast>,
   tags : [string, string][] = []) {
+
   try {
     const trx = await client.createTransaction({ data: JSON.stringify(newMetadata) }, wallet);
     trx.addTag('Content-Type', 'application/json');
@@ -105,23 +106,27 @@ export async function newMetadataTransaction(wallet: JWKInterface,
   (newMetadata.categories || []).forEach(cat => podcastTags.push(['category', cat]));
   (newMetadata.keywords || []).forEach(key => podcastTags.push(['keyword', key]));
 
-  const episodeBatchTags = episodeTags(newMetadata.episodes, cachedMetadata);
+  const episodeBatchTags =
+    episodeTags(newMetadata.episodes, cachedMetadata, newMetadata.metadataBatch);
 
   return newTransaction(wallet, newMetadata, podcastTags.concat(episodeBatchTags));
 }
 
 /**
- * @param newEpisodes
- * @param cachedMetadata
- * @returns The metadata transaction tags for the given list of newEpisodes
+ * @param {Array.<Object>} newEpisodes
+ * @param {Object} cachedMetadata
+ * @param {number|null} metadataBatchNumber
+ *   Iff null then metadataBatch is computed by @see getMetadataBatchNumber
+ * @returns {[[string, string]]} The metadata transaction tags for the given list of newEpisodes
  */
-function episodeTags(newEpisodes : Episode[] = [],
-  cachedMetadata : Partial<Podcast> = {}) : [string, string][] {
+function episodeTags(newEpisodes : Episode[] = [], cachedMetadata : Partial<Podcast> = {},
+  metadataBatchNumber : number | null = null) : [string, string][] {
   if (!newEpisodes.length) { return []; }
 
   const firstEpisodeDate = newEpisodes[newEpisodes.length - 1].publishedAt;
   const lastEpisodeDate = newEpisodes[0].publishedAt;
-  const metadataBatch = getMetadataBatchNumber(cachedMetadata, firstEpisodeDate, lastEpisodeDate);
+  const metadataBatch = (isValidInteger(metadataBatchNumber) ? metadataBatchNumber :
+    getMetadataBatchNumber(cachedMetadata, firstEpisodeDate, lastEpisodeDate));
 
   return [
     ['firstEpisodeDate', toISOString(firstEpisodeDate)],
@@ -137,7 +142,7 @@ function episodeTags(newEpisodes : Episode[] = [],
  * @returns
  *   An integer denoting the batch number for the [firstNewEpisodeDate, lastNewEpisodeDate] interval
  */
-function getMetadataBatchNumber(cachedMetadata : Partial<Podcast>,
+export function getMetadataBatchNumber(cachedMetadata : Partial<Podcast>,
   firstNewEpisodeDate: Date, lastNewEpisodeDate: Date) {
   if (!isValidDate(firstNewEpisodeDate) || !isValidDate(lastNewEpisodeDate)) {
     throw new Error(`Could not upload metadata for ${cachedMetadata.title}: ` +
@@ -155,7 +160,7 @@ function getMetadataBatchNumber(cachedMetadata : Partial<Podcast>,
   //   return cachedMetadata.firstBatch.count - 1;
   // }
 
-  if (cachedMetadata.lastEpisodeDate && 
+  if (cachedMetadata.lastEpisodeDate &&
     cachedMetadata.lastEpisodeDate > lastNewEpisodeDate) {
     // return queryMiddleMetadataBatchNumber(cachedMetadata,firstNewEpisodeDate,lastNewEpisodeDate);
     throw new Error('Supplementing existing metadata is not implemented yet.');
