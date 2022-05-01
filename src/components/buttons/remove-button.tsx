@@ -23,10 +23,14 @@ const DeleteBtn = styled(Button)`
   }
 `;
 
-function RemoveBtn({
+interface Props {
+  onClick: () => void;
+}
+
+const RemoveBtn : React.FC<Props> = ({
   onClick,
   ...props
-}) {
+}) => {
   return (
     <DeleteBtn
       onClick={onClick}
@@ -35,14 +39,6 @@ function RemoveBtn({
       <MinusIcon />
     </DeleteBtn>
   );
-}
-
-RemoveBtn.propTypes = {
-  onClick: PropTypes.func,
-};
-
-RemoveBtn.defaultProps = {
-  onClick: null,
 };
 
 export default RemoveBtn;

@@ -166,8 +166,8 @@ function ArweaveProvider({ children }) {
   );
 }
 
-ArweaveProvider.propTypes = {
-  children: PropTypes.node.isRequired,
-};
+// ArweaveProvider.propTypes = {
+//   children: PropTypes.node.isRequired,
+// };
 
 export default ArweaveProvider;

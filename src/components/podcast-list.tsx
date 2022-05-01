@@ -14,10 +14,16 @@ import {
   TimeRelease, CallToAction, ActionBtn,
 } from './podcast-list-elements';
 import RemoveBtn from './buttons/remove-button';
+import { Podcast } from './pod-graph/cytoscape/graph-logic/interfaces/interfaces';
 
 dayjs.extend(relativeTime);
 
-function PodcastList({ subscriptions, unsubscribe }) {
+interface Props {
+  subscriptions: Podcast[];
+  unsubscribe: (id: string) => void;
+}
+
+const PodcastList : React.FC<Props> = ({ subscriptions, unsubscribe }) => {
   return (
     <EventWrapper>
       <LeftPane>
@@ -87,8 +93,5 @@ function PodcastList({ subscriptions, unsubscribe }) {
     </EventWrapper>
   );
 }
-PodcastList.propTypes = {
-  subscriptions: PropTypes.arrayOf(PropTypes.shape(podcastPropType).isRequired).isRequired,
-  unsubscribe: PropTypes.func.isRequired,
-};
+
 export default PodcastList;

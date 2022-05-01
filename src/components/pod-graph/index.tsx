@@ -6,6 +6,8 @@ import createCytoscape from './cytoscape';
 import getElementsFromSubscriptions from './get-elements-from-subscriptions';
 import PodcastDetails from '../podcast-details';
 import ToggleBtn from '../buttons/toggle-button'; // This button can be used for another fn
+import { Podcast } from './cytoscape/graph-logic/interfaces/interfaces';
+import { ExtendedCore } from './cytoscape/interfaces';
 
 const PodGraphContainer = styled.div`
   position: relative;
@@ -24,11 +26,15 @@ const PodGraphInnerContainer = styled.div`
   }
 `;
 
-function PodGraph({ subscriptions }) {
+interface Props {
+  subscriptions: Podcast[];
+}
+
+const PodGraph : React.FC<Props> = ({ subscriptions }) => {
   const el = useRef();
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [cy, setCy] = useState(null);
-  const [selectedPodcastId, setSelectedPodcastId] = useState(null);
+  const [cy, setCy] = useState<ExtendedCore>();
+  const [selectedPodcastId, setSelectedPodcastId] = useState<string | null>(null);
   const selectedPodcast = subscriptions
     .find(subscription => subscription.subscribeUrl === selectedPodcastId);
 
@@ -38,11 +44,11 @@ function PodGraph({ subscriptions }) {
 
   useEffect(() => {
     const cyto = createCytoscape(el.current, getElementsFromSubscriptions(subscriptions), {
-      setSelectedPodcastId,
+      setSelectedPodcastId: (id) => setSelectedPodcastId(id),
     });
     setCy(cyto);
 
-    if (process.env.NODE_ENV !== 'production') window.cy = cyto;
+    // if (process.env.NODE_ENV !== 'production') window.cy = cyto;
     return () => {
       cyto.destroy();
     };
@@ -51,18 +57,18 @@ function PodGraph({ subscriptions }) {
   return (
     <PodGraphContainer>
       <PodGraphInnerContainer ref={el} />
-      <PodcastDetails
+      {selectedPodcast && <PodcastDetails
         {...selectedPodcast}
         isOpen={!!selectedPodcast}
         close={() => setSelectedPodcastId(null)}
-      />
+      />}
       <ToggleBtn />  {/* this btn has no fn yet,it can be added later */}
     </PodGraphContainer>
   );
-}
-
-PodGraph.propTypes = {
-  subscriptions: PropTypes.arrayOf(PropTypes.shape(podcastPropType).isRequired).isRequired,
 };
+
+// PodGraph.propTypes = {
+//   subscriptions: PropTypes.arrayOf(PropTypes.shape(podcastPropType).isRequired).isRequired,
+// };
 
 export default PodGraph;

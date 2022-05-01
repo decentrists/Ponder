@@ -24,7 +24,12 @@ const NavBtn = styled(Button)`
   }
 `;
 
-function NavButton({ children, ...props }) {
+interface Props {
+  children: React.ReactNode;
+  to: string;
+}
+
+const NavButton : React.FC<Props> = ({ children, ...props }) => {
   return (
     <li>
       <NavBtn
@@ -35,11 +40,11 @@ function NavButton({ children, ...props }) {
       </NavBtn>
     </li>
   );
-}
-
-NavButton.propTypes = {
-  children: PropTypes.node.isRequired,
-  to: PropTypes.string.isRequired,
 };
+
+// NavButton.propTypes = {
+//   children: PropTypes.node.isRequired,
+//   to: PropTypes.string.isRequired,
+// };
 
 export default NavButton;

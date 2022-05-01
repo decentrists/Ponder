@@ -18,8 +18,8 @@ function CytoscapeProvider({ children }) {
   );
 }
 
-CytoscapeProvider.propTypes = {
-  children: PropTypes.node.isRequired,
-};
+// CytoscapeProvider.propTypes = {
+//   children: PropTypes.node.isRequired,
+// };
 
 export default CytoscapeProvider;

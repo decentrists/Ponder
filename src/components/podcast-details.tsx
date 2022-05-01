@@ -1,6 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import styled from 'styled-components';
+import { Episode } from './pod-graph/cytoscape/graph-logic/interfaces/interfaces';
 import { Modal, Button, Image } from 'react-bootstrap';
 import EpisodeDetails from './episode-details';
 
@@ -18,15 +19,25 @@ const PodImage = styled(Image)`
   margin-bottom: 2px;
 `;
 
-function PodcastDetails({
-  isOpen,
+interface Props {
+  title: string,
+  close: () => void,
+  isOpen?: boolean,
+  description?: string,
+  imageUrl?: string,
+  imageTitle?: string,
+  episodes?: Episode[],
+}
+
+const PodcastDetails : React.FC<Props> = ({
   close,
   title,
   description,
   imageUrl,
   imageTitle,
-  episodes,
-}) {
+  isOpen = false,
+  episodes = [],
+}) => {
   return (
     <Modal show={isOpen} onHide={close} animation centered scrollable backdrop="static">
       <Modal.Header>{title}</Modal.Header>
@@ -39,7 +50,7 @@ function PodcastDetails({
         )}
         <EpisodeList>
           {episodes.slice()
-            .sort((a, b) => b.publishedAt - a.publishedAt)
+            .sort((a, b) => b.publishedAt.getTime() - a.publishedAt.getTime())
             .map(episode => (
               <EpisodeDetails key={episode.title} {...episode} />
             ))}
@@ -50,30 +61,30 @@ function PodcastDetails({
       </Modal.Footer>
     </Modal>
   );
-}
-
-PodcastDetails.propTypes = {
-  isOpen: PropTypes.bool,
-  close: PropTypes.func.isRequired,
-  title: PropTypes.string.isRequired,
-  description: PropTypes.string,
-  imageUrl: PropTypes.string,
-  imageTitle: PropTypes.string,
-  language: PropTypes.string,
-  categories: PropTypes.arrayOf(PropTypes.string),
-  keywords: PropTypes.arrayOf(PropTypes.string),
-  episodes: PropTypes.arrayOf(EpisodeDetails.propTypes),
 };
 
-PodcastDetails.defaultProps = {
-  isOpen: false,
-  description: null,
-  imageUrl: null,
-  imageTitle: null,
-  language: null,
-  categories: [],
-  keywords: [],
-  episodes: [],
-};
+// PodcastDetails.propTypes = {
+//   isOpen: PropTypes.bool,
+//   close: PropTypes.func.isRequired,
+//   title: PropTypes.string.isRequired,
+//   description: PropTypes.string,
+//   imageUrl: PropTypes.string,
+//   imageTitle: PropTypes.string,
+//   language: PropTypes.string,
+//   categories: PropTypes.arrayOf(PropTypes.string),
+//   keywords: PropTypes.arrayOf(PropTypes.string),
+//   episodes: PropTypes.arrayOf(EpisodeDetails.propTypes),
+// };
+
+// PodcastDetails.defaultProps = {
+//   isOpen: false,
+//   description: null,
+//   imageUrl: null,
+//   imageTitle: null,
+//   language: null,
+//   categories: [],
+//   keywords: [],
+//   episodes: [],
+// };
 
 export default PodcastDetails;

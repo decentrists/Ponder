@@ -129,8 +129,8 @@ function SubscriptionsProvider({ children }) {
   );
 }
 
-SubscriptionsProvider.propTypes = {
-  children: PropTypes.node.isRequired,
-};
+// SubscriptionsProvider.propTypes = {
+//   children: PropTypes.node.isRequired,
+// };
 
 export default SubscriptionsProvider;

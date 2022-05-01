@@ -9,12 +9,13 @@ export interface Podcast {
   title: string;
   imageUrl: string;
   imageTitle: string;
+  firstEpisodeDate: Date;
 }
 
 export type Episode = {
   title: string;
   url: string;
-  publishedAt:string;
+  publishedAt: Date;
   categories: string[];
   keywords: string[];
 };

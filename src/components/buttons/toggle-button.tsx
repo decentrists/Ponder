@@ -45,11 +45,18 @@ const Btn = styled(Button)`
   }
 }
 `;
-function ToggleBtn({
+
+interface Props {
+  collapseGroups: () => void,
+  expandGroups: () => void,
+  toggle?: boolean,
+}
+
+const ToggleBtn : React.FC<Props> = ({
   collapseGroups,
   expandGroups,
-  toggle,
-}) {
+  toggle = false,
+}) => {
   return (
     <Btn
       onClick={toggle ? expandGroups : collapseGroups}
@@ -57,14 +64,14 @@ function ToggleBtn({
       {toggle ? <BtnIconOpen /> : <BtnIconClose /> }
     </Btn>
   );
-}
-ToggleBtn.propTypes = {
-  collapseGroups: PropTypes.func.isRequired,
-  expandGroups: PropTypes.func.isRequired,
-  toggle: PropTypes.bool,
 };
+// ToggleBtn.propTypes = {
+//   collapseGroups: PropTypes.func.isRequired,
+//   expandGroups: PropTypes.func.isRequired,
+//   toggle: PropTypes.bool,
+// };
 
-ToggleBtn.defaultProps = {
-  toggle: false,
-};
+// ToggleBtn.defaultProps = {
+//   toggle: false,
+// };
 export default ToggleBtn;

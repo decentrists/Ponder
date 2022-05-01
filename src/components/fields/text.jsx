@@ -13,13 +13,13 @@ function TextField({ name, label, ...props }) {
   );
 }
 
-TextField.propTypes = {
-  name: PropTypes.string.isRequired,
-  label: PropTypes.string,
-};
+// TextField.propTypes = {
+//   name: PropTypes.string.isRequired,
+//   label: PropTypes.string,
+// };
 
-TextField.defaultProps = {
-  label: null,
-};
+// TextField.defaultProps = {
+//   label: null,
+// };
 
 export default TextField;

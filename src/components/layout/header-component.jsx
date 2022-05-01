@@ -66,7 +66,7 @@ function HeaderComponent({ onSubmit }) {
   );
 }
 
-HeaderComponent.propTypes = {
-  onSubmit: PropTypes.func.isRequired,
-};
+// HeaderComponent.propTypes = {
+//   onSubmit: PropTypes.func.isRequired,
+// };
 export default HeaderComponent;
