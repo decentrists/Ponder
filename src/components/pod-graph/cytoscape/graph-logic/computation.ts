@@ -1,16 +1,19 @@
+import { EdgeDefinition, NodeDefinition } from 'cytoscape';
 import { v4 as uuid } from 'uuid';
+import { DisjointGraphFunctionNode, Podcast } from './interfaces/interfaces';
 import {
   findSharedCategoriesAndKeywords, haveSharedElements,
   removeDuplicateElements,
 } from './utils';
 
 /**
- * @param {Array.<Object>} nodes
- * @param {Array.<Array.<Object>>} disjointGraphs The intermediate result through recursion
- * @returns {Array.<Array.<Object>>}
+ * @param nodes
+ * @param disjointGraphs The intermediate result through recursion
+ * @returns
  *   An array of graph representations grouped by shared keywords & categories
  */
-export const findAllDisjointGraphs = (nodes, disjointGraphs = []) => {
+export const findAllDisjointGraphs = (nodes: DisjointGraphFunctionNode[],
+  disjointGraphs : DisjointGraphFunctionNode[][] = []) : DisjointGraphFunctionNode[][] => {
   const firstUnvisitedNode = nodes.find(item => item.visited !== true);
   if (!firstUnvisitedNode) return disjointGraphs;
 
@@ -37,38 +40,41 @@ export const findAllDisjointGraphs = (nodes, disjointGraphs = []) => {
 };
 
 /**
- * @param {Array.<Object>} subscriptions
- * @param {Array.<Array.<Object>>} disjointGraphs
- * @returns {Array.<Array.<Object>>}
+ * @param subscriptions
+ * @param disjointGraphs
+ * @returns 
  *   The findAllDisjointGraphs result mapped onto the subscriptions metadata
  */
-const finalizeDisjointGraphsObject = (subscriptions, disjointGraphs) => disjointGraphs
-  .map(graph => graph.map(node => subscriptions.find(subscription => subscription.subscribeUrl ===
-      node.subscribeUrl)));
+const finalizeDisjointGraphsObject = (subscriptions: Podcast[],
+  disjointGraphs:DisjointGraphFunctionNode[][]) => disjointGraphs
+  .map(graph => graph
+    .map(node => subscriptions
+      .find(subscription => subscription.subscribeUrl === node.subscribeUrl)!));
 
 /**
- * @param {Array.<Object>} subscriptions
- * @returns {Array.<Array.<Object>>} An array of graphs grouped by shared keywords & categories,
+ * @param subscriptions
+ * @returns An array of graphs grouped by shared keywords & categories,
  *   where each graph comprises an array of subscription metadata (nodes)
  */
-export const groupSubscriptionsBySharedKeywords = subscriptions => {
+export const groupSubscriptionsBySharedKeywords = (subscriptions: Podcast[]) => {
   const nodes = subscriptions.map(subscription => ({
     subscribeUrl: subscription.subscribeUrl,
     keywordsAndCategories: removeDuplicateElements([
       ...(subscription.keywords || []),
       ...(subscription.categories || []),
     ]),
+    visited: false,
   }));
   return finalizeDisjointGraphsObject(subscriptions, findAllDisjointGraphs(nodes));
 };
 
-export const generateNodes = disjointGraphs => {
-  const nodes = [];
+export const generateNodes = (disjointGraphs: Podcast[][]) => {
+  const nodes : NodeDefinition[] = [];
 
   disjointGraphs.forEach(graph => {
     const id = uuid();
     const compoundNode = {
-      group: 'nodes',
+      group: 'nodes' as const,
       data: {
         id,
       },
@@ -76,7 +82,7 @@ export const generateNodes = disjointGraphs => {
     };
     nodes.push(compoundNode);
     nodes.push(...graph.map(podcast => ({
-      group: 'nodes',
+      group: 'nodes' as const,
       classes: 'customNodes',
       data: {
         id: podcast.subscribeUrl,
@@ -96,9 +102,9 @@ export const generateNodes = disjointGraphs => {
   return nodes;
 };
 
-export const generateEdges = disjointGraphs => {
+export const generateEdges = (disjointGraphs: Podcast[][]) => {
   const eachDisjointGraphEdges = disjointGraphs.map(graph => graph
-    .reduce((acc, podcast, _, arrayReference) => {
+    .reduce((acc: EdgeDefinition[], podcast, _, arrayReference) => {
       // A match is any other podcast that has one same category or keyword
       let matches = arrayReference.filter(({ categories, keywords }) => (
         haveSharedElements(podcast.categories, categories)
@@ -121,7 +127,7 @@ export const generateEdges = disjointGraphs => {
       return [...acc, ...result];
     }, [])
   // remove duplicate edges since the graph is undirected.
-    .reduce((acc, edge) => (
+    .reduce((acc: EdgeDefinition[], edge) => (
       acc.some(item => item.data.target === edge.data.source &&
          item.data.source === edge.data.target)
         ? acc

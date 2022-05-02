@@ -1,12 +1,15 @@
-export default function applyNodeGroups(cy) {
+import { Core } from 'cytoscape';
+import { CoreWithPanzoom } from './interfaces';
+
+export default function applyNodeGroups(cy: CoreWithPanzoom) {
   initializeZoomExtrema(cy);
   fitGraph(cy);
 }
 // function to center the graph by default
-function fitGraph(cy) {
+function fitGraph(cy: Core) {
   return cy.fit();
 }
-function initializeZoomExtrema(cy) {
+function initializeZoomExtrema(cy: CoreWithPanzoom) {
   // find a good MAXIMUM_ZOOM_LEVEL and DEFAULT_LAYOUT_ZOOM_LEVEL
   const DEFAULT_LAYOUT_ZOOM_LEVEL = 0.5;
   const MAXIMUM_ZOOM_LEVEL = 3;

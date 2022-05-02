@@ -1,4 +1,4 @@
-import cytoscape from 'cytoscape';
+import cytoscape, { CytoscapeOptions } from 'cytoscape';
 import dagre from 'cytoscape-dagre';
 import layout from './layout';
 import applyStyles from './styles';
@@ -6,10 +6,16 @@ import applyPanzoom from './panzoom';
 import applyEvents from './events';
 import applyNodeGroups from './node-groups';
 import applyHtmlLabel from './html-cytoscape';
+import { ExtendedCore } from './interfaces';
 
 cytoscape.use(dagre);
 
-export default function createCytoscape(container, elements, deps) {
+type Deps = {
+  setSelectedPodcastId: (id: string) => void;
+};
+
+export default function createCytoscape(container: CytoscapeOptions['container'],
+  elements:  CytoscapeOptions['elements'], deps: Deps) {
   const cy = cytoscape({
     container,
     layout,
@@ -17,12 +23,12 @@ export default function createCytoscape(container, elements, deps) {
     zoomingEnabled: true,
     userZoomingEnabled: true,
     autoungrabify: false,
-  });
-  applyStyles(cy, deps);
-  applyPanzoom(cy, deps);
+  }) as ExtendedCore;
+  applyStyles(cy);
   applyEvents(cy, deps);
-  applyNodeGroups(cy, deps);
-  applyHtmlLabel(cy, deps);
+  applyPanzoom(cy);
+  applyNodeGroups(cy);
+  applyHtmlLabel(cy);
   cy.fit();
   return cy;
 }
