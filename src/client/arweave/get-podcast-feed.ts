@@ -12,7 +12,15 @@ import { mergeBatchMetadata, mergeBatchTags } from './sync/diff-merge-logic';
 
 const MAX_BATCH_NUMBER = 100;
 
-export async function getPodcastFeed(subscribeUrl) {
+interface TransactionNode { id: string, tags: { name: string, value: string }[] } 
+
+type GetPodcastFeedForBatchReturnType = {
+  errorMessage?: string;
+  metadata: any;
+  tags: any;
+};
+
+export async function getPodcastFeed(subscribeUrl: string) {
   const errorMessages = [];
   const metadataBatches = [];
   const tagBatches = [];
@@ -53,7 +61,8 @@ export async function getPodcastFeed(subscribeUrl) {
   return mergedMetadata;
 }
 
-async function getPodcastFeedForBatch(subscribeUrl, batch) {
+async function getPodcastFeedForBatch(subscribeUrl: string,
+  batch: number) : Promise<GetPodcastFeedForBatchReturnType> {
   const gqlQuery = {
     query: `
       query GetPodcast($tags: [TagFilter!]!) {
@@ -105,7 +114,7 @@ async function getPodcastFeedForBatch(subscribeUrl, batch) {
   // TODO: We currently simply grab the newest transaction matching this `batch` nr.
   //       In the future we should fetch multiple transactions referencing the same batch and
   //       merge the result.
-  const trx = edges[0].node;
+  const trx : TransactionNode = edges[0].node;
   const tags = (isEmpty(trx.tags) ? {} : trx.tags
     .filter(tag => !['Content-Type', 'Unix-Time', toTag('version')].includes(tag.name))
     .map(tag => ({
@@ -116,7 +125,9 @@ async function getPodcastFeedForBatch(subscribeUrl, batch) {
     }))
     .reduce((acc, tag) => ({
       ...acc,
-      [tag.name]: Array.isArray(acc[tag.name]) ? acc[tag.name].concat(tag.value) : tag.value,
+      [tag.name]: Array.isArray(acc[tag.name as keyof typeof acc]) 
+        ? [...acc[tag.name as keyof typeof acc], tag.value] 
+        : tag.value,
     }), {
       categories: [],
       keywords: [],
@@ -138,7 +149,7 @@ async function getPodcastFeedForBatch(subscribeUrl, batch) {
 
   let metadata;
   try {
-    metadata = JSON.parse(getDataResult);
+    metadata = JSON.parse(getDataResult as string);
     metadata = podcastWithDateObjects(metadata, true);
   }
   catch (ex) {

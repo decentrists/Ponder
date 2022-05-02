@@ -2,7 +2,6 @@ import React from 'react';
 import styled from 'styled-components';
 import { Button } from 'react-bootstrap';
 import { MdOutlineOpenInFull, MdOutlineCloseFullscreen } from 'react-icons/md';
-import PropTypes from 'prop-types';
 
 const BtnIconOpen = styled(MdOutlineOpenInFull)`
   font-size: 1.25rem;
@@ -65,13 +64,5 @@ const ToggleBtn : React.FC<Props> = ({
     </Btn>
   );
 };
-// ToggleBtn.propTypes = {
-//   collapseGroups: PropTypes.func.isRequired,
-//   expandGroups: PropTypes.func.isRequired,
-//   toggle: PropTypes.bool,
-// };
 
-// ToggleBtn.defaultProps = {
-//   toggle: false,
-// };
 export default ToggleBtn;

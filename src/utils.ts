@@ -67,11 +67,11 @@ export function toDate(date: string | Date) {
 }
 
 /**
- * @param {Object} metadata
- * @returns {boolean} true if `metadata` has specific metadata other than:
+ * @param metadata
+ * @returns true if `metadata` has specific metadata other than:
  *   `subscribeUrl`, `publishedAt` and an empty episodes list
  */
-export function hasMetadata(metadata: Podcast) {
+export function hasMetadata(metadata: Partial<Podcast> | Partial<Episode>) {
   if (isEmpty(metadata)) return false;
   if (metadata.title) return true;
 
@@ -113,14 +113,15 @@ export function podcastsWithDateObjects(podcasts: Podcast[], sortEpisodes = true
  * @param metadata
  * @returns The `metadata` exluding props where !valuePresent(value), @see valuePresent
  */
-export function omitEmptyMetadata(metadata : Podcast) {
+export function omitEmptyMetadata(metadata : Partial<Podcast>) {
   if (isEmpty(metadata)) return {};
   
-  const result : Partial<Podcast> = {};
+  let result : Partial<Podcast> = {};
   Object.entries(metadata).forEach(([prop, value]) => {
     let newValue = value;
+    // @ts-ignore
     if (Array.isArray(newValue)) newValue = newValue.filter(elem => valuePresent(elem));
-    if (valuePresent(newValue)) result[prop as keyof Podcast] = newValue;
+    if (valuePresent(newValue)) result = { ...result, [prop]: newValue };
   });
 
   return result;
@@ -128,7 +129,7 @@ export function omitEmptyMetadata(metadata : Podcast) {
 
 /**
  * @param value
- * @returns false iff `metadata` comprises one of these values:
+ * @returns false iff `value` comprises one of these values:
  *   - null
  *   - undefined
  *   - NaN
@@ -163,7 +164,9 @@ export function valuesEqual(a : object = {}, b : object = {}) {
   if (a === b) return true;
   if (!a || !b) return false;
 
+  // @ts-ignore
   return (Object.values(a).every(x => b.includes(x)) &&
+  // @ts-ignore
     Object.values(b).every(x => a.includes(x)));
 }
 

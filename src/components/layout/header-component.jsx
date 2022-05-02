@@ -1,5 +1,5 @@
 import React, { useState, useContext } from 'react';
-import PropTypes from 'prop-types';
+// import PropTypes from 'prop-types';
 import { InputGroup, Form } from 'react-bootstrap';
 import { ToastContext } from '../../providers/toast';
 import RssButton from '../buttons/rss-button';

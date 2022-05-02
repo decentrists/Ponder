@@ -1,9 +1,7 @@
 import React from 'react';
-import PropTypes from 'prop-types';
 import { RiMapPinTimeLine } from 'react-icons/ri';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
-import { podcastPropType } from '../prop-types';
 import {
   EventWrapper, LeftPane,
   CategoryHeader, CategoryList,

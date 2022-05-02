@@ -1,5 +1,4 @@
 import React, { ErrorInfo } from 'react';
-import PropTypes from 'prop-types';
 import { RouteComponentProps, withRouter } from 'react-router-dom';
 import { Button } from 'react-bootstrap';
 

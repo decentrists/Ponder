@@ -43,7 +43,7 @@ export type Episode = {
   keywords: string[];
 };
 
-export interface DisjointGraphFunctionNode extends Pick<Podcast['tags'], 'subscribeUrl'> {
+export interface DisjointGraphFunctionNode extends Pick<Podcast, 'subscribeUrl'> {
   keywordsAndCategories: string[];
   visited: boolean;
 }

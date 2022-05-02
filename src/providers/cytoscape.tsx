@@ -1,5 +1,4 @@
 import React, { createContext, useState } from 'react';
-import PropTypes from 'prop-types';
 import { ExtendedCore } from '../components/pod-graph/cytoscape/interfaces';
 
 interface CytoscapeContextValue {
@@ -32,9 +31,5 @@ const CytoscapeProvider : React.FC<Props> = ({ children }) => {
     </CytoscapeContext.Provider>
   );
 };
-
-// CytoscapeProvider.propTypes = {
-//   children: PropTypes.node.isRequired,
-// };
 
 export default CytoscapeProvider;

@@ -19,14 +19,14 @@ function Field({ children, name, label }) {
   );
 }
 
-// Field.propTypes = {
-//   children: PropTypes.func.isRequired,
-//   name: PropTypes.string.isRequired,
-//   label: PropTypes.string,
-// };
+Field.propTypes = {
+  children: PropTypes.func.isRequired,
+  name: PropTypes.string.isRequired,
+  label: PropTypes.string,
+};
 
-// Field.defaultProps = {
-//   label: null,
-// };
+Field.defaultProps = {
+  label: null,
+};
 
 export default Field;

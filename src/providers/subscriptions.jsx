@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useState } from 'react';
-// import PropTypes from 'prop-types';
 import { ToastContext } from './toast';
 import useRerenderEffect from '../hooks/use-rerender-effect';
 import { getPodcast, refreshSubscriptions } from '../client';
@@ -128,9 +127,5 @@ function SubscriptionsProvider({ children }) {
     </SubscriptionsContext.Provider>
   );
 }
-
-// SubscriptionsProvider.propTypes = {
-//   children: PropTypes.node.isRequired,
-// };
 
 export default SubscriptionsProvider;

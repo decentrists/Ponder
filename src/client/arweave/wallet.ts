@@ -1,3 +1,4 @@
+import { JWKInterface } from 'arweave/node/lib/wallet';
 import client from './client';
 
 export async function createNewDevWallet() {
@@ -6,10 +7,10 @@ export async function createNewDevWallet() {
   return wallet;
 }
 
-export async function getWalletAddress(wallet) {
+export async function getWalletAddress(wallet: JWKInterface) {
   return client.wallets.jwkToAddress(wallet);
 }
 
-async function mintDevTokens(walletAddress, numTokens = '100000000000000000') {
+async function mintDevTokens(walletAddress: string, numTokens = '100000000000000000') {
   client.api.get(`/mint/${walletAddress}/${numTokens}`);
 }

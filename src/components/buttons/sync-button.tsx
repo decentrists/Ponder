@@ -1,4 +1,5 @@
 import React, { useContext } from 'react';
+// @ts-ignore
 import { ReactComponent as ArSyncIcon } from '../../assets/arsync-logo.svg';
 import SpinButton from './spin-button';
 import { SubscriptionsContext } from '../../providers/subscriptions';

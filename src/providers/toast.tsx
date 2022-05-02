@@ -1,6 +1,6 @@
 import React, { createContext, useState } from 'react';
 import styled from 'styled-components';
-import { Toast } from 'react-bootstrap';
+import { Toast, ToastProps } from 'react-bootstrap';
 import { v4 as uuid } from 'uuid';
 
 const ToastList = styled.ul`
@@ -31,23 +31,48 @@ const CloseButton = styled.button`
   float: right;
   padding: 0.5rem;
 `;
-const CustomHeader = ({ closeToast }) => (
+
+interface CustomHeaderProps { 
+  children: React.ReactNode,
+  className: string;
+  closeToast: () => void 
+}
+
+const CustomHeader : React.FC<CustomHeaderProps> = ({ closeToast, className }) => (
   <CloseButton
     type='button'
-    className='btn-close fa fa-times'
+    className={`${className} btn-close fa fa-times`}
     onClick={closeToast}
   />
 );
+
 const TOAST_DELAY = 3500;
 
-export const ToastContext = createContext();
+interface Props {
+  children: React.ReactNode
+}
 
-function ToastProvider({ children }) {
-  const [messages, setMessages] = useState([]);
+interface ToastOptions extends Omit<ToastProps, 'autohide' | 'delay'> {
+  autohideDelay?: number
+  variant?: string;
+  header?: string;
+}
 
-  function dispatchToastMessage(text, options = {}) {
-    const { autohideDelay, variant, ...otherOptions } = options;
+type ToastDispatchFunction = (text: string, options: ToastOptions) => void;
+
+interface Message extends ToastOptions {
+  id: string;
+  text: string;
+}
+
+export const ToastContext = createContext<ToastDispatchFunction>(() => {});
+
+const ToastProvider : React.FC<Props> = ({ children }) =>{
+  const [messages, setMessages] = useState<Message[]>([]);
+
+  const dispatchToastMessage : ToastDispatchFunction = (text, options = {}) => {
     const id = uuid();
+    const { autohideDelay, variant, ...otherOptions } = options;
 
     // We autohide the toast by default unless autohideDelay=0 is specified in `options`
     if (autohideDelay !== 0) setTimeout(() => handleClose(id), autohideDelay || TOAST_DELAY);
@@ -59,9 +84,9 @@ function ToastProvider({ children }) {
       text,
       id,
     }));
-  }
+  };
 
-  function handleClose(messageId) {
+  function handleClose(messageId: Message['id']) {
     setMessages(prev => prev.filter(a => a.id !== messageId));
   }
 
@@ -73,9 +98,10 @@ function ToastProvider({ children }) {
           <li key={message.id}>
             <Toast
               delay={TOAST_DELAY}
+              // @ts-ignore
               variant={message.variant}
               onClose={() => handleClose(message.id)}
-            >
+              >
               <CustomHeader
                 className={`toast-${message.variant}`}
                 closeToast={() => handleClose(message.id)}
@@ -91,6 +117,6 @@ function ToastProvider({ children }) {
       </ToastList>
     </ToastContext.Provider>
   );
-}
+};
 
 export default ToastProvider;
