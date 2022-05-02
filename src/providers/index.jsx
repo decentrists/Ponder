@@ -1,5 +1,4 @@
 import React from 'react';
-import PropTypes from 'prop-types';
 import ToastProvider from './toast';
 import SubscriptionsProvider from './subscriptions';
 import ArweaveProvider from './arweave';
@@ -18,9 +17,5 @@ function GlobalProviders({ children }) {
     </ToastProvider>
   );
 }
-
-GlobalProviders.propTypes = {
-  children: PropTypes.node.isRequired,
-};
 
 export default GlobalProviders;

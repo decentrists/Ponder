@@ -1,5 +1,4 @@
 import React, { createContext, useState } from 'react';
-import PropTypes from 'prop-types';
 import styled from 'styled-components';
 import { Toast } from 'react-bootstrap';
 import { v4 as uuid } from 'uuid';
@@ -46,15 +45,20 @@ export const ToastContext = createContext();
 function ToastProvider({ children }) {
   const [messages, setMessages] = useState([]);
 
-  function dispatchToastMessage(text, options) {
+  function dispatchToastMessage(text, options = {}) {
+    const { autohideDelay, variant, ...otherOptions } = options;
     const id = uuid();
-    const { autohideDelay, ...otherOptions } = options;
 
     // We autohide the toast by default unless autohideDelay=0 is specified in `options`
     if (autohideDelay !== 0) setTimeout(() => handleClose(id), autohideDelay || TOAST_DELAY);
 
     console.debug(text);
-    setMessages(prev => prev.concat({ ...otherOptions, text, id }));
+    setMessages(prev => prev.concat({
+      ...otherOptions,
+      variant: variant?.trim() || 'primary',
+      text,
+      id,
+    }));
   }
 
   function handleClose(messageId) {
@@ -69,13 +73,16 @@ function ToastProvider({ children }) {
           <li key={message.id}>
             <Toast
               delay={TOAST_DELAY}
-              variant={message.variant || 'primary'}
+              variant={message.variant}
               onClose={() => handleClose(message.id)}
             >
-              <CustomHeader closeToast={() => handleClose(message.id)}>
+              <CustomHeader
+                className={`toast-${message.variant}`}
+                closeToast={() => handleClose(message.id)}
+              >
                 {message.header}
               </CustomHeader>
-              <Toast.Body className={`toast-${message.variant || 'primary'}`}>
+              <Toast.Body className={`toast-${message.variant}`}>
                 {message.text}
               </Toast.Body>
             </Toast>
@@ -85,9 +92,5 @@ function ToastProvider({ children }) {
     </ToastContext.Provider>
   );
 }
-
-ToastProvider.propTypes = {
-  children: PropTypes.node.isRequired,
-};
 
 export default ToastProvider;
