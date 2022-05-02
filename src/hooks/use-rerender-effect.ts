@@ -1,10 +1,12 @@
 import { useEffect, useRef } from 'react';
 
+
+type UseEffect = (effect: React.EffectCallback, deps?: React.DependencyList | undefined) => void;
 /**
  * Similar to React.useEffect except it doesn't run the effect
  * on mount but only after subsequent rerenders.
  */
-export default function useRerenderEffect(effect, dependencies) {
+const useRerenderEffect : UseEffect = (effect, dependencies) => {
   const mounted = useRef(false);
 
   useEffect(() => {
@@ -20,4 +22,6 @@ export default function useRerenderEffect(effect, dependencies) {
   useEffect(() => () => {
     mounted.current = false;
   }, []);
-}
+};
+
+export default useRerenderEffect;

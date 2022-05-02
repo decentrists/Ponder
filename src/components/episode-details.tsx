@@ -44,7 +44,7 @@ const EpisodeDetails : React.FC<Props> = ({
       </DetailsCard>
     </EpisodeLink>
   );
-}
+};
 
 // EpisodeDetails.propTypes = {
 //   title: PropTypes.string.isRequired,

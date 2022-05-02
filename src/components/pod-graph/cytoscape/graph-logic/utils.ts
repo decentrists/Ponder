@@ -1,3 +1,4 @@
+import { Primitive } from '../../../../utils';
 import { Podcast } from './interfaces/interfaces';
 
 export const findSharedCategoriesAndKeywords = (podcast1: Podcast,
@@ -10,8 +11,6 @@ export const findSharedCategoriesAndKeywords = (podcast1: Podcast,
   ];
   return removeDuplicateElements(arr);
 };
-
-type Primitive = string | boolean | number;
 
 export const haveSharedElements = <T extends Primitive>(arr1: T[],
   arr2: T[]) => arr1.some(item => arr2.includes(item));

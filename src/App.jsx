@@ -6,7 +6,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import Layout from './components/layout';
 import MasterErrorBoundary from './components/master-error-boundary';
 import Routes from './routes';
-import GlobalProviders from './providers';
+import GlobalProviders from './providers/index.tsx';
 
 const history = createBrowserHistory();
 

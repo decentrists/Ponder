@@ -1,11 +1,16 @@
 // TODO: group similar utils into separate modules, such as
 // omitEmptyMetadata() --> src/client/metadata-filtering/utils
 
-export function unixTimestamp(date = null) {
+import {
+  Episode,
+  Podcast, 
+} from './components/pod-graph/cytoscape/graph-logic/interfaces/interfaces';
+
+export function unixTimestamp(date : Date | null = null) {
   return Math.floor(date ? date.getTime() : Date.now() / 1000);
 }
 
-export function toISOString(date) {
+export function toISOString(date: Date) {
   try {
     return date.toISOString();
   }
@@ -14,44 +19,46 @@ export function toISOString(date) {
   }
 }
 
-export function isValidInteger(number) {
+export function isValidInteger(number: number) {
   return typeof number === 'number' && Number.isInteger(number);
 }
 
-export function isValidDate(date) {
+export function isValidDate(date: Date) {
   return date instanceof Date && !!date.getTime();
 }
 
-export function datesEqual(a, b) {
+export function datesEqual(a: Date, b: Date) {
   return a instanceof Date && b instanceof Date && a.getTime() === b.getTime();
 }
 
+export type Primitive = string | boolean | number;
+
 /**
- * @returns {Array} The given arrays, concatenated, omitting duplicate as well as falsy elements
+ * @returns The given arrays, concatenated, omitting duplicate as well as falsy elements
  */
-export function mergeArrays(arr1, arr2) {
+export function mergeArrays<T extends Primitive>(arr1: T[], arr2: T[]) {
   return [...new Set((arr1 || []).concat(arr2 || []))].filter(x => x);
 }
 
 /**
- * @param {Array.<string>} messages
- * @param {boolean} filterDuplicates
- * @returns {string}
+ * @param messages
+ * @param  filterDuplicates
+ * @returns 
  */
-export function concatMessages(messages = [], filterDuplicates = false) {
+export function concatMessages(messages : string[] = [], filterDuplicates = false) {
   return (filterDuplicates ? [...new Set(messages.flat())] : messages.flat())
     .filter(x => x) // Filter out any null elements
     .join('\n').trim();
 }
 
 /**
- * @param {(string|Date)} date
- * @returns {(Date|null)} One of the following:
+ * @param date
+ * @returns One of the following:
  *   - A new Date object, if `date` is a valid date string.
  *   - null, if `date` is not a valid date string.
  *   - `date`, if `date` is already a Date object.
  */
-export function toDate(date) {
+export function toDate(date: string | Date) {
   if (!date) return null;
   if (date instanceof Date) return date;
 
@@ -64,27 +71,29 @@ export function toDate(date) {
  * @returns {boolean} true if `metadata` has specific metadata other than:
  *   `subscribeUrl`, `publishedAt` and an empty episodes list
  */
-export function hasMetadata(metadata) {
+export function hasMetadata(metadata: Podcast) {
   if (isEmpty(metadata)) return false;
   if (metadata.title) return true;
 
+  // @ts-ignore
   const { subscribeUrl, publishedAt, episodes, ...specificMetadata } = { ...metadata };
   if (episodes?.length) return true;
 
   return !!Object.values(specificMetadata).flat().filter(x => x).length;
 }
 
-export function findMetadata(subscribeUrl, arrayOfMetadata = []) {
+export function findMetadata(subscribeUrl: string, arrayOfMetadata : Podcast[] = []) {
   return arrayOfMetadata.find(obj => !isEmpty(obj) && obj.subscribeUrl === subscribeUrl) || {};
 }
 
-export function podcastWithDateObjects(podcast, sortEpisodes = true) {
-  const conditionalSort = episodes => (sortEpisodes ?
-    episodes.sort((a, b) => b.publishedAt - a.publishedAt) : episodes);
+export function podcastWithDateObjects(podcast : Podcast, sortEpisodes = true) {
+  const conditionalSort = (episodes: Episode[]) => (sortEpisodes ?
+    episodes.sort((a, b) => b.publishedAt.getTime() - a.publishedAt.getTime()) : episodes);
   const episodes = conditionalSort(
     (podcast.episodes || []).map(episode => ({
       ...episode,
-      publishedAt: toDate(episode.publishedAt),
+      // TODO: probably this casting should be looked at because it may not be safe or correct.
+      publishedAt: toDate(episode.publishedAt) as Date,
     })),
   );
 
@@ -95,30 +104,31 @@ export function podcastWithDateObjects(podcast, sortEpisodes = true) {
   );
 }
 
-export function podcastsWithDateObjects(podcasts, sortEpisodes = true) {
+export function podcastsWithDateObjects(podcasts: Podcast[], sortEpisodes = true) {
   return podcasts.filter(podcast => !isEmpty(podcast))
     .map(podcast => podcastWithDateObjects(podcast, sortEpisodes));
 }
 
 /**
- * @param {Object} metadata
- * @returns {Object} The `metadata` exluding props where !valuePresent(value), @see valuePresent
+ * @param metadata
+ * @returns The `metadata` exluding props where !valuePresent(value), @see valuePresent
  */
-export function omitEmptyMetadata(metadata = {}) {
-  const result = {};
+export function omitEmptyMetadata(metadata : Podcast) {
+  if (isEmpty(metadata)) return {};
+  
+  const result : Partial<Podcast> = {};
   Object.entries(metadata).forEach(([prop, value]) => {
     let newValue = value;
     if (Array.isArray(newValue)) newValue = newValue.filter(elem => valuePresent(elem));
-
-    if (valuePresent(newValue)) result[prop] = newValue;
+    if (valuePresent(newValue)) result[prop as keyof Podcast] = newValue;
   });
 
   return result;
 }
 
 /**
- * @param {Object} value
- * @returns {Object} false iff `value` comprises one of these values:
+ * @param value
+ * @returns false iff `metadata` comprises one of these values:
  *   - null
  *   - undefined
  *   - NaN
@@ -127,7 +137,7 @@ export function omitEmptyMetadata(metadata = {}) {
  *   - an empty object (non-recursively)
  *   - an array comprised of only any of the above elements
  */
-export function valuePresent(value) {
+export function valuePresent(value: number | string | object) : boolean {
   switch (typeof value) {
     case 'number':
       return !Number.isNaN(value);
@@ -144,12 +154,12 @@ export function valuePresent(value) {
 }
 
 /* Returns true if the given array or object is empty or not an object */
-export function isEmpty(obj) {
+export function isEmpty(obj: object) {
   return !obj || typeof obj !== 'object' || Object.keys(obj).length === 0;
 }
 
 /* Returns true if the given arrays or objects' values are equal */
-export function valuesEqual(a = {}, b = {}) {
+export function valuesEqual(a : object = {}, b : object = {}) {
   if (a === b) return true;
   if (!a || !b) return false;
 
@@ -171,6 +181,6 @@ export function corsProxyURL() {
   return 'https://corsanywhere.herokuapp.com/';
 }
 
-export function withCorsProxy(url) {
+export function withCorsProxy(url: string) {
   return corsProxyURL() + url;
 }

@@ -92,6 +92,6 @@ const PodcastList : React.FC<Props> = ({ subscriptions, unsubscribe }) => {
       </RightPane>
     </EventWrapper>
   );
-}
+};
 
 export default PodcastList;
