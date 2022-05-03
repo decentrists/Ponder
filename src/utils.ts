@@ -71,8 +71,10 @@ export function toDate(date: string | Date) {
  * @returns true if `metadata` has specific metadata other than:
  *   `subscribeUrl`, `publishedAt` and an empty episodes list
  */
-export function hasMetadata(metadata: Partial<Podcast> | Partial<Episode>) {
+export function hasMetadata(metadata: Partial<Podcast>[] | 
+Partial<Episode>[] |  Partial<Podcast> | Partial<Episode>) {
   if (isEmpty(metadata)) return false;
+  if (Array.isArray(metadata)) return true;
   if (metadata.title) return true;
 
   // @ts-ignore
@@ -159,15 +161,17 @@ export function isEmpty(obj: object) {
   return !obj || typeof obj !== 'object' || Object.keys(obj).length === 0;
 }
 
-/* Returns true if the given arrays or objects' values are equal */
-export function valuesEqual(a : object = {}, b : object = {}) {
+/* Returns true if the given objects' values are (deep)equal */
+export function valuesEqual(a : object = {}, b : object = {}) : boolean {
   if (a === b) return true;
   if (!a || !b) return false;
 
-  // @ts-ignore
-  return (Object.values(a).every(x => b.includes(x)) &&
-  // @ts-ignore
-    Object.values(b).every(x => a.includes(x)));
+  // See https://stackoverflow.com/a/32922084/8691102
+  const ok = Object.keys, tx = typeof a, ty = typeof b;
+  return tx === 'object' && tx === ty ? (
+    ok(a).length === ok(b).length 
+    && ok(a).every(key => valuesEqual(a[key as keyof typeof a], b[key as keyof typeof b]))
+  ) : (a === b);
 }
 
 export function corsApiHeaders() {

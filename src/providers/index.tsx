@@ -20,6 +20,6 @@ const GlobalProviders : React.FC<Props> = ({ children }) => {
       </SubscriptionsProvider>
     </ToastProvider>
   );
-}
+};
 
 export default GlobalProviders;

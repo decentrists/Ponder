@@ -46,7 +46,7 @@ type PartialEpisodeWithDate = Partial<Episode> & Pick<Episode, 'publishedAt'>;
  *   duplicate episodes take precedence, except for categories and keywords, which are merged.
  */
 function mergeEpisodesMetadata(oldEpisodes: PartialEpisodeWithDate[],
-  newEpisodes: PartialEpisodeWithDate[]) : Partial<Episode>[] {
+  newEpisodes: PartialEpisodeWithDate[]) : PartialEpisodeWithDate[] {
   if (!oldEpisodes.length) return newEpisodes;
   if (!newEpisodes.length) return oldEpisodes;
 
@@ -93,10 +93,7 @@ function mergeEpisodesMetadata(oldEpisodes: PartialEpisodeWithDate[],
  * @param episodeBatches
  * @returns
  */
-// TODO: is the param type correct?
-export function mergeEpisodeBatches(episodeBatches: Partial<Episode>[][]) {
-  // TOOD 
-  // @ts-ignore
+export function mergeEpisodeBatches(episodeBatches: PartialEpisodeWithDate[][]) {
   return episodeBatches.reduce((mergedEps, batch) => mergeEpisodesMetadata(mergedEps, batch), []);
 }
 
@@ -222,9 +219,7 @@ export function rightDiff<T extends Episode | Podcast>(oldMetadata : T,
       case 'episodes':
         // @ts-ignore
         const episodesDiff = episodesRightDiff(oldValue, value);
-        // TODO: does `hasMetadata` accept arrays? 
-        // @ts-ignore
-        if (hasMetadata(episodesDiff)) result.episodes = episodesDiff;
+        if (hasMetadata(episodesDiff)) result = { ...result, episodes: episodesDiff };
         break;
       default:
         if (Array.isArray(value)) {
@@ -247,9 +242,9 @@ export function rightDiff<T extends Episode | Podcast>(oldMetadata : T,
 }
 
 /**
- * @param {Object} oldMetadata
- * @param {Object} newMetadata
- * @returns {Object} The newMetadata omitting episodes whose timestamps exist in oldMetadata.
+ * @param oldMetadata
+ * @param newMetadata
+ * @returns The newMetadata omitting episodes whose timestamps exist in oldMetadata.
  *   If there are no new episodes, return an empty metadata object: { episodes: [] }
  */
 export function simpleDiff(oldMetadata: Podcast, newMetadata: Podcast) {

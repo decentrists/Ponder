@@ -4,9 +4,6 @@ import { Button } from 'react-bootstrap';
 
 interface Props extends RouteComponentProps {
   children: React.ReactNode;
-  history: {
-    goBack: () => void;
-  };
 }
 
 interface State {
@@ -15,12 +12,6 @@ interface State {
 }
 
 class MasterErrorBoundary extends React.Component<Props, State> {
-  // static propTypes = {
-  //   children: PropTypes.node.isRequired,
-  //   history: PropTypes.shape({
-  //     goBack: PropTypes.func.isRequired,
-  //   }).isRequired,
-  // };
 
   state : State = {
     error: null,

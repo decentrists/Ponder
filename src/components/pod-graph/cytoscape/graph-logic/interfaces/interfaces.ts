@@ -1,19 +1,4 @@
-export interface Podcast {
-  id: string;
-  subscribeUrl: string;
-  label: string;
-  categories: string[];
-  keywords: string[];
-  episodes: Episode[];
-  description: string;
-  title: string;
-  imageUrl: string;
-  imageTitle: string;
-  firstEpisodeDate: Date;
-  lastEpisodeDate: Date;
-  language: string;
-  metadataBatch: number;
-}
+export interface Podcast extends PodcastTags, PodcastContent {}
 
 export interface PodcastTags {
   id: string;

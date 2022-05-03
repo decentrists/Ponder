@@ -1,7 +1,7 @@
 import React, {
   createContext, useState, useContext, useRef, useEffect, useCallback,
 } from 'react';
-// import PropTypes from 'prop-types';
+import PropTypes from 'prop-types';
 import { ToastContext } from './toast';
 import useRerenderEffect from '../hooks/use-rerender-effect';
 import { SubscriptionsContext } from './subscriptions';
@@ -166,8 +166,8 @@ function ArweaveProvider({ children }) {
   );
 }
 
-// ArweaveProvider.propTypes = {
-//   children: PropTypes.node.isRequired,
-// };
+ArweaveProvider.propTypes = {
+  children: PropTypes.node.isRequired,
+};
 
 export default ArweaveProvider;

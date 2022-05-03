@@ -16,6 +16,7 @@ interface TransactionNode { id: string, tags: { name: string, value: string }[] 
 
 type GetPodcastFeedForBatchReturnType = {
   errorMessage?: string;
+  // TOOD: remove `any`s and replace with proper types.
   metadata: any;
   tags: any;
 };
