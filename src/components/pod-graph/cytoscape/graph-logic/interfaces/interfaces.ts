@@ -15,24 +15,28 @@ export interface Podcast {
   metadataBatch: number;
 }
 
+export interface PodcastTags {
+  id: string;
+  subscribeUrl: string;
+  title: string;
+  categories: string[];
+  keywords: string[];
+  firstEpisodeDate: Date;
+  lastEpisodeDate: Date;
+  metadataBatch: number;
+} 
+
+export interface PodcastContent {
+  description: string;
+  imageUrl: string;
+  imageTitle: string;
+  language: string;
+  episodes: Episode[];
+}
+
 export interface PodcastSeed {
-  content: {
-    description: string;
-    imageUrl: string;
-    imageTitle: string;
-    language: string;
-    episodes: Episode[];
-  },
-  tags: {
-    id: string;
-    subscribeUrl: string;
-    title: string;
-    categories: string[];
-    keywords: string[];
-    firstEpisodeDate: Date;
-    lastEpisodeDate: Date;
-    metadataBatch: number;
-  },
+  content: PodcastContent,
+  tags: PodcastTags,
 }
 
 export type Episode = {

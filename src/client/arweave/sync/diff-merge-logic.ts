@@ -1,7 +1,7 @@
 import {
   Episode, 
   Podcast,
-  PodcastSeed, 
+  PodcastTags, 
 } from '../../../components/pod-graph/cytoscape/graph-logic/interfaces/interfaces';
 import {
   isEmpty,
@@ -22,8 +22,8 @@ import {
  * @returns The merged episodes metadata, where newer non-empty properties of duplicate
  *   episodes take precedence, except for categories and keywords, which are merged.
  */
-function mergeEpisodeMetadata(oldEpisode: Episode, newEpisode: Episode) {
-  let result : Episode = { ...oldEpisode };
+function mergeEpisodeMetadata(oldEpisode: Partial<Episode>, newEpisode: Partial<Episode>) {
+  let result : Partial<Episode> = { ...oldEpisode };
 
   Object.entries(newEpisode).forEach(([prop, value]) => {
     let newValue = value;
@@ -37,13 +37,16 @@ function mergeEpisodeMetadata(oldEpisode: Episode, newEpisode: Episode) {
   return result;
 }
 
+type PartialEpisodeWithDate = Partial<Episode> & Pick<Episode, 'publishedAt'>;
+
 /**
  * @param oldEpisodes assumed-DATE_DESC-sorted array of episodes metadata
  * @param newEpisodes assumed-DATE_DESC-sorted array of newer episodes metadata
  * @returns An array of merged episodes metadata, where newer properties of
  *   duplicate episodes take precedence, except for categories and keywords, which are merged.
  */
-function mergeEpisodesMetadata(oldEpisodes: Episode[], newEpisodes: Episode[]) : Episode[] {
+function mergeEpisodesMetadata(oldEpisodes: PartialEpisodeWithDate[],
+  newEpisodes: PartialEpisodeWithDate[]) : Partial<Episode>[] {
   if (!oldEpisodes.length) return newEpisodes;
   if (!newEpisodes.length) return oldEpisodes;
 
@@ -76,7 +79,8 @@ function mergeEpisodesMetadata(oldEpisodes: Episode[], newEpisodes: Episode[]) :
       const newEpisode = newEpisodes[duplicateNewEpisodeIndex];
 
       // Replace duplicate oldEpisode with merged episode metadata
-      oldEpisodesWithMerges[oldEpisodeIndex] = mergeEpisodeMetadata(oldEpisode, newEpisode);
+      oldEpisodesWithMerges[oldEpisodeIndex] = mergeEpisodeMetadata(
+        oldEpisode, newEpisode) as PartialEpisodeWithDate;
     }
   }
   return newEpisodes
@@ -89,22 +93,26 @@ function mergeEpisodesMetadata(oldEpisodes: Episode[], newEpisodes: Episode[]) :
  * @param episodeBatches
  * @returns
  */
-export function mergeEpisodeBatches(episodeBatches: Episode[][]) {
+// TODO: is the param type correct?
+export function mergeEpisodeBatches(episodeBatches: Partial<Episode>[][]) {
+  // TOOD 
+  // @ts-ignore
   return episodeBatches.reduce((mergedEps, batch) => mergeEpisodesMetadata(mergedEps, batch), []);
 }
 
 /**
  * NOTE: for the getPodcastFeed() caller, podcast categories & keywords are still in the tags,
  * outside of this scope. Other use cases may want to enable `applyMergeSpecialTags` or refactor.
- * @param {Array.<Object>} metadataBatches
- * @param {boolean} applyMergeSpecialTags
+ * @param metadataBatches
+ * @param applyMergeSpecialTags
  *   - If false, each non-empty metadatum of newer batches overrides the value from prior batches.
  *     @see omitEmptyMetadata
  *   - If true, the following additional exceptions apply: @see mergeSpecialTags
- * @returns {Object} A new object with merged podcast metadata, where newer batches take precedence
+ * @returns A new object with merged podcast metadata, where newer batches take precedence
  *   (read above for exceptions) and episodes are merged by @see mergeEpisodeBatches
  */
-export function mergeBatchMetadata(metadataBatches: Podcast[], applyMergeSpecialTags = false) {
+export function mergeBatchMetadata(metadataBatches: Partial<Podcast>[]
+  , applyMergeSpecialTags = false) {
   if (isEmpty(metadataBatches) || metadataBatches.every(batch => !hasMetadata(batch))) return {};
 
   const mergedEpisodes = mergeEpisodeBatches(metadataBatches.map(batch => batch.episodes || []));
@@ -131,8 +139,8 @@ export function mergeBatchMetadata(metadataBatches: Podcast[], applyMergeSpecial
  *     NOTE: pending T251, removal of certain categories and keywords can still be accomplished
  *           by omitting the (e.g. downvoted) tx.id in preselection of GraphQL results.
  */
-const mergeSpecialTags = (acc: Partial<PodcastSeed['tags']>,
-  metadata: Partial<PodcastSeed['tags']>) => {
+const mergeSpecialTags = (acc: Partial<PodcastTags>,
+  metadata: Partial<PodcastTags>) => {
   Object.entries(omitEmptyMetadata(metadata)).forEach(([tag, value]) => {
     switch (tag) {
       case 'episodes':
@@ -150,7 +158,7 @@ const mergeSpecialTags = (acc: Partial<PodcastSeed['tags']>,
         break;
       case 'categories':
       case 'keywords':
-        acc.keywords = mergeArrays(acc[tag] || [], value as string[]);
+        acc[tag as 'categories' | 'keywords'] = mergeArrays(acc[tag] || [], value as string[]);
         break;
       default:
         acc = { ...acc, [tag]: value };
@@ -164,19 +172,18 @@ const mergeSpecialTags = (acc: Partial<PodcastSeed['tags']>,
  * @returns {Object} A new object with all tags merged, where newer batches take precedence;
  *   @see mergeSpecialTags for exceptions.
  */
-export function mergeBatchTags(tagBatches: PodcastSeed['tags'][]) {
+export function mergeBatchTags(tagBatches: PodcastTags[]) {
   return tagBatches.reduce((acc, batch) => mergeSpecialTags(acc, batch), {});
 }
 
 function episodesRightDiff(oldEpisodes : Episode[] = [], newEpisodes : Episode[] = []) {
-  const result : Episode[] = [];
+  const result : PartialEpisodeWithDate[] = [];
   newEpisodes.forEach(newEpisode => {
     const oldEpisodeMatch =
-      oldEpisodes.find(oldEpisode => datesEqual(oldEpisode.publishedAt, newEpisode.publishedAt))!;
+      oldEpisodes.find(oldEpisode => datesEqual(oldEpisode.publishedAt, newEpisode.publishedAt));
     if (oldEpisodeMatch) {
-      // TODO: remove `any`s and the type casting in the next line.
-      const diff = rightDiff(oldEpisodeMatch as any, newEpisode as any, 'publishedAt');
-      if (hasMetadata(diff)) result.push(diff as Episode);
+      const diff = rightDiff(oldEpisodeMatch, newEpisode, 'publishedAt');
+      if (hasMetadata(diff)) result.push(diff as PartialEpisodeWithDate);
     }
     else {
       result.push(newEpisode);
@@ -197,14 +204,14 @@ function arrayRightDiff<T extends Primitive>(oldArray : T[] = [], newArray : T[]
  * @returns The newMetadata omitting each { prop: value } already present in oldMetadata
  *   and empty props are ignored.
  */
-export function rightDiff(oldMetadata : Podcast,
-  newMetadata : Podcast, primaryKey = 'subscribeUrl') {
+export function rightDiff<T extends Episode | Podcast>(oldMetadata : T,
+  newMetadata : T, primaryKey = 'subscribeUrl') : Partial<T> {
   if (!hasMetadata(oldMetadata)) return newMetadata;
-  if (!hasMetadata(newMetadata)) return {};
+  if (!hasMetadata(newMetadata)) return {} as T;
 
-  let result : Partial<Podcast> = {};
+  let result : Partial<T> = {};
   Object.entries(newMetadata).forEach(([prop, value]) => {
-    const oldValue = oldMetadata[prop as keyof Podcast];
+    const oldValue = oldMetadata[prop as keyof T];
 
     switch (prop) {
       case 'firstEpisodeDate':
@@ -213,27 +220,28 @@ export function rightDiff(oldMetadata : Podcast,
         // These should be excluded from the diff, as they are recomputed in their relevant context
         break;
       case 'episodes':
-        const episodesDiff = episodesRightDiff(oldValue as Episode[], value);
-        // TODO: does hasMetadata accept arrays? 
+        // @ts-ignore
+        const episodesDiff = episodesRightDiff(oldValue, value);
+        // TODO: does `hasMetadata` accept arrays? 
         // @ts-ignore
         if (hasMetadata(episodesDiff)) result.episodes = episodesDiff;
         break;
       default:
         if (Array.isArray(value)) {
-          const arrayDiff = arrayRightDiff<string>(oldValue as string[], value);
-          // @ts-ignore
-          if (arrayDiff.length) result[prop as keyof Podcast] = arrayDiff;
+          const arrayDiff = arrayRightDiff<string>(oldValue as any, value);
+          if (arrayDiff.length) result = { ...result, [prop]: arrayDiff };
         }
-        else if (isValidDate(value)) {
-          if (!datesEqual(value, oldValue as Date)) result[prop as keyof Podcast] = value;
+        else if (isValidDate(value) && isValidDate(oldValue)) {
+          if (!datesEqual(value, oldValue)) result = { ...result, [prop]: value };
         }
-        else if (value !== oldValue && valuePresent(value)) result[prop as keyof Podcast] = value;
+        else if (value !== oldValue && valuePresent(value)) result = { ...result, [prop]: value };
     }
+
   });
 
   if (hasMetadata(result) && primaryKey) {
-    result = { ...result, [primaryKey]: newMetadata[primaryKey as keyof Podcast]
-      || oldMetadata[primaryKey as keyof Podcast] };
+    result = { ...result, [primaryKey]: newMetadata[primaryKey as keyof T]
+      || oldMetadata[primaryKey as keyof T] };
   }
   return result;
 }

@@ -23,7 +23,7 @@ export function isValidInteger(number: number) {
   return typeof number === 'number' && Number.isInteger(number);
 }
 
-export function isValidDate(date: Date) {
+export function isValidDate(date: unknown) : date is Date {
   return date instanceof Date && !!date.getTime();
 }
 
