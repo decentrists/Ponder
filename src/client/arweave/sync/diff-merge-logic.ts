@@ -4,7 +4,7 @@ import {
   PodcastTags, 
 } from '../../../components/pod-graph/cytoscape/graph-logic/interfaces/interfaces';
 import {
-  isEmpty,
+  isNotEmpty,
   toDate,
   isValidDate,
   datesEqual,
@@ -110,7 +110,8 @@ export function mergeEpisodeBatches(episodeBatches: PartialEpisodeWithDate[][]) 
  */
 export function mergeBatchMetadata(metadataBatches: Partial<Podcast>[]
   , applyMergeSpecialTags = false) {
-  if (isEmpty(metadataBatches) || metadataBatches.every(batch => !hasMetadata(batch))) return {};
+  if (!isNotEmpty(metadataBatches) || 
+    metadataBatches.every(batch => !hasMetadata(batch))) return {};
 
   const mergedEpisodes = mergeEpisodeBatches(metadataBatches.map(batch => batch.episodes || []));
   return {
@@ -126,7 +127,7 @@ export function mergeBatchMetadata(metadataBatches: Partial<Podcast>[]
 /**
  * Helper function to run in the body of a reduce operation on an array of objects.
  * @param acc
- * @param batch
+ * @param metadata
  * @returns
  *   `acc` with all non-empty tags merged, where newer batches take precedence, except for:
  *   - min holds for firstEpisodeDate
@@ -165,8 +166,8 @@ const mergeSpecialTags = (acc: Partial<PodcastTags>,
 };
 
 /**
- * @param {Array.<Object>} tagBatches
- * @returns {Object} A new object with all tags merged, where newer batches take precedence;
+ * @param tagBatches
+ * @returns A new object with all tags merged, where newer batches take precedence;
  *   @see mergeSpecialTags for exceptions.
  */
 export function mergeBatchTags(tagBatches: PodcastTags[]) {

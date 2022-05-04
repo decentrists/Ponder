@@ -1,7 +1,7 @@
 /* eslint-disable no-await-in-loop */
 import client from './client';
 import {
-  isEmpty,
+  isNotEmpty,
   hasMetadata,
   toDate,
   podcastWithDateObjects,
@@ -9,6 +9,10 @@ import {
 } from '../../utils';
 import { toTag, fromTag } from './utils';
 import { mergeBatchMetadata, mergeBatchTags } from './sync/diff-merge-logic';
+import {
+  Podcast, 
+  PodcastTags, 
+} from '../../components/pod-graph/cytoscape/graph-logic/interfaces/interfaces';
 
 const MAX_BATCH_NUMBER = 100;
 
@@ -16,15 +20,14 @@ interface TransactionNode { id: string, tags: { name: string, value: string }[] 
 
 type GetPodcastFeedForBatchReturnType = {
   errorMessage?: string;
-  // TOOD: remove `any`s and replace with proper types.
-  metadata: any;
-  tags: any;
+  metadata: Podcast | {};
+  tags: PodcastTags | {};
 };
 
 export async function getPodcastFeed(subscribeUrl: string) {
-  const errorMessages = [];
+  const errorMessages : string[] = [];
   const metadataBatches = [];
-  const tagBatches = [];
+  const tagBatches : PodcastTags[] = [];
   // TODO: negative batch numbers
   let batch = 0;
   do {
@@ -35,7 +38,7 @@ export async function getPodcastFeed(subscribeUrl: string) {
     // console.debug('tags=', tags);
     if (errorMessage) errorMessages.push(errorMessage);
 
-    if (!isEmpty(tags)) {
+    if (isNotEmpty(tags)) {
       if (!hasMetadata(metadata)) {
         // Match found for this batch number, but with invalid/empty metadata
         // TODO: prioritize next trx.id with this batch number;
@@ -116,7 +119,7 @@ async function getPodcastFeedForBatch(subscribeUrl: string,
   //       In the future we should fetch multiple transactions referencing the same batch and
   //       merge the result.
   const trx : TransactionNode = edges[0].node;
-  const tags = (isEmpty(trx.tags) ? {} : trx.tags
+  const formattedTags = (!isNotEmpty(trx.tags) ? {} : trx.tags
     .filter(tag => !['Content-Type', 'Unix-Time', toTag('version')].includes(tag.name))
     .map(tag => ({
       ...tag,
@@ -133,7 +136,10 @@ async function getPodcastFeedForBatch(subscribeUrl: string,
       categories: [],
       keywords: [],
     })
-  );
+  ) as Omit<PodcastTags, 'metadataBatch'> & { metadataBatch: string };
+
+  const tags = { ...formattedTags, 
+    metadataBatch: parseInt(formattedTags.metadataBatch, 10) } as PodcastTags;
 
   let getDataResult;
   try {

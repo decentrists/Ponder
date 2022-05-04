@@ -73,7 +73,7 @@ export function toDate(date: string | Date) {
  */
 export function hasMetadata(metadata: Partial<Podcast>[] | 
 Partial<Episode>[] |  Partial<Podcast> | Partial<Episode>) {
-  if (isEmpty(metadata)) return false;
+  if (!isNotEmpty(metadata)) return false;
   if (Array.isArray(metadata)) return true;
   if (metadata.title) return true;
 
@@ -84,8 +84,9 @@ Partial<Episode>[] |  Partial<Podcast> | Partial<Episode>) {
   return !!Object.values(specificMetadata).flat().filter(x => x).length;
 }
 
-export function findMetadata(subscribeUrl: string, arrayOfMetadata : Podcast[] = []) {
-  return arrayOfMetadata.find(obj => !isEmpty(obj) && obj.subscribeUrl === subscribeUrl) || {};
+export function findMetadata(subscribeUrl: string,
+  arrayOfMetadata : Podcast[] = []) : Partial<Podcast> {
+  return arrayOfMetadata.find(obj => isNotEmpty(obj) && obj.subscribeUrl === subscribeUrl) || {};
 }
 
 export function podcastWithDateObjects(podcast : Podcast, sortEpisodes = true) {
@@ -107,7 +108,7 @@ export function podcastWithDateObjects(podcast : Podcast, sortEpisodes = true) {
 }
 
 export function podcastsWithDateObjects(podcasts: Podcast[], sortEpisodes = true) {
-  return podcasts.filter(podcast => !isEmpty(podcast))
+  return podcasts.filter(podcast => isNotEmpty(podcast))
     .map(podcast => podcastWithDateObjects(podcast, sortEpisodes));
 }
 
@@ -116,7 +117,7 @@ export function podcastsWithDateObjects(podcasts: Podcast[], sortEpisodes = true
  * @returns The `metadata` exluding props where !valuePresent(value), @see valuePresent
  */
 export function omitEmptyMetadata(metadata : Partial<Podcast>) {
-  if (isEmpty(metadata)) return {};
+  if (!isNotEmpty(metadata)) return {};
   
   let result : Partial<Podcast> = {};
   Object.entries(metadata).forEach(([prop, value]) => {
@@ -147,18 +148,23 @@ export function valuePresent(value: number | string | object) : boolean {
     case 'string':
       return !!value.trim();
     case 'object':
-      if (Array.isArray(value)) return !isEmpty(value.filter(elem => valuePresent(elem)));
+      if (Array.isArray(value)) return isNotEmpty(value.filter(elem => valuePresent(elem)));
       if (value instanceof Date) return isValidDate(value);
 
-      return !isEmpty(value);
+      return isNotEmpty(value);
     default:
       return !!value;
   }
 }
 
-/* Returns true if the given array or object is empty or not an object */
-export function isEmpty(obj: object) {
-  return !obj || typeof obj !== 'object' || Object.keys(obj).length === 0;
+/**
+ * 
+ * @param obj is an object that might be empty/undefined
+ * @returns true if the given array or object is not empty
+ */
+export function isNotEmpty<T extends object>(obj: T | undefined | null | {}) : obj is T {
+  const isEmpty = !obj || typeof obj !== 'object' || Object.keys(obj).length === 0;
+  return !isEmpty;
 }
 
 /* Returns true if the given objects' values are (deep)equal */

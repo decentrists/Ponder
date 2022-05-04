@@ -7,7 +7,7 @@ import useRerenderEffect from '../hooks/use-rerender-effect';
 import { SubscriptionsContext } from './subscriptions';
 import * as arweave from '../client/arweave';
 import * as arsync from '../client/arweave/sync';
-import { isEmpty, valuesEqual, concatMessages } from '../utils';
+import { isNotEmpty, valuesEqual, concatMessages } from '../utils';
 
 export const ArweaveContext = createContext();
 
@@ -58,11 +58,11 @@ function ArweaveProvider({ children }) {
 
     const [newSubscriptions, newMetadataToSync] = await refresh(true);
 
-    if (isEmpty(newSubscriptions)) {
+    if (!isNotEmpty(newSubscriptions)) {
       // TODO: make toast dynamic based on activeSyncTypes
       return cancelSync('Failed to refresh subscriptions.');
     }
-    if (isEmpty(newMetadataToSync)) {
+    if (!isNotEmpty(newMetadataToSync)) {
       // TODO: make toast dynamic based on activeSyncTypes
       return cancelSync('Subscribed podcasts are already up-to-date.', 'info');
     }
@@ -77,8 +77,8 @@ function ArweaveProvider({ children }) {
     }
     const { txs, failedTxs } = result;
 
-    if (isEmpty(txs)) {
-      if (isEmpty(failedTxs)) {
+    if (!isNotEmpty(txs)) {
+      if (!isNotEmpty(failedTxs)) {
         return cancelSync('Subscribed podcasts are already up-to-date.', 'info');
       }
       // Rare situation where all transactions failed to create; probably due to invalid wallet
@@ -118,13 +118,13 @@ function ArweaveProvider({ children }) {
     }
     const { txs, failedTxs } = result;
 
-    if (!isEmpty(txs)) {
+    if (isNotEmpty(txs)) {
       const message = concatMessages(txs.map(elem => elem.title));
       const plural = txs.length > 1 ? 's' : '';
       toast(`Transaction${plural} successfully posted to Arweave with metadata for:\n${message}`,
         { autohideDelay: 10000, variant: 'success' });
     }
-    if (!isEmpty(failedTxs)) {
+    if (isNotEmpty(failedTxs)) {
       const message =
         concatMessages(failedTxs.map(elem => `${elem.title}, reason:\n${elem.resultObj}\n`));
       const plural = failedTxs.length > 1 ? 's' : '';
