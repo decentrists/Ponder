@@ -19,7 +19,7 @@ export function toISOString(date: Date) {
   }
 }
 
-export function isValidInteger(number: number) {
+export function isValidInteger(number: unknown) : number is number {
   return typeof number === 'number' && Number.isInteger(number);
 }
 

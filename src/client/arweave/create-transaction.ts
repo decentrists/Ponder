@@ -3,18 +3,25 @@ import { toTag } from './utils';
 import {
   unixTimestamp,
   toISOString,
-  isEmpty,
+  isNotEmpty,
   hasMetadata,
   isValidDate,
   isValidInteger,
 } from '../../utils';
+import {
+  Episode, 
+  Podcast, 
+} from '../../components/pod-graph/cytoscape/graph-logic/interfaces/interfaces';
+import { JWKInterface } from 'arweave/node/lib/wallet';
+import Transaction from 'arweave/node/lib/transaction';
 
-async function newTransaction(wallet, newMetadata, tags = []) {
+async function newTransaction(wallet: JWKInterface, newMetadata: Partial<Podcast>,
+  tags : [string, string][] = []) {
   try {
     const trx = await client.createTransaction({ data: JSON.stringify(newMetadata) }, wallet);
     trx.addTag('Content-Type', 'application/json');
     trx.addTag('Unix-Time', `${unixTimestamp()}`);
-    trx.addTag(toTag('version'), process.env.REACT_APP_VERSION);
+    trx.addTag(toTag('version'), process.env.REACT_APP_VERSION as string);
     tags.forEach(([k, v]) => {
       trx.addTag(toTag(k), `${v}`);
     });
@@ -27,12 +34,12 @@ async function newTransaction(wallet, newMetadata, tags = []) {
 }
 
 /**
- * @param {Object} trx The Arweave Transaction to be signed and posted
- * @param {Object} wallet
- * @returns {Object} `trx` if signed and posted successfully
- * @throws {Error} if signing or posting fails
+ * @param trx The Arweave Transaction to be signed and posted
+ * @param wallet
+ * @returns `trx` if signed and posted successfully
+ * @throws if signing or posting fails
  */
-export async function signAndPostTransaction(trx, wallet) {
+export async function signAndPostTransaction(trx: Transaction, wallet: JWKInterface) {
   let postResponse;
   try {
     await client.transactions.sign(trx, wallet); // has no return value
@@ -46,44 +53,52 @@ export async function signAndPostTransaction(trx, wallet) {
     throw new Error('Posting transaction failed; please try reloading your wallet.');
   }
 
-  if (!isEmpty(postResponse.data.error)) {
+  if (isNotEmpty(postResponse.data.error)) {
     throw new Error(`${postResponse.data.error.code}. Posting transaction failed: ` +
       `${postResponse.data.error.msg}`);
   }
   return trx;
 }
 
+type MandatoryTags = 'subscribeUrl' | 'title' | 'description';
+
 /**
- * @param {Object} wallet
- * @param {Object} newMetadata Assumed to already be a diff vs `cachedMetadata`
- * @param {Object} cachedMetadata
- * @returns {Object} a new Arweave Transaction object
- * @throws {Error} if `newMetadata` is incomplete or if newTransaction() throws
+ * @param wallet
+ * @param newMetadata Assumed to already be a diff vs `cachedMetadata`
+ * @param cachedMetadata
+ * @returns a new Arweave Transaction object
+ * @throws if `newMetadata` is incomplete or if newTransaction() throws
  */
-export async function newMetadataTransaction(wallet, newMetadata, cachedMetadata = {}) {
+export async function newMetadataTransaction(wallet: JWKInterface,
+  newMetadata: Partial<Podcast>, cachedMetadata : Partial<Podcast> = {}) {
   const optionalPodcastTags = [
     // TODO: expand this list to be as complete as possible.
     // imgUrl and imageTitle are optional metadata as well, but these do not belong in the tags,
     // as they do not have to be GraphQL-searchable.
     'language',
   ];
-  const mandatoryPodcastTags = [
+  const mandatoryPodcastTags : [MandatoryTags, string | undefined][] = [
     ['subscribeUrl', newMetadata.subscribeUrl || cachedMetadata.subscribeUrl],
     ['title', newMetadata.title || cachedMetadata.title],
     ['description', newMetadata.description || cachedMetadata.description],
   ];
 
+  const getMandatoryTagsValues = (key: MandatoryTags) => {
+    return mandatoryPodcastTags.find((element) => element[0] === key)![1];
+  };
+
   mandatoryPodcastTags.forEach(([name, value]) => {
     if (!value) {
       throw new Error('Could not upload metadata for ' +
-        `${mandatoryPodcastTags.title || mandatoryPodcastTags.subscribeUrl}: ` +
+        `${getMandatoryTagsValues('title') || getMandatoryTagsValues('subscribeUrl')}: ` +
         `${name} is missing`);
     }
   });
 
-  const podcastTags = [...mandatoryPodcastTags];
+  const podcastTags = [...mandatoryPodcastTags] as [string, string][];
   optionalPodcastTags.forEach(tagName => {
-    if (newMetadata[tagName]) podcastTags.push([tagName, newMetadata[tagName]]);
+    const val = newMetadata[tagName as keyof Podcast] as string;
+    if (val) podcastTags.push([tagName, val]);
   });
 
   // Add new categories and keywords in string => string format
@@ -96,11 +111,12 @@ export async function newMetadataTransaction(wallet, newMetadata, cachedMetadata
 }
 
 /**
- * @param {Array.<Object>} newEpisodes
- * @param {Object} cachedMetadata
- * @returns {[[string, string]]} The metadata transaction tags for the given list of newEpisodes
+ * @param newEpisodes
+ * @param cachedMetadata
+ * @returns The metadata transaction tags for the given list of newEpisodes
  */
-function episodeTags(newEpisodes = [], cachedMetadata = {}) {
+function episodeTags(newEpisodes : Episode[] = [],
+  cachedMetadata : Partial<Podcast> = {}) : [string, string][] {
   if (!newEpisodes.length) { return []; }
 
   const firstEpisodeDate = newEpisodes[newEpisodes.length - 1].publishedAt;
@@ -115,18 +131,19 @@ function episodeTags(newEpisodes = [], cachedMetadata = {}) {
 }
 
 /**
- * @param {Object} cachedMetadata
- * @param {Date} firstNewEpisodeDate
- * @param {Date} lastNewEpisodeDate
- * @returns {number}
+ * @param cachedMetadata
+ * @param firstNewEpisodeDate
+ * @param lastNewEpisodeDate
+ * @returns
  *   An integer denoting the batch number for the [firstNewEpisodeDate, lastNewEpisodeDate] interval
  */
-function getMetadataBatchNumber(cachedMetadata, firstNewEpisodeDate, lastNewEpisodeDate) {
+function getMetadataBatchNumber(cachedMetadata : Partial<Podcast>,
+  firstNewEpisodeDate: Date, lastNewEpisodeDate: Date) {
   if (!isValidDate(firstNewEpisodeDate) || !isValidDate(lastNewEpisodeDate)) {
     throw new Error(`Could not upload metadata for ${cachedMetadata.title}: ` +
                     'Invalid date found for one of its episodes.');
   }
-  const cachedBatchNumber = Number.parseInt(cachedMetadata.metadataBatch, 10);
+  const cachedBatchNumber = cachedMetadata.metadataBatch;
 
   /* First metadata batch for this podcast */
   if (!hasMetadata(cachedMetadata) || !isValidInteger(cachedBatchNumber)) {
@@ -138,7 +155,8 @@ function getMetadataBatchNumber(cachedMetadata, firstNewEpisodeDate, lastNewEpis
   //   return cachedMetadata.firstBatch.count - 1;
   // }
 
-  if (cachedBatchNumber && cachedMetadata.lastEpisodeDate > lastNewEpisodeDate) {
+  if (cachedMetadata.lastEpisodeDate && 
+    cachedMetadata.lastEpisodeDate > lastNewEpisodeDate) {
     // return queryMiddleMetadataBatchNumber(cachedMetadata,firstNewEpisodeDate,lastNewEpisodeDate);
     throw new Error('Supplementing existing metadata is not implemented yet.');
   }
