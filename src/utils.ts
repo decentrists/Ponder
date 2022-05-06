@@ -33,6 +33,8 @@ export function datesEqual(a: Date, b: Date) {
 
 export type Primitive = string | boolean | number;
 
+export type EmptyTypes = null | undefined | {};
+
 /**
  * @returns The given arrays, concatenated, omitting duplicate as well as falsy elements
  */
@@ -71,8 +73,10 @@ export function toDate(date: string | Date) {
  * @returns true if `metadata` has specific metadata other than:
  *   `subscribeUrl`, `publishedAt` and an empty episodes list
  */
-export function hasMetadata(metadata: Partial<Podcast>[] | 
-Partial<Episode>[] |  Partial<Podcast> | Partial<Episode>) {
+export function hasMetadata<T extends Partial<Podcast>[] 
+| Partial<Episode>[], K extends Partial<Podcast>
+| Partial<Episode>>(metadata: K | T | EmptyTypes) : metadata is T | K {
+ 
   if (!isNotEmpty(metadata)) return false;
   if (Array.isArray(metadata)) return true;
   if (metadata.title) return true;
@@ -85,7 +89,7 @@ Partial<Episode>[] |  Partial<Podcast> | Partial<Episode>) {
 }
 
 export function findMetadata(subscribeUrl: string,
-  arrayOfMetadata : Podcast[] = []) : Partial<Podcast> {
+  arrayOfMetadata : Partial<Podcast>[] = []) : Partial<Podcast> {
   return arrayOfMetadata.find(obj => isNotEmpty(obj) && obj.subscribeUrl === subscribeUrl) || {};
 }
 
@@ -162,7 +166,7 @@ export function valuePresent(value: number | string | object) : boolean {
  * @param obj is an object that might be empty/undefined
  * @returns true if the given array or object is not empty
  */
-export function isNotEmpty<T extends object>(obj: T | undefined | null | {}) : obj is T {
+export function isNotEmpty<T extends object>(obj: T | EmptyTypes) : obj is T {
   const isEmpty = !obj || typeof obj !== 'object' || Object.keys(obj).length === 0;
   return !isEmpty;
 }

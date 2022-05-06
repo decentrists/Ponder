@@ -58,7 +58,7 @@ interface ToastOptions extends Omit<ToastProps, 'autohide' | 'delay'> {
   header?: string;
 }
 
-type ToastDispatchFunction = (text: string, options: ToastOptions) => void;
+type ToastDispatchFunction = (text: string, options?: ToastOptions) => void;
 
 interface Message extends ToastOptions {
   id: string;

@@ -55,7 +55,8 @@ export async function getPodcastFeed(subscribeUrl: string) {
   }
   while (batch < MAX_BATCH_NUMBER);
 
-  const mergedMetadata = { ...mergeBatchMetadata(metadataBatches), ...mergeBatchTags(tagBatches) };
+  const mergedMetadata : Partial<Podcast> = 
+    { ...mergeBatchMetadata(metadataBatches), ...mergeBatchTags(tagBatches) };
   if (!hasMetadata(mergedMetadata) && errorMessages.length) {
     // Only return an errorMessage if no metadata was found, since GraphQL likely was unreachable.
     return { errorMessage: `Encountered the following errors when fetching ${subscribeUrl} ` +

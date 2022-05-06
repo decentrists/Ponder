@@ -109,7 +109,7 @@ export function mergeEpisodeBatches(episodeBatches: PartialEpisodeWithDate[][]) 
  *   (read above for exceptions) and episodes are merged by @see mergeEpisodeBatches
  */
 export function mergeBatchMetadata(metadataBatches: Partial<Podcast>[]
-  , applyMergeSpecialTags = false) {
+  , applyMergeSpecialTags = false) : Podcast | {} {
   if (!isNotEmpty(metadataBatches) || 
     metadataBatches.every(batch => !hasMetadata(batch))) return {};
 
@@ -171,7 +171,8 @@ const mergeSpecialTags = (acc: Partial<PodcastTags>,
  *   @see mergeSpecialTags for exceptions.
  */
 export function mergeBatchTags(tagBatches: PodcastTags[]) {
-  return tagBatches.reduce((acc, batch) => mergeSpecialTags(acc, batch), {});
+  const initialAcc : Partial<PodcastTags> = {};
+  return tagBatches.reduce((acc, batch) => mergeSpecialTags(acc, batch), initialAcc);
 }
 
 function episodesRightDiff(oldEpisodes : Episode[] = [], newEpisodes : Episode[] = []) {
@@ -202,7 +203,7 @@ function arrayRightDiff<T extends Primitive>(oldArray : T[] = [], newArray : T[]
  * @returns The newMetadata omitting each { prop: value } already present in oldMetadata
  *   and empty props are ignored.
  */
-export function rightDiff<T extends Episode | Podcast>(oldMetadata : T,
+export function rightDiff<T extends Partial<Episode> | Partial<Podcast>>(oldMetadata : T,
   newMetadata : T, primaryKey = 'subscribeUrl') : Partial<T> {
   if (!hasMetadata(oldMetadata)) return newMetadata;
   if (!hasMetadata(newMetadata)) return {} as T;
@@ -248,7 +249,7 @@ export function rightDiff<T extends Episode | Podcast>(oldMetadata : T,
  * @returns The newMetadata omitting episodes whose timestamps exist in oldMetadata.
  *   If there are no new episodes, return an empty metadata object: { episodes: [] }
  */
-export function simpleDiff(oldMetadata: Podcast, newMetadata: Podcast) {
+export function simpleDiff(oldMetadata: Partial<Podcast>, newMetadata: Partial<Podcast>) {
   const emptyDiff = { episodes: [] };
   if (!hasMetadata(oldMetadata)) return { ...emptyDiff, ...newMetadata };
   if (!hasMetadata(newMetadata)) return emptyDiff;

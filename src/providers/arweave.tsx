@@ -8,20 +8,23 @@ import { SubscriptionsContext } from './subscriptions';
 import * as arweave from '../client/arweave';
 import * as arsync from '../client/arweave/sync';
 import { isNotEmpty, valuesEqual, concatMessages } from '../utils';
+import { JWKInterface } from 'arweave/node/lib/wallet';
+import Transaction from 'arweave/node/lib/transaction';
+import { TransactionStatus } from '../client/arweave/sync';
 
 export const ArweaveContext = createContext();
 
 // TODO: ArSync v1.5+, test me
-function ArweaveProvider({ children }) {
+const ArweaveProvider : React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { refresh, setMetadataToSync } = useContext(SubscriptionsContext);
   const toast = useContext(ToastContext);
-  const [wallet, setWallet] = useState(null);
+  const [wallet, setWallet] = useState<JWKInterface>(null);
   const [walletAddress, setWalletAddress] = useState('');
   const [isSyncing, setIsSyncing] = useState(false);
+  // TODO: clear value within 10mins (?) of setting, as the pendingTxsToSync may have become stale
+  const [pendingArSyncTxs, setPendingArSyncTxs] = useState<TransactionStatus<Transaction>[]>([]);
   const loadingWallet = useRef(false);
 
-  // TODO: clear value within 10mins (?) of setting, as the pendingTxsToSync may have become stale
-  const [pendingArSyncTxs, setPendingArSyncTxs] = useState([]);
 
   // TODO: Determine transaction status after pendingArSyncTxs have been posted and signed.
   // https://github.com/ArweaveTeam/arweave-js#get-a-transaction-status
@@ -36,7 +39,7 @@ function ArweaveProvider({ children }) {
    * If !newWallet, a new developer wallet is created and some AR tokens are minted.
    * @param {(Object|null)} newWallet
    */
-  const loadNewWallet = useCallback(async (newWallet) => {
+  const loadNewWallet = useCallback(async (newWallet: JWKInterface) => {
     if (!loadingWallet.current) {
       loadingWallet.current = true;
 
@@ -44,7 +47,6 @@ function ArweaveProvider({ children }) {
       if (!valuesEqual(wallet, userOrDevWallet)) {
         setWalletAddress(await arweave.getWalletAddress(userOrDevWallet));
         setWallet(userOrDevWallet);
-        window.arWallet = userOrDevWallet;
       }
 
       loadingWallet.current = false;
@@ -164,7 +166,7 @@ function ArweaveProvider({ children }) {
       {children}
     </ArweaveContext.Provider>
   );
-}
+};
 
 ArweaveProvider.propTypes = {
   children: PropTypes.node.isRequired,

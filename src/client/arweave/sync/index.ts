@@ -4,7 +4,7 @@ import * as arweave from '..';
 import { Podcast } from '../../../components/pod-graph/cytoscape/graph-logic/interfaces/interfaces';
 import { findMetadata, hasMetadata } from '../../../utils';
 
-interface TransactionStatus<T> {
+export interface TransactionStatus<T> {
   subscribeUrl: string,
   title?: string,
   resultObj: T,
@@ -12,7 +12,7 @@ interface TransactionStatus<T> {
 }
 
 export async function initArSyncTxs(subscriptions: Podcast[],
-  metadataToSync: Podcast[], wallet: JWKInterface) {
+  metadataToSync: Partial<Podcast>[], wallet: JWKInterface) {
   const txs : TransactionStatus<Transaction>[] = [];
   const failedTxs : TransactionStatus<Error>[] = [];
 
