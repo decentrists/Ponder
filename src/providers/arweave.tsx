@@ -12,19 +12,34 @@ import { JWKInterface } from 'arweave/node/lib/wallet';
 import Transaction from 'arweave/node/lib/transaction';
 import { TransactionStatus } from '../client/arweave/sync';
 
-export const ArweaveContext = createContext();
+interface ArweaveContaxtType {
+  isSyncing: boolean,
+  wallet: JWKInterface | undefined,
+  walletAddress: string,
+  loadNewWallet: () => Promise<void>,
+  prepareSync: () => Promise<void>,
+  hasPendingTxs: boolean,
+}
+
+export const ArweaveContext = createContext<ArweaveContaxtType>({
+  isSyncing: false,
+  wallet: undefined,
+  hasPendingTxs: false,
+  walletAddress: '',
+  loadNewWallet: async () => {},
+  prepareSync: async () => {},
+});
 
 // TODO: ArSync v1.5+, test me
 const ArweaveProvider : React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { refresh, setMetadataToSync } = useContext(SubscriptionsContext);
   const toast = useContext(ToastContext);
-  const [wallet, setWallet] = useState<JWKInterface>(null);
+  const [wallet, setWallet] = useState<JWKInterface>();
   const [walletAddress, setWalletAddress] = useState('');
   const [isSyncing, setIsSyncing] = useState(false);
   // TODO: clear value within 10mins (?) of setting, as the pendingTxsToSync may have become stale
   const [pendingArSyncTxs, setPendingArSyncTxs] = useState<TransactionStatus<Transaction>[]>([]);
   const loadingWallet = useRef(false);
-
 
   // TODO: Determine transaction status after pendingArSyncTxs have been posted and signed.
   // https://github.com/ArweaveTeam/arweave-js#get-a-transaction-status
@@ -37,9 +52,9 @@ const ArweaveProvider : React.FC<{ children: React.ReactNode }> = ({ children })
   /**
    * Loads the state variables `wallet` and `walletAddress` for the given `newWallet`.
    * If !newWallet, a new developer wallet is created and some AR tokens are minted.
-   * @param {(Object|null)} newWallet
+   * @param newWallet
    */
-  const loadNewWallet = useCallback(async (newWallet: JWKInterface) => {
+  const loadNewWallet = useCallback(async (newWallet?: JWKInterface) => {
     if (!loadingWallet.current) {
       loadingWallet.current = true;
 
@@ -53,7 +68,12 @@ const ArweaveProvider : React.FC<{ children: React.ReactNode }> = ({ children })
     }
   }, [wallet]);
 
+  useEffect(() => {
+    loadNewWallet(wallet);
+  }, [wallet, loadNewWallet]);
+
   async function prepareSync() {
+    if (!wallet) throw new Error('wallet is undefined');
     if (isSyncing || hasPendingTxs()) return;
 
     setIsSyncing(true);
@@ -108,6 +128,7 @@ const ArweaveProvider : React.FC<{ children: React.ReactNode }> = ({ children })
   }
 
   async function startSync() {
+    if (!wallet) throw new Error('wallet is undefined');
     if (!isSyncing || !hasPendingTxs()) return cancelSync();
 
     let result;
@@ -121,7 +142,7 @@ const ArweaveProvider : React.FC<{ children: React.ReactNode }> = ({ children })
     const { txs, failedTxs } = result;
 
     if (isNotEmpty(txs)) {
-      const message = concatMessages(txs.map(elem => elem.title));
+      const message = concatMessages(txs.map(elem => elem.title || ''));
       const plural = txs.length > 1 ? 's' : '';
       toast(`Transaction${plural} successfully posted to Arweave with metadata for:\n${message}`,
         { autohideDelay: 10000, variant: 'success' });
@@ -138,10 +159,6 @@ const ArweaveProvider : React.FC<{ children: React.ReactNode }> = ({ children })
     setIsSyncing(false);
     setPendingArSyncTxs([]);
   }
-
-  useEffect(() => {
-    loadNewWallet(wallet);
-  }, [wallet, loadNewWallet]);
 
   useRerenderEffect(() => {
     // Temporary wrapper for startSync(). TODO: remove in ArSync v1.2+, when intermediate user
@@ -160,7 +177,7 @@ const ArweaveProvider : React.FC<{ children: React.ReactNode }> = ({ children })
         walletAddress,
         loadNewWallet,
         prepareSync,
-        hasPendingTxs,
+        hasPendingTxs: hasPendingTxs(),
       }}
     >
       {children}

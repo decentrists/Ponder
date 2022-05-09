@@ -19,7 +19,7 @@ export async function initArSyncTxs(subscriptions: Podcast[],
   await Promise.all(metadataToSync.map(async podcastToSync => {
     if (hasMetadata(podcastToSync)) {
       const { subscribeUrl } = podcastToSync;
-      const cachedMetadata = findMetadata(subscribeUrl, subscriptions);
+      const cachedMetadata = findMetadata(subscribeUrl!, subscriptions);
       let newTxResult : Transaction | Error;
       try {
         newTxResult = await arweave.newMetadataTransaction(wallet, podcastToSync, cachedMetadata);
