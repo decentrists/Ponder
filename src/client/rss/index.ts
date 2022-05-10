@@ -3,7 +3,7 @@ import { toDate, withCorsProxy } from '../../utils';
 import {
   Episode, 
   Podcast, 
-} from '../../components/pod-graph/cytoscape/graph-logic/interfaces/interfaces';
+} from '../interfaces';
 
 function mergeItunesData(items: string[] = [], itunes: string[] = []) {
   return (items).concat(itunes)
@@ -15,22 +15,22 @@ export async function getPodcastFeed(subscribeUrl: Podcast['subscribeUrl']) {
   let errorMessage;
   try {
     const { items, ...podcast } = await parser.parseURL(withCorsProxy(subscribeUrl));
-    const imageUrl = podcast.image?.url || podcast.itunes?.image || '';
+    const imageUrl = podcast.image?.url || podcast.itunes?.image || null;
     const episodes = (items || []).map(episode => ({
       title: episode.title,
-      url: episode.enclosure?.url || episode.link || '',
-      publishedAt: toDate(episode.isoDate || episode.pubDate || '') ?? undefined,
+      url: episode.enclosure?.url || episode.link || null,
+      publishedAt: toDate(episode.isoDate || episode.pubDate || ''),
       imageUrl: episode.image?.url || imageUrl,
       categories: mergeItunesData(episode.categories, episode.itunes?.categories),
       keywords: mergeItunesData(episode.keywords, episode.itunes?.keywords),
     })) as Episode[];
-    const result : Partial<Podcast> = {
+    const result = {
       subscribeUrl,
       title: podcast.title,
-      description: podcast.description || podcast.itunes?.summary || 'null',
+      description: podcast.description || podcast.itunes?.summary || null,
       imageUrl,
-      imageTitle: podcast.image?.title || 'null',
-      language: podcast.language || 'null',
+      imageTitle: podcast.image?.title || null,
+      language: podcast.language || null,
       categories: mergeItunesData(podcast.categories, podcast.itunes?.categories),
       keywords: mergeItunesData(podcast.keywords, podcast.itunes?.keywords),
       episodes,

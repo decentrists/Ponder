@@ -11,7 +11,7 @@ import {
 import {
   Episode, 
   Podcast, 
-} from '../../components/pod-graph/cytoscape/graph-logic/interfaces/interfaces';
+} from '../interfaces';
 import { JWKInterface } from 'arweave/node/lib/wallet';
 import Transaction from 'arweave/node/lib/transaction';
 

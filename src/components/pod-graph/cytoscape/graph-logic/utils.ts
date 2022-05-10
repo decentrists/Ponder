@@ -1,5 +1,5 @@
 import { Primitive } from '../../../../utils';
-import { Podcast } from './interfaces/interfaces';
+import { Podcast } from '../../../../client/interfaces';
 
 export const findSharedCategoriesAndKeywords = (podcast1: Podcast,
   podcast2: Podcast) => {

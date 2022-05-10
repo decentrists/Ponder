@@ -31,8 +31,3 @@ export type Episode = {
   categories: string[];
   keywords: string[];
 };
-
-export interface DisjointGraphFunctionNode extends Pick<Podcast, 'subscribeUrl'> {
-  keywordsAndCategories: string[];
-  visited: boolean;
-}

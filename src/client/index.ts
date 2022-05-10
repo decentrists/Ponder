@@ -2,7 +2,7 @@ import * as arweave from './arweave';
 import * as rss from './rss';
 import { findMetadata, hasMetadata } from '../utils';
 import { mergeBatchMetadata, simpleDiff, rightDiff } from './arweave/sync/diff-merge-logic';
-import { Podcast } from '../components/pod-graph/cytoscape/graph-logic/interfaces/interfaces';
+import { Podcast } from './interfaces';
 
 async function fetchFeeds(subscribeUrl: string) {
   const [arweaveFeed, rssFeed] = await Promise.all([

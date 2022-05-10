@@ -1,11 +1,15 @@
 import { EdgeDefinition, NodeDefinition } from 'cytoscape';
 import { v4 as uuid } from 'uuid';
-import { DisjointGraphFunctionNode, Podcast } from './interfaces/interfaces';
+import { Podcast } from '../../../../client/interfaces';
 import {
   findSharedCategoriesAndKeywords, haveSharedElements,
   removeDuplicateElements,
 } from './utils';
 
+export interface DisjointGraphFunctionNode extends Pick<Podcast, 'subscribeUrl'> {
+  keywordsAndCategories: string[];
+  visited: boolean;
+}
 /**
  * @param nodes
  * @param disjointGraphs The intermediate result through recursion

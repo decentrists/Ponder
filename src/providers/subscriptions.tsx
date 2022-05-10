@@ -8,7 +8,7 @@ import {
   hasMetadata,
   concatMessages,
 } from '../utils';
-import { Podcast } from '../components/pod-graph/cytoscape/graph-logic/interfaces/interfaces';
+import { Podcast } from '../client/interfaces';
 
 interface SubscriptionContextType {
   subscriptions: Podcast[],

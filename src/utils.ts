@@ -4,7 +4,7 @@
 import {
   Episode,
   Podcast, 
-} from './components/pod-graph/cytoscape/graph-logic/interfaces/interfaces';
+} from './client/interfaces';
 
 export function unixTimestamp(date : Date | null = null) {
   return Math.floor(date ? date.getTime() : Date.now() / 1000);

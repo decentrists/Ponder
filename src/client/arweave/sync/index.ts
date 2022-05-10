@@ -1,7 +1,7 @@
 import Transaction from 'arweave/node/lib/transaction';
 import { JWKInterface } from 'arweave/node/lib/wallet';
 import * as arweave from '..';
-import { Podcast } from '../../../components/pod-graph/cytoscape/graph-logic/interfaces/interfaces';
+import { Podcast } from '../../interfaces';
 import { findMetadata, hasMetadata } from '../../../utils';
 
 export interface TransactionStatus<T> {

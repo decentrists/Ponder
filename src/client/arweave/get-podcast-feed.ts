@@ -12,7 +12,7 @@ import { mergeBatchMetadata, mergeBatchTags } from './sync/diff-merge-logic';
 import {
   Podcast, 
   PodcastTags, 
-} from '../../components/pod-graph/cytoscape/graph-logic/interfaces/interfaces';
+} from '../interfaces';
 
 const MAX_BATCH_NUMBER = 100;
 

@@ -1,6 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
-import { Episode } from './pod-graph/cytoscape/graph-logic/interfaces/interfaces';
+import { Episode } from '../client/interfaces';
 import { Modal, Button, Image } from 'react-bootstrap';
 import EpisodeDetails from './episode-details';
 

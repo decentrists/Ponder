@@ -2,7 +2,7 @@ import {
   Episode, 
   Podcast,
   PodcastTags, 
-} from '../../../components/pod-graph/cytoscape/graph-logic/interfaces/interfaces';
+} from '../../interfaces';
 import {
   isNotEmpty,
   toDate,

@@ -4,7 +4,7 @@ import createCytoscape from './cytoscape';
 import getElementsFromSubscriptions from './get-elements-from-subscriptions';
 import PodcastDetails from '../podcast-details';
 import ToggleBtn from '../buttons/toggle-button'; // This button can be used for another fn
-import { Podcast } from './cytoscape/graph-logic/interfaces/interfaces';
+import { Podcast } from '../../client/interfaces';
 import { ExtendedCore } from './cytoscape/interfaces';
 
 const PodGraphContainer = styled.div`

@@ -12,7 +12,7 @@ import {
   TimeRelease, CallToAction, ActionBtn,
 } from './podcast-list-elements';
 import RemoveBtn from './buttons/remove-button';
-import { Podcast } from './pod-graph/cytoscape/graph-logic/interfaces/interfaces';
+import { Podcast } from '../client/interfaces';
 
 dayjs.extend(relativeTime);
 
