@@ -3,7 +3,8 @@
 
 import {
   Episode,
-  Podcast, 
+  Podcast,
+  PodcastDTO, 
 } from './client/interfaces';
 
 export function unixTimestamp(date : Date | null = null) {
@@ -93,25 +94,29 @@ export function findMetadata(subscribeUrl: string,
   return arrayOfMetadata.find(obj => isNotEmpty(obj) && obj.subscribeUrl === subscribeUrl) || {};
 }
 
-export function podcastWithDateObjects(podcast : Podcast, sortEpisodes = true) {
-  const conditionalSort = (episodes: Episode[]) => (sortEpisodes ?
-    episodes.sort((a, b) => b.publishedAt.getTime() - a.publishedAt.getTime()) : episodes);
-  const episodes = conditionalSort(
-    (podcast.episodes || []).map(episode => ({
-      ...episode,
-      // TODO: probably this casting should be looked at because it may not be safe or correct.
-      publishedAt: toDate(episode.publishedAt) as Date,
-    })),
+export function podcastWithDateObjects(podcast : PodcastDTO,
+  sortEpisodes = true) : Podcast {
+  const conditionalSort = (episodes: PodcastDTO['episodes']) => (sortEpisodes ?
+    episodes.sort((a, b) => new Date(b.publishedAt).getTime()
+     - new Date(a.publishedAt).getTime()) : episodes);
+
+  const episodes : Episode[] = conditionalSort(
+    (podcast.episodes || [])).map(episode => ({
+    ...episode,
+    publishedAt: toDate(episode.publishedAt) as Date,
+  }),
   );
 
-  return Object.assign(
-    { ...podcast, episodes },
-    podcast.firstEpisodeDate ? { firstEpisodeDate: toDate(podcast.firstEpisodeDate) } : null,
-    podcast.lastEpisodeDate ? { lastEpisodeDate: toDate(podcast.lastEpisodeDate) } : null,
-  );
+  return ({
+    ...podcast,
+    episodes,
+    metadataBatch: Number(podcast.metadataBatch),
+    firstEpisodeDate: toDate(podcast.firstEpisodeDate) as Date,
+    lastEpisodeDate: toDate(podcast.lastEpisodeDate) as Date,
+  });
 }
 
-export function podcastsWithDateObjects(podcasts: Podcast[], sortEpisodes = true) {
+export function podcastsWithDateObjects(podcasts: PodcastDTO[], sortEpisodes = true) {
   return podcasts.filter(podcast => isNotEmpty(podcast))
     .map(podcast => podcastWithDateObjects(podcast, sortEpisodes));
 }

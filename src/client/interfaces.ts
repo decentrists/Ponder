@@ -24,6 +24,18 @@ export interface PodcastSeed {
   tags: PodcastTags,
 }
 
+export interface PodcastDTO extends Omit<Podcast, 'firstEpisodeDate' | 'lastEpisodeDate'
+| 'metadataBatch' | 'episodes'> {
+  firstEpisodeDate: string;
+  lastEpisodeDate: string;
+  metadataBatch: string;
+  episodes: EpisodeDTO[];
+}
+
+export interface EpisodeDTO extends Omit<Episode, 'publishedAt'> {
+  publishedAt: string;
+}
+
 export type Episode = {
   title: string;
   url: string;

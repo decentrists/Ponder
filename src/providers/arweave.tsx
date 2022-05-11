@@ -12,7 +12,7 @@ import { JWKInterface } from 'arweave/node/lib/wallet';
 import Transaction from 'arweave/node/lib/transaction';
 import { TransactionStatus } from '../client/arweave/sync';
 
-interface ArweaveContaxtType {
+interface ArweaveContextType {
   isSyncing: boolean,
   wallet: JWKInterface | undefined,
   walletAddress: string,
@@ -21,7 +21,7 @@ interface ArweaveContaxtType {
   hasPendingTxs: boolean,
 }
 
-export const ArweaveContext = createContext<ArweaveContaxtType>({
+export const ArweaveContext = createContext<ArweaveContextType>({
   isSyncing: false,
   wallet: undefined,
   hasPendingTxs: false,

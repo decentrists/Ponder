@@ -16,7 +16,8 @@ export async function getPodcastFeed(subscribeUrl: Podcast['subscribeUrl']) {
   try {
     const { items, ...podcast } = await parser.parseURL(withCorsProxy(subscribeUrl));
     const imageUrl = podcast.image?.url || podcast.itunes?.image || null;
-    const episodes = (items || []).map(episode => ({
+    // TODO: delete `any` once rss-parser typescript definitions are working properly 
+    const episodes = (items || []).map((episode: any) => ({
       title: episode.title,
       url: episode.enclosure?.url || episode.link || null,
       publishedAt: toDate(episode.isoDate || episode.pubDate || ''),
