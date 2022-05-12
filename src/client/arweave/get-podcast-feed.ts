@@ -1,7 +1,7 @@
 /* eslint-disable no-await-in-loop */
 import client from './client';
 import {
-  isEmpty,
+  isNotEmpty,
   hasMetadata,
   toDate,
   podcastWithDateObjects,
@@ -9,13 +9,25 @@ import {
 } from '../../utils';
 import { toTag, fromTag } from './utils';
 import { mergeBatchMetadata, mergeBatchTags } from './sync/diff-merge-logic';
+import {
+  Podcast, 
+  PodcastTags, 
+} from '../interfaces';
 
 const MAX_BATCH_NUMBER = 100;
 
-export async function getPodcastFeed(subscribeUrl) {
-  const errorMessages = [];
+interface TransactionNode { id: string, tags: { name: string, value: string }[] } 
+
+type GetPodcastFeedForBatchReturnType = {
+  errorMessage?: string;
+  metadata: Podcast | {};
+  tags: PodcastTags | {};
+};
+
+export async function getPodcastFeed(subscribeUrl: string) {
+  const errorMessages : string[] = [];
   const metadataBatches = [];
-  const tagBatches = [];
+  const tagBatches : PodcastTags[] = [];
   // TODO: negative batch numbers
   let batch = 0;
   do {
@@ -26,7 +38,7 @@ export async function getPodcastFeed(subscribeUrl) {
     // console.debug('tags=', tags);
     if (errorMessage) errorMessages.push(errorMessage);
 
-    if (!isEmpty(tags)) {
+    if (isNotEmpty(tags)) {
       if (!hasMetadata(metadata)) {
         // Match found for this batch number, but with invalid/empty metadata
         // TODO: prioritize next trx.id with this batch number;
@@ -43,7 +55,8 @@ export async function getPodcastFeed(subscribeUrl) {
   }
   while (batch < MAX_BATCH_NUMBER);
 
-  const mergedMetadata = { ...mergeBatchMetadata(metadataBatches), ...mergeBatchTags(tagBatches) };
+  const mergedMetadata : Partial<Podcast> = 
+    { ...mergeBatchMetadata(metadataBatches), ...mergeBatchTags(tagBatches) };
   if (!hasMetadata(mergedMetadata) && errorMessages.length) {
     // Only return an errorMessage if no metadata was found, since GraphQL likely was unreachable.
     return { errorMessage: `Encountered the following errors when fetching ${subscribeUrl} ` +
@@ -53,7 +66,8 @@ export async function getPodcastFeed(subscribeUrl) {
   return mergedMetadata;
 }
 
-async function getPodcastFeedForBatch(subscribeUrl, batch) {
+async function getPodcastFeedForBatch(subscribeUrl: string,
+  batch: number) : Promise<GetPodcastFeedForBatchReturnType> {
   const gqlQuery = {
     query: `
       query GetPodcast($tags: [TagFilter!]!) {
@@ -105,8 +119,8 @@ async function getPodcastFeedForBatch(subscribeUrl, batch) {
   // TODO: We currently simply grab the newest transaction matching this `batch` nr.
   //       In the future we should fetch multiple transactions referencing the same batch and
   //       merge the result.
-  const trx = edges[0].node;
-  const tags = (isEmpty(trx.tags) ? {} : trx.tags
+  const trx : TransactionNode = edges[0].node;
+  const formattedTags = (!isNotEmpty(trx.tags) ? {} : trx.tags
     .filter(tag => !['Content-Type', 'Unix-Time', toTag('version')].includes(tag.name))
     .map(tag => ({
       ...tag,
@@ -116,12 +130,17 @@ async function getPodcastFeedForBatch(subscribeUrl, batch) {
     }))
     .reduce((acc, tag) => ({
       ...acc,
-      [tag.name]: Array.isArray(acc[tag.name]) ? acc[tag.name].concat(tag.value) : tag.value,
+      [tag.name]: Array.isArray(acc[tag.name as keyof typeof acc]) 
+        ? [...acc[tag.name as keyof typeof acc], tag.value] 
+        : tag.value,
     }), {
       categories: [],
       keywords: [],
     })
-  );
+  ) as Omit<PodcastTags, 'metadataBatch'> & { metadataBatch: string };
+
+  const tags = { ...formattedTags, 
+    metadataBatch: parseInt(formattedTags.metadataBatch, 10) } as PodcastTags;
 
   let getDataResult;
   try {
@@ -138,7 +157,7 @@ async function getPodcastFeedForBatch(subscribeUrl, batch) {
 
   let metadata;
   try {
-    metadata = JSON.parse(getDataResult);
+    metadata = JSON.parse(getDataResult as string);
     metadata = podcastWithDateObjects(metadata, true);
   }
   catch (ex) {

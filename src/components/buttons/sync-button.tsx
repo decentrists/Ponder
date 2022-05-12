@@ -1,10 +1,11 @@
 import React, { useContext } from 'react';
+// @ts-ignore
 import { ReactComponent as ArSyncIcon } from '../../assets/arsync-logo.svg';
 import SpinButton from './spin-button';
 import { SubscriptionsContext } from '../../providers/subscriptions';
 import { ArweaveContext } from '../../providers/arweave';
 
-function SyncButton() {
+const SyncButton : React.FC = () => {
   const { isRefreshing } = useContext(SubscriptionsContext);
   const { isSyncing, prepareSync } = useContext(ArweaveContext);
 
@@ -22,6 +23,6 @@ function SyncButton() {
       />
     </SpinButton>
   );
-}
+};
 
 export default SyncButton;

@@ -1,5 +1,4 @@
 import React from 'react';
-import PropTypes from 'prop-types';
 import styled from 'styled-components';
 import { Button } from 'react-bootstrap';
 import { FaRss, FaPlus, FaMinus } from 'react-icons/fa';
@@ -37,13 +36,20 @@ const CustomBtn = styled(Button)`
   }
 `;
 
-function RssButton({
+interface Props {
+  className?: string,
+  removeButton?: boolean,
+  disabled?: boolean,
+  onClick?: () => void,
+}
+
+const RssButton : React.FC<Props> = ({
   className,
-  removeButton,
-  disabled,
+  removeButton = false,
+  disabled = false,
   onClick,
   ...props
-}) {
+}) => {
   return (
     <CustomBtn
       className={className}
@@ -60,20 +66,6 @@ function RssButton({
       )}
     </CustomBtn>
   );
-}
-
-RssButton.propTypes = {
-  className: PropTypes.string,
-  removeButton: PropTypes.bool,
-  disabled: PropTypes.bool,
-  onClick: PropTypes.func,
-};
-
-RssButton.defaultProps = {
-  className: null,
-  removeButton: false,
-  disabled: false,
-  onClick: null,
 };
 
 export default RssButton;

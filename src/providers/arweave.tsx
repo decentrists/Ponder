@@ -7,21 +7,39 @@ import useRerenderEffect from '../hooks/use-rerender-effect';
 import { SubscriptionsContext } from './subscriptions';
 import * as arweave from '../client/arweave';
 import * as arsync from '../client/arweave/sync';
-import { isEmpty, valuesEqual, concatMessages } from '../utils';
+import { isNotEmpty, valuesEqual, concatMessages } from '../utils';
+import { JWKInterface } from 'arweave/node/lib/wallet';
+import Transaction from 'arweave/node/lib/transaction';
+import { TransactionStatus } from '../client/arweave/sync';
 
-export const ArweaveContext = createContext();
+interface ArweaveContextType {
+  isSyncing: boolean,
+  wallet: JWKInterface | undefined,
+  walletAddress: string,
+  loadNewWallet: () => Promise<void>,
+  prepareSync: () => Promise<void>,
+  hasPendingTxs: boolean,
+}
+
+export const ArweaveContext = createContext<ArweaveContextType>({
+  isSyncing: false,
+  wallet: undefined,
+  hasPendingTxs: false,
+  walletAddress: '',
+  loadNewWallet: async () => {},
+  prepareSync: async () => {},
+});
 
 // TODO: ArSync v1.5+, test me
-function ArweaveProvider({ children }) {
+const ArweaveProvider : React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { refresh, setMetadataToSync } = useContext(SubscriptionsContext);
   const toast = useContext(ToastContext);
-  const [wallet, setWallet] = useState(null);
+  const [wallet, setWallet] = useState<JWKInterface>();
   const [walletAddress, setWalletAddress] = useState('');
   const [isSyncing, setIsSyncing] = useState(false);
-  const loadingWallet = useRef(false);
-
   // TODO: clear value within 10mins (?) of setting, as the pendingTxsToSync may have become stale
-  const [pendingArSyncTxs, setPendingArSyncTxs] = useState([]);
+  const [pendingArSyncTxs, setPendingArSyncTxs] = useState<TransactionStatus<Transaction>[]>([]);
+  const loadingWallet = useRef(false);
 
   // TODO: Determine transaction status after pendingArSyncTxs have been posted and signed.
   // https://github.com/ArweaveTeam/arweave-js#get-a-transaction-status
@@ -34,9 +52,9 @@ function ArweaveProvider({ children }) {
   /**
    * Loads the state variables `wallet` and `walletAddress` for the given `newWallet`.
    * If !newWallet, a new developer wallet is created and some AR tokens are minted.
-   * @param {(Object|null)} newWallet
+   * @param newWallet
    */
-  const loadNewWallet = useCallback(async (newWallet) => {
+  const loadNewWallet = useCallback(async (newWallet?: JWKInterface) => {
     if (!loadingWallet.current) {
       loadingWallet.current = true;
 
@@ -44,25 +62,29 @@ function ArweaveProvider({ children }) {
       if (!valuesEqual(wallet, userOrDevWallet)) {
         setWalletAddress(await arweave.getWalletAddress(userOrDevWallet));
         setWallet(userOrDevWallet);
-        window.arWallet = userOrDevWallet;
       }
 
       loadingWallet.current = false;
     }
   }, [wallet]);
 
+  useEffect(() => {
+    loadNewWallet(wallet);
+  }, [wallet, loadNewWallet]);
+
   async function prepareSync() {
+    if (!wallet) throw new Error('wallet is undefined');
     if (isSyncing || hasPendingTxs()) return;
 
     setIsSyncing(true);
 
     const [newSubscriptions, newMetadataToSync] = await refresh(true);
 
-    if (isEmpty(newSubscriptions)) {
+    if (!isNotEmpty(newSubscriptions)) {
       // TODO: make toast dynamic based on activeSyncTypes
       return cancelSync('Failed to refresh subscriptions.');
     }
-    if (isEmpty(newMetadataToSync)) {
+    if (!isNotEmpty(newMetadataToSync)) {
       // TODO: make toast dynamic based on activeSyncTypes
       return cancelSync('Subscribed podcasts are already up-to-date.', 'info');
     }
@@ -77,8 +99,8 @@ function ArweaveProvider({ children }) {
     }
     const { txs, failedTxs } = result;
 
-    if (isEmpty(txs)) {
-      if (isEmpty(failedTxs)) {
+    if (!isNotEmpty(txs)) {
+      if (!isNotEmpty(failedTxs)) {
         return cancelSync('Subscribed podcasts are already up-to-date.', 'info');
       }
       // Rare situation where all transactions failed to create; probably due to invalid wallet
@@ -106,6 +128,7 @@ function ArweaveProvider({ children }) {
   }
 
   async function startSync() {
+    if (!wallet) throw new Error('wallet is undefined');
     if (!isSyncing || !hasPendingTxs()) return cancelSync();
 
     let result;
@@ -118,13 +141,13 @@ function ArweaveProvider({ children }) {
     }
     const { txs, failedTxs } = result;
 
-    if (!isEmpty(txs)) {
-      const message = concatMessages(txs.map(elem => elem.title));
+    if (isNotEmpty(txs)) {
+      const message = concatMessages(txs.map(elem => elem.title || ''));
       const plural = txs.length > 1 ? 's' : '';
       toast(`Transaction${plural} successfully posted to Arweave with metadata for:\n${message}`,
         { autohideDelay: 10000, variant: 'success' });
     }
-    if (!isEmpty(failedTxs)) {
+    if (isNotEmpty(failedTxs)) {
       const message =
         concatMessages(failedTxs.map(elem => `${elem.title}, reason:\n${elem.resultObj}\n`));
       const plural = failedTxs.length > 1 ? 's' : '';
@@ -136,10 +159,6 @@ function ArweaveProvider({ children }) {
     setIsSyncing(false);
     setPendingArSyncTxs([]);
   }
-
-  useEffect(() => {
-    loadNewWallet(wallet);
-  }, [wallet, loadNewWallet]);
 
   useRerenderEffect(() => {
     // Temporary wrapper for startSync(). TODO: remove in ArSync v1.2+, when intermediate user
@@ -158,13 +177,13 @@ function ArweaveProvider({ children }) {
         walletAddress,
         loadNewWallet,
         prepareSync,
-        hasPendingTxs,
+        hasPendingTxs: hasPendingTxs(),
       }}
     >
       {children}
     </ArweaveContext.Provider>
   );
-}
+};
 
 ArweaveProvider.propTypes = {
   children: PropTypes.node.isRequired,

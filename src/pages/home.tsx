@@ -7,7 +7,7 @@ import PodcastList from '../components/podcast-list';
 function HomePage() {
   const { subscriptions, subscribe, unsubscribe } = useContext(SubscriptionsContext);
 
-  async function search({ query }) {
+  async function search({ query } : { query: string }) {
     subscribe(query);
   }
 

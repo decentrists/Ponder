@@ -1,5 +1,5 @@
 import React from 'react';
-import PropTypes from 'prop-types';
+// import PropTypes from 'prop-types';
 import { Form } from 'react-bootstrap';
 import Field from './field';
 
@@ -13,13 +13,13 @@ function TextField({ name, label, ...props }) {
   );
 }
 
-TextField.propTypes = {
-  name: PropTypes.string.isRequired,
-  label: PropTypes.string,
-};
+// TextField.propTypes = {
+//   name: PropTypes.string.isRequired,
+//   label: PropTypes.string,
+// };
 
-TextField.defaultProps = {
-  label: null,
-};
+// TextField.defaultProps = {
+//   label: null,
+// };
 
 export default TextField;

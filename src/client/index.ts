@@ -2,8 +2,9 @@ import * as arweave from './arweave';
 import * as rss from './rss';
 import { findMetadata, hasMetadata } from '../utils';
 import { mergeBatchMetadata, simpleDiff, rightDiff } from './arweave/sync/diff-merge-logic';
+import { Podcast } from './interfaces';
 
-async function fetchFeeds(subscribeUrl) {
+async function fetchFeeds(subscribeUrl: string) {
   const [arweaveFeed, rssFeed] = await Promise.all([
     arweave.getPodcastFeed(subscribeUrl),
     rss.getPodcastFeed(subscribeUrl),
@@ -14,17 +15,17 @@ async function fetchFeeds(subscribeUrl) {
   };
 }
 
-export async function getPodcast(subscribeUrl, metadataToSync = []) {
+export async function getPodcast(subscribeUrl: string, metadataToSync : Partial<Podcast>[] = []) {
   const feed = await fetchFeeds(subscribeUrl);
-  if (feed.arweave.errorMessage) {
+  if ('errorMessage' in feed.arweave) {
     return { errorMessage: feed.arweave.errorMessage };
   }
-  if (feed.rss.errorMessage && !hasMetadata(feed.arweave)) {
+  if ('errorMessage' in feed.rss && !hasMetadata(feed.arweave)) {
     return { errorMessage: feed.rss.errorMessage };
   }
   // else: we do want to update the subscription if RSS fails but Arweave has metadata
 
-  const rssDiffnewToArweave = simpleDiff(feed.arweave, feed.rss);
+  const rssDiffnewToArweave = simpleDiff(feed.arweave, feed.rss as Partial<Podcast>);
   const currentPodcastMetadataToSync = findMetadata(subscribeUrl, metadataToSync);
 
   // Here we do want currentPodcastMetadataToSync to override each field of the rssDiffnewToArweave,
@@ -40,10 +41,11 @@ export async function getPodcast(subscribeUrl, metadataToSync = []) {
   return { newPodcastMetadata, newPodcastMetadataToSync };
 }
 
-export async function refreshSubscriptions(subscriptions, metadataToSync = []) {
-  const errorMessages = [];
-  const newSubscriptions = [];
-  const newMetadataToSync = [];
+export async function refreshSubscriptions(subscriptions: Podcast[],
+  metadataToSync : Partial<Podcast>[] = []) {
+  const errorMessages : string[] = [];
+  const newSubscriptions : Podcast[] = [];
+  const newMetadataToSync : Partial<Podcast>[] = [];
   const getPodcastResults = await Promise.all(
     subscriptions.map(subscription => getPodcast(subscription.subscribeUrl, metadataToSync)),
   );

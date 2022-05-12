@@ -4,7 +4,11 @@ import SubscriptionsProvider from './subscriptions';
 import ArweaveProvider from './arweave';
 import CytoscapeProvider from './cytoscape';
 
-function GlobalProviders({ children }) {
+interface Props {
+  children: React.ReactNode;
+}
+
+const GlobalProviders : React.FC<Props> = ({ children }) => {
   return (
     <ToastProvider>
       <SubscriptionsProvider>
@@ -16,6 +20,6 @@ function GlobalProviders({ children }) {
       </SubscriptionsProvider>
     </ToastProvider>
   );
-}
+};
 
 export default GlobalProviders;

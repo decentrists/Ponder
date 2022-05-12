@@ -1,5 +1,5 @@
 import React from 'react';
-import PropTypes from 'prop-types';
+// import PropTypes from 'prop-types';
 import Footer from './footer';
 import { Page, CenterComponents, MainContent } from './index-elements';
 
@@ -15,9 +15,5 @@ function Layout({ children }) {
     </Page>
   );
 }
-
-Layout.propTypes = {
-  children: PropTypes.node.isRequired,
-};
 
 export default Layout;

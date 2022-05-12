@@ -1,6 +1,5 @@
 import React from 'react';
 import styled from 'styled-components';
-import PropTypes from 'prop-types';
 import { Button } from 'react-bootstrap';
 import { CgTrash } from 'react-icons/cg';
 
@@ -23,10 +22,14 @@ const DeleteBtn = styled(Button)`
   }
 `;
 
-function RemoveBtn({
+interface Props {
+  onClick: () => void;
+}
+
+const RemoveBtn : React.FC<Props> = ({
   onClick,
   ...props
-}) {
+}) => {
   return (
     <DeleteBtn
       onClick={onClick}
@@ -35,14 +38,6 @@ function RemoveBtn({
       <MinusIcon />
     </DeleteBtn>
   );
-}
-
-RemoveBtn.propTypes = {
-  onClick: PropTypes.func,
-};
-
-RemoveBtn.defaultProps = {
-  onClick: null,
 };
 
 export default RemoveBtn;

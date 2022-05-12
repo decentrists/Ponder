@@ -14,11 +14,11 @@ const TAG_EXCLUDES = ['Content-Type', 'Unix-Time'];
 //   return tag;
 // }
 
-export function toTag(name) {
+export function toTag(name: string) {
   return TAG_EXCLUDES.includes(name) ? name : `${process.env.REACT_APP_TAG_PREFIX}-${name}`;
 }
 
-export function fromTag(tagName) {
+export function fromTag(tagName: string) {
   const a = tagName.replace(new RegExp(`^${process.env.REACT_APP_TAG_PREFIX}-`), '');
-  return PLURAL_TAG_MAP[a] || a;
+  return PLURAL_TAG_MAP[a as keyof typeof PLURAL_TAG_MAP] || a;
 }

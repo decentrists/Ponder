@@ -1,5 +1,4 @@
 import React from 'react';
-import PropTypes from 'prop-types';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import {
@@ -10,9 +9,16 @@ import {
 } from './episode-details-elements';
 
 dayjs.extend(relativeTime);
-function EpisodeDetails({
+
+interface Props {
+  title: string,
+  url: string,
+  publishedAt?: Date,
+  imageUrl?: string,
+}
+const EpisodeDetails : React.FC<Props> = ({
   title, url, publishedAt, imageUrl,
-}) {
+}) => {
   return (
     <EpisodeLink href={url}>
       <DetailsCard>
@@ -37,23 +43,6 @@ function EpisodeDetails({
       </DetailsCard>
     </EpisodeLink>
   );
-}
-
-EpisodeDetails.propTypes = {
-  title: PropTypes.string.isRequired,
-  url: PropTypes.string.isRequired,
-  publishedAt: PropTypes.instanceOf(Date),
-  imageUrl: PropTypes.string,
-  // uncomment once you actually use categories and keywords in EpisodeDetails
-  // categories: PropTypes.arrayOf(PropTypes.string),
-  // keywords: PropTypes.arrayOf(PropTypes.string),
-};
-
-EpisodeDetails.defaultProps = {
-  publishedAt: null,
-  imageUrl: null,
-  // categories: [],
-  // keywords: [],
 };
 
 export default EpisodeDetails;

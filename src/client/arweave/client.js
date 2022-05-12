@@ -7,6 +7,5 @@ const client = Arweave.init({
   timeout: 20000,
   logging: true,
 });
-window.arApi = client;
 
 export default client;

@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useState } from 'react';
-import PropTypes from 'prop-types';
 import { ToastContext } from './toast';
 import useRerenderEffect from '../hooks/use-rerender-effect';
 import { getPodcast, refreshSubscriptions } from '../client';
@@ -9,28 +8,49 @@ import {
   hasMetadata,
   concatMessages,
 } from '../utils';
+import { Podcast } from '../client/interfaces';
 
-export const SubscriptionsContext = createContext();
+interface SubscriptionContextType {
+  subscriptions: Podcast[],
+  isRefreshing: boolean,
+  lastRefreshTime: number,
+  subscribe: (id: string) => Promise<boolean>,
+  unsubscribe: (id: string) => Promise<void>,
+  refresh: (silent?: boolean) => Promise<[null, null] | [Podcast[], Partial<Podcast>[]]>,
+  setMetadataToSync: (value: Partial<Podcast>[]) => void,
+}
+
+export const SubscriptionsContext = createContext<SubscriptionContextType>({
+  subscriptions: [],
+  isRefreshing: false,
+  lastRefreshTime: 0,
+  refresh: async () => [null, null],
+  setMetadataToSync: () => {},
+  subscribe: async () => false,
+  unsubscribe: async () => {},
+});
 
 function readCachedPodcasts() {
-  const podcasts = JSON.parse(localStorage.getItem('subscriptions')) || [];
+  const cachedSubscriptions = localStorage.getItem('subscriptions');
+  const podcasts = cachedSubscriptions ? JSON.parse(cachedSubscriptions) : [];
   return podcastsWithDateObjects(podcasts);
 }
 
 function readMetadataToSync() {
-  const podcasts = JSON.parse(localStorage.getItem('metadataToSync')) || [];
+  const cachedMetadata = localStorage.getItem('metadataToSync');
+  const podcasts = cachedMetadata ? JSON.parse(cachedMetadata) : [];
   return podcastsWithDateObjects(podcasts);
 }
 
 // TODO: ArSync v1.5+, test me
-function SubscriptionsProvider({ children }) {
+const SubscriptionsProvider : React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const toast = useContext(ToastContext);
   const [subscriptions, setSubscriptions] = useState(readCachedPodcasts());
-  const [metadataToSync, setMetadataToSync] = useState(readMetadataToSync());
+  const [metadataToSync, setMetadataToSync] = useState<Partial<Podcast>[]>(readMetadataToSync());
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastRefreshTime, setLastRefreshTime] = useState(0);
 
-  async function subscribe(subscribeUrl) {
+  async function subscribe(subscribeUrl: string) {
     // TODO: subscribeUrl validation
     if (subscriptions.some(subscription => subscription.subscribeUrl === subscribeUrl)) {
       toast(`You are already subscribed to ${subscribeUrl}.`, { variant: 'danger' });
@@ -53,7 +73,7 @@ function SubscriptionsProvider({ children }) {
     return false; // TODO: don't clear text field if returns false
   }
 
-  async function unsubscribe(subscribeUrl) {
+  async function unsubscribe(subscribeUrl: string) {
     // TODO: warn if subscribeUrl has pending metadataToSync
     //       currently, any pending metadataToSync is left but does not survive a refresh
     if (subscriptions.every(subscription => subscription.subscribeUrl !== subscribeUrl)) {
@@ -64,7 +84,8 @@ function SubscriptionsProvider({ children }) {
     }
   }
 
-  async function refresh(silent = false) {
+  const refresh = async (silent = false) : Promise<[null, null] 
+  | [Podcast[], Partial<Podcast>[]]> => {
     if (isRefreshing) return [null, null];
 
     setIsRefreshing(true);
@@ -100,7 +121,11 @@ function SubscriptionsProvider({ children }) {
       setIsRefreshing(false);
     }
     return [null, null];
-  }
+  };
+
+  const handleMetadataToSync = (value: Partial<Podcast>[]) => {
+    setMetadataToSync(value);
+  };
 
   useRerenderEffect(() => {
     console.debug('subscriptions have been updated to:', subscriptions);
@@ -121,16 +146,12 @@ function SubscriptionsProvider({ children }) {
         subscribe,
         unsubscribe,
         refresh,
-        setMetadataToSync,
+        setMetadataToSync: handleMetadataToSync,
       }}
     >
       {children}
     </SubscriptionsContext.Provider>
   );
-}
-
-SubscriptionsProvider.propTypes = {
-  children: PropTypes.node.isRequired,
 };
 
 export default SubscriptionsProvider;

@@ -1,9 +1,7 @@
 import React from 'react';
-import PropTypes from 'prop-types';
 import { RiMapPinTimeLine } from 'react-icons/ri';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
-import { podcastPropType } from '../prop-types';
 import {
   EventWrapper, LeftPane,
   CategoryHeader, CategoryList,
@@ -14,10 +12,16 @@ import {
   TimeRelease, CallToAction, ActionBtn,
 } from './podcast-list-elements';
 import RemoveBtn from './buttons/remove-button';
+import { Podcast } from '../client/interfaces';
 
 dayjs.extend(relativeTime);
 
-function PodcastList({ subscriptions, unsubscribe }) {
+interface Props {
+  subscriptions: Podcast[];
+  unsubscribe: (id: string) => void;
+}
+
+const PodcastList : React.FC<Props> = ({ subscriptions, unsubscribe }) => {
   return (
     <EventWrapper>
       <LeftPane>
@@ -86,9 +90,6 @@ function PodcastList({ subscriptions, unsubscribe }) {
       </RightPane>
     </EventWrapper>
   );
-}
-PodcastList.propTypes = {
-  subscriptions: PropTypes.arrayOf(PropTypes.shape(podcastPropType).isRequired).isRequired,
-  unsubscribe: PropTypes.func.isRequired,
 };
+
 export default PodcastList;
