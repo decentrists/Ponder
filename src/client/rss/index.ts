@@ -3,7 +3,6 @@ import Parser from 'rss-parser/index.d';
 import {
   Episode,
   Podcast,
-  PodcastContent,
   PodcastFeedError,
 } from '../interfaces';
 import {
@@ -23,7 +22,7 @@ import {
 } from '../metadata-filtering';
 import { initializeKeywords } from '../metadata-filtering/generation';
 
-interface RssPodcastFeed extends Parser.Output<any>, PodcastContent {
+interface RssPodcastFeed extends Parser.Output<any>, Omit<Podcast, 'title'> {
   categories?: string[];
   keywords?: string[];
   owner?: {

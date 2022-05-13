@@ -1,11 +1,54 @@
-export interface Podcast extends PodcastTags, PodcastContent {
+export interface Podcast extends PodcastTags {
   [key: string]: any;
+  episodes?: Episode[];
+  infoUrl?: string;
+  imageUrl?: string;
+  imageTitle?: string;
+  copyright?: string;
 }
 
+export const ALLOWED_STRING_TAGS = [
+  'subscribeUrl',
+  'title',
+  'id',
+  'description',
+  'author',
+  'summary',
+  'explicit',
+  'subtitle',
+  'language',
+  'creator',
+  'ownerName',
+  'ownerEmail',
+  'managingEditor',
+  'firstEpisodeDate',
+  'lastEpisodeDate',
+  'metadataBatch',
+  'lastBuildDate',
+];
+
+export const ALLOWED_TAGS = [
+  'categories',
+  'keywords',
+  'episodesKeywords',
+  ...ALLOWED_STRING_TAGS,
+];
+
+
 export interface PodcastTags {
-  id: string;
   subscribeUrl: string;
   title: string;
+  id?: string;
+  description?: string;
+  author?: string;
+  summary?: string;
+  explicit?: string;
+  subtitle?: string;
+  language?: string;
+  creator?: string;
+  ownerName?: string;
+  ownerEmail?: string;
+  managingEditor?: string;
   categories?: string[];
   keywords?: string[];
   episodesKeywords?: string[];
@@ -15,36 +58,13 @@ export interface PodcastTags {
   lastBuildDate?: Date;
 }
 
-export interface PodcastContent {
-  episodes?: Episode[];
-  description?: string;
-  infoUrl?: string;
-  imageUrl?: string;
-  imageTitle?: string;
-  author?: string;
-  summary?: string;
-  explicit?: string;
-  subtitle?: string;
-  docs?: string;
-  language?: string;
-  creator?: string;
-  copyright?: string;
-  ownerName?: string;
-  ownerEmail?: string;
-  managingEditor?: string;
-}
-
-export interface PodcastSeed {
-  content: PodcastContent,
-  tags: PodcastTags,
-}
-
-export interface PodcastDTO extends Omit<Podcast, 'firstEpisodeDate' | 'lastEpisodeDate'
-| 'metadataBatch' | 'episodes'> {
+export interface PodcastDTO extends Omit<PodcastTags, 'firstEpisodeDate' | 'lastEpisodeDate'
+| 'metadataBatch' | 'episodes' | 'lastBuildDate'> {
   firstEpisodeDate: string;
   lastEpisodeDate: string;
   metadataBatch: string;
   episodes: EpisodeDTO[];
+  lastBuildDate?: string;
 }
 
 export interface EpisodeDTO extends Omit<Episode, 'publishedAt'> {

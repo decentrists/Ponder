@@ -11,6 +11,7 @@ import {
 import {
   Episode,
   Podcast,
+  ALLOWED_STRING_TAGS,
 } from '../interfaces';
 import { JWKInterface } from 'arweave/node/lib/wallet';
 import Transaction from 'arweave/node/lib/transaction';
@@ -61,7 +62,8 @@ export async function signAndPostTransaction(trx: Transaction, wallet: JWKInterf
   return trx;
 }
 
-type MandatoryTags = 'subscribeUrl' | 'title' | 'description';
+const MANDATORY_TAGS = ['subscribeUrl', 'title', 'description'];
+type MandatoryTags = typeof MANDATORY_TAGS[number];
 
 /**
  * @param wallet
@@ -72,12 +74,7 @@ type MandatoryTags = 'subscribeUrl' | 'title' | 'description';
  */
 export async function newMetadataTransaction(wallet: JWKInterface,
   newMetadata: Partial<Podcast>, cachedMetadata : Partial<Podcast> = {}) {
-  const optionalPodcastTags = [
-    // TODO: expand this list to be as complete as possible.
-    // imgUrl and imageTitle are optional metadata as well, but these do not belong in the tags,
-    // as they do not have to be GraphQL-searchable.
-    'language',
-  ];
+
   const mandatoryPodcastTags : [MandatoryTags, string | undefined][] = [
     ['subscribeUrl', newMetadata.subscribeUrl || cachedMetadata.subscribeUrl],
     ['title', newMetadata.title || cachedMetadata.title],
@@ -97,14 +94,17 @@ export async function newMetadataTransaction(wallet: JWKInterface,
   });
 
   const podcastTags = [...mandatoryPodcastTags] as [string, string][];
-  optionalPodcastTags.forEach(tagName => {
-    const val = newMetadata[tagName as keyof Podcast] as string;
-    if (val) podcastTags.push([tagName, val]);
+  ALLOWED_STRING_TAGS.forEach(tagName => {
+    if (!MANDATORY_TAGS.includes(tagName)) {
+      const val = newMetadata[tagName as keyof Podcast] as string;
+      if (val) podcastTags.push([tagName, val]);
+    }
   });
 
   // Add new categories and keywords in string => string format
   (newMetadata.categories || []).forEach(cat => podcastTags.push(['category', cat]));
   (newMetadata.keywords || []).forEach(key => podcastTags.push(['keyword', key]));
+  (newMetadata.episodesKeywords || []).forEach(key => podcastTags.push(['episodesKeyword', key]));
 
   const episodeBatchTags =
     episodeTags(newMetadata.episodes, cachedMetadata, newMetadata.metadataBatch);

@@ -10,13 +10,14 @@ import {
 import { toTag, fromTag } from './utils';
 import { mergeBatchMetadata, mergeBatchTags } from './sync/diff-merge-logic';
 import {
-  Podcast, 
-  PodcastTags, 
+  Podcast,
+  PodcastTags,
+  ALLOWED_TAGS,
 } from '../interfaces';
 
 const MAX_BATCH_NUMBER = 100;
 
-interface TransactionNode { id: string, tags: { name: string, value: string }[] } 
+interface TransactionNode { id: string, tags: { name: string, value: string }[] }
 
 type GetPodcastFeedForBatchReturnType = {
   errorMessage?: string;
@@ -55,7 +56,7 @@ export async function getPodcastFeed(subscribeUrl: string) {
   }
   while (batch < MAX_BATCH_NUMBER);
 
-  const mergedMetadata : Partial<Podcast> = 
+  const mergedMetadata : Partial<Podcast> =
     { ...mergeBatchMetadata(metadataBatches), ...mergeBatchTags(tagBatches) };
   if (!hasMetadata(mergedMetadata) && errorMessages.length) {
     // Only return an errorMessage if no metadata was found, since GraphQL likely was unreachable.
@@ -120,27 +121,27 @@ async function getPodcastFeedForBatch(subscribeUrl: string,
   //       In the future we should fetch multiple transactions referencing the same batch and
   //       merge the result.
   const trx : TransactionNode = edges[0].node;
-  const formattedTags = (!isNotEmpty(trx.tags) ? {} : trx.tags
-    .filter(tag => !['Content-Type', 'Unix-Time', toTag('version')].includes(tag.name))
-    .map(tag => ({
-      ...tag,
-      name: fromTag(tag.name),
-      value: ['firstEpisodeDate', 'lastEpisodeDate'].includes(fromTag(tag.name)) ?
-        toDate(tag.value) : tag.value,
-    }))
-    .reduce((acc, tag) => ({
-      ...acc,
-      [tag.name]: Array.isArray(acc[tag.name as keyof typeof acc]) 
-        ? [...acc[tag.name as keyof typeof acc], tag.value] 
-        : tag.value,
-    }), {
-      categories: [],
-      keywords: [],
-    })
-  ) as Omit<PodcastTags, 'metadataBatch'> & { metadataBatch: string };
-
-  const tags = { ...formattedTags, 
-    metadataBatch: parseInt(formattedTags.metadataBatch, 10) } as PodcastTags;
+  let tags : Partial<PodcastTags> = {};
+  if (isNotEmpty(trx.tags)) {
+    tags = trx.tags
+      .filter(tag => ALLOWED_TAGS.includes(fromTag(tag.name)))
+      .map(tag => ({
+        ...tag,
+        name: fromTag(tag.name),
+        value: ['firstEpisodeDate', 'lastEpisodeDate', 'lastBuildDate'].includes(
+          fromTag(tag.name)) ? toDate(tag.value) : tag.value,
+      }))
+      .reduce((acc, tag) => ({
+        ...acc,
+        [tag.name]: Array.isArray(acc[tag.name as keyof typeof acc])
+          ? [...acc[tag.name as keyof typeof acc], tag.value]
+          : tag.value,
+      }), {
+        categories: [],
+        keywords: [],
+        episodesKeywords: [],
+      });
+  }
 
   let getDataResult;
   try {

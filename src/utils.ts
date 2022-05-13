@@ -114,13 +114,11 @@ export function podcastWithDateObjects(podcast : PodcastDTO,
 
   return ({
     ...podcast,
-    id: podcast.id, // TODO: TS wants explicit expansion of mandatory Podcast.types
-    subscribeUrl: podcast.subscribeUrl,
-    title: podcast.title,
     episodes,
     metadataBatch: Number(podcast.metadataBatch),
     firstEpisodeDate: toDate(podcast.firstEpisodeDate),
     lastEpisodeDate: toDate(podcast.lastEpisodeDate),
+    lastBuildDate: toDate(podcast.lastBuildDate),
   });
 }
 
