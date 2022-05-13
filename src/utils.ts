@@ -6,6 +6,7 @@ import {
   Podcast,
   PodcastDTO,
 } from './client/interfaces';
+import { initializeKeywords } from './client/metadata-filtering/generation';
 
 export function unixTimestamp(date : Date | null = null) {
   return Math.floor(date ? date.getTime() : Date.now() / 1000);
@@ -18,6 +19,10 @@ export function toISOString(date: Date) {
   catch (error) {
     return '';
   }
+}
+
+export function valueToLowerCase(value: any) : string {
+  return typeof value === 'string' ? value.toLowerCase() : '';
 }
 
 export function isValidString(str: unknown) : str is string {
@@ -39,13 +44,6 @@ export function datesEqual(a: Date, b: Date) {
 export type Primitive = string | boolean | number;
 
 export type EmptyTypes = null | undefined | {};
-
-/**
- * @returns The given arrays, concatenated, omitting duplicate as well as falsy elements
- */
-export function mergeArrays<T extends Primitive>(arr1: T[], arr2: T[]) {
-  return [...new Set((arr1 || []).concat(arr2 || []))].filter(x => x);
-}
 
 /**
  * @param messages
@@ -98,7 +96,7 @@ export function findMetadata(subscribeUrl: string,
   return arrayOfMetadata.find(obj => isNotEmpty(obj) && obj.subscribeUrl === subscribeUrl) || {};
 }
 
-export function podcastWithDateObjects(podcast : PodcastDTO,
+export function podcastFromDTO(podcast : PodcastDTO,
   sortEpisodes = true) : Podcast {
   const conditionalSort = (episodes: PodcastDTO['episodes']) => (sortEpisodes ?
     episodes.sort((a, b) => new Date(b.publishedAt).getTime()
@@ -114,6 +112,7 @@ export function podcastWithDateObjects(podcast : PodcastDTO,
 
   return ({
     ...podcast,
+    keywords: initializeKeywords(podcast, podcast.keywords),
     episodes,
     metadataBatch: Number(podcast.metadataBatch),
     firstEpisodeDate: toDate(podcast.firstEpisodeDate),
@@ -122,9 +121,9 @@ export function podcastWithDateObjects(podcast : PodcastDTO,
   });
 }
 
-export function podcastsWithDateObjects(podcasts: PodcastDTO[], sortEpisodes = true) {
+export function podcastsFromDTO(podcasts: PodcastDTO[], sortEpisodes = true) {
   return podcasts.filter(podcast => isNotEmpty(podcast))
-    .map(podcast => podcastWithDateObjects(podcast, sortEpisodes));
+    .map(podcast => podcastFromDTO(podcast, sortEpisodes));
 }
 
 /**

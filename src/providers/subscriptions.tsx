@@ -4,7 +4,7 @@ import useRerenderEffect from '../hooks/use-rerender-effect';
 import { getPodcast, refreshSubscriptions } from '../client';
 import {
   unixTimestamp,
-  podcastsWithDateObjects,
+  podcastsFromDTO,
   hasMetadata,
   concatMessages,
 } from '../utils';
@@ -35,13 +35,13 @@ export const SubscriptionsContext = createContext<SubscriptionContextType>({
 function readCachedPodcasts() {
   const cachedSubscriptions = localStorage.getItem('subscriptions');
   const podcasts = cachedSubscriptions ? JSON.parse(cachedSubscriptions) : [];
-  return podcastsWithDateObjects(podcasts);
+  return podcastsFromDTO(podcasts);
 }
 
 function readMetadataToSync() {
   const cachedMetadata = localStorage.getItem('metadataToSync');
   const podcasts = cachedMetadata ? JSON.parse(cachedMetadata) : [];
-  return podcastsWithDateObjects(podcasts);
+  return podcastsFromDTO(podcasts);
 }
 
 // TODO: ArSync v1.5+, test me

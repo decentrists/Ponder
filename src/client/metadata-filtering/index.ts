@@ -1,5 +1,6 @@
 import DOMPurify from 'isomorphic-dompurify';
 import he from 'he'; /** html entities @see https://github.com/mathiasbynens/he */
+import { Primitive, valueToLowerCase } from '../../utils';
 
 /**
  * @see https://github.com/cure53/DOMPurify/blob/main/README.md#can-i-configure-dompurify
@@ -53,9 +54,11 @@ export function sanitizeUri(uri : string, throwOnError = false) : string {
  * @returns {Array.<string>} The given arrays, concatenated, mapped to lower case & sanitized,
  *   omitting any duplicate/empty strings and non-string elements
  */
-export function mergeArraysToLowerCase(arr1 : any[] = [], arr2 : any[] = []) : string[] {
-  const filterArray = (arr : any[]) => (arr || [])
-    .map(x => typeof x === 'string' ? sanitizeString(x.toLowerCase()) : '')
+export function mergeArraysToLowerCase<T extends Primitive>(arr1 : T[] = [], arr2 : T[] = []) :
+string[] {
+
+  const filterArray = (arr : T[]) => (arr || [])
+    .map(x => sanitizeString(valueToLowerCase(x), false))
     .filter(x => x);
 
   return [...new Set(filterArray(arr1).concat(filterArray(arr2)))];

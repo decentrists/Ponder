@@ -122,13 +122,8 @@ function formatPodcastFeed(feed: RssPodcastFeed, subscribeUrl: Podcast['subscrib
   };
 
   // We should at least add one keyword referencing the Podcast Author(s)
-  const primaryKeyword = initializeKeywords(optionalPodcastTags)[0];
-  if (isValidString(primaryKeyword)) {
-    // Sometimes iTunes has keywords ['jimmy', 'dore', ...]; merge these with `primaryKeyword`
-    const duplicateKeywords = primaryKeyword.split(' ');
-    mandatoryPodcastTags.keywords = mergeArraysToLowerCase([primaryKeyword],
-      mandatoryPodcastTags.keywords.filter(keyword => !duplicateKeywords.includes(keyword)));
-  }
+  mandatoryPodcastTags.keywords =
+    initializeKeywords(optionalPodcastTags, mandatoryPodcastTags.keywords);
 
   Object.entries(mandatoryPodcastTags).forEach(([tagName, value]) => {
     if (!valuePresent(value)) {

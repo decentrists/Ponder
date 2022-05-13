@@ -4,8 +4,9 @@ import {
   isNotEmpty,
   hasMetadata,
   toDate,
-  podcastWithDateObjects,
+  podcastFromDTO,
   concatMessages,
+  valueToLowerCase,
 } from '../../utils';
 import { toTag, fromTag } from './utils';
 import { mergeBatchMetadata, mergeBatchTags } from './sync/diff-merge-logic';
@@ -134,7 +135,7 @@ async function getPodcastFeedForBatch(subscribeUrl: string,
       .reduce((acc, tag) => ({
         ...acc,
         [tag.name]: Array.isArray(acc[tag.name as keyof typeof acc])
-          ? [...acc[tag.name as keyof typeof acc], tag.value]
+          ? [...acc[tag.name as keyof typeof acc], valueToLowerCase(tag.value)]
           : tag.value,
       }), {
         categories: [],
@@ -159,7 +160,7 @@ async function getPodcastFeedForBatch(subscribeUrl: string,
   let metadata;
   try {
     metadata = JSON.parse(getDataResult as string);
-    metadata = podcastWithDateObjects(metadata, true);
+    metadata = podcastFromDTO(metadata, true);
   }
   catch (ex) {
     // TODO: T251 blacklist trx.id

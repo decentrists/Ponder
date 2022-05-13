@@ -8,12 +8,12 @@ import {
   toDate,
   isValidDate,
   datesEqual,
-  mergeArrays,
   hasMetadata,
   valuePresent,
   omitEmptyMetadata,
   Primitive,
 } from '../../../utils';
+import { mergeArraysToLowerCase } from '../../metadata-filtering';
 
 /**
  *
@@ -27,7 +27,7 @@ function mergeEpisodeMetadata(oldEpisode: Partial<Episode>, newEpisode: Partial<
 
   Object.entries(newEpisode).forEach(([prop, value]) => {
     let newValue = value;
-    if (Array.isArray(newValue)) newValue = mergeArrays(
+    if (Array.isArray(newValue)) newValue = mergeArraysToLowerCase(
       oldEpisode[prop as keyof Episode] as string[], newValue,
     );
 
@@ -156,7 +156,9 @@ const mergeSpecialTags = (acc: Partial<PodcastTags>,
         break;
       case 'categories':
       case 'keywords':
-        acc[tag as 'categories' | 'keywords'] = mergeArrays(acc[tag] || [], value as string[]);
+      case 'episodesKeywords':
+        acc[tag as 'categories' | 'keywords' | 'episodesKeywords'] =
+          mergeArraysToLowerCase(acc[tag] || [], value as string[]);
         break;
       default:
         acc = { ...acc, [tag]: value };
