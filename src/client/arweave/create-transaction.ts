@@ -11,10 +11,13 @@ import {
 import {
   Episode,
   Podcast,
-  ALLOWED_STRING_TAGS,
+  MANDATORY_ARWEAVE_TAGS,
+  OPTIONAL_ARWEAVE_STRING_TAGS,
 } from '../interfaces';
 import { JWKInterface } from 'arweave/node/lib/wallet';
 import Transaction from 'arweave/node/lib/transaction';
+
+type MandatoryTags = typeof MANDATORY_ARWEAVE_TAGS[number];
 
 async function newTransaction(wallet: JWKInterface, newMetadata: Partial<Podcast>,
   tags : [string, string][] = []) {
@@ -62,9 +65,6 @@ export async function signAndPostTransaction(trx: Transaction, wallet: JWKInterf
   return trx;
 }
 
-const MANDATORY_TAGS = ['subscribeUrl', 'title', 'description'];
-type MandatoryTags = typeof MANDATORY_TAGS[number];
-
 /**
  * @param wallet
  * @param newMetadata Assumed to already be a diff vs `cachedMetadata`
@@ -73,7 +73,7 @@ type MandatoryTags = typeof MANDATORY_TAGS[number];
  * @throws if `newMetadata` is incomplete or if newTransaction() throws
  */
 export async function newMetadataTransaction(wallet: JWKInterface,
-  newMetadata: Partial<Podcast>, cachedMetadata : Partial<Podcast> = {}) {
+  newMetadata: Partial<Podcast>, cachedMetadata : Partial<Podcast> = {}) : Promise<Transaction> {
 
   const mandatoryPodcastTags : [MandatoryTags, string | undefined][] = [
     ['subscribeUrl', newMetadata.subscribeUrl || cachedMetadata.subscribeUrl],
@@ -94,11 +94,9 @@ export async function newMetadataTransaction(wallet: JWKInterface,
   });
 
   const podcastTags = [...mandatoryPodcastTags] as [string, string][];
-  ALLOWED_STRING_TAGS.forEach(tagName => {
-    if (!MANDATORY_TAGS.includes(tagName)) {
-      const val = newMetadata[tagName as keyof Podcast] as string;
-      if (val) podcastTags.push([tagName, val]);
-    }
+  OPTIONAL_ARWEAVE_STRING_TAGS.forEach(tagName => {
+    const val = newMetadata[tagName as keyof Podcast] as string;
+    if (val) podcastTags.push([tagName, val]);
   });
 
   // Add new categories and keywords in string => string format
@@ -113,11 +111,10 @@ export async function newMetadataTransaction(wallet: JWKInterface,
 }
 
 /**
- * @param {Array.<Object>} newEpisodes
- * @param {Object} cachedMetadata
- * @param {number|null} metadataBatchNumber
- *   Iff null then metadataBatch is computed by @see getMetadataBatchNumber
- * @returns {[[string, string]]} The metadata transaction tags for the given list of newEpisodes
+ * @param newEpisodes
+ * @param cachedMetadata
+ * @param metadataBatchNumber Iff null then metadataBatch is computed by @see getMetadataBatchNumber
+ * @returns The metadata transaction tags for the given list of newEpisodes
  */
 function episodeTags(newEpisodes : Episode[] = [], cachedMetadata : Partial<Podcast> = {},
   metadataBatchNumber : number | null = null) : [string, string][] {
@@ -143,7 +140,7 @@ function episodeTags(newEpisodes : Episode[] = [], cachedMetadata : Partial<Podc
  *   An integer denoting the batch number for the [firstNewEpisodeDate, lastNewEpisodeDate] interval
  */
 export function getMetadataBatchNumber(cachedMetadata : Partial<Podcast>,
-  firstNewEpisodeDate: Date, lastNewEpisodeDate: Date) {
+  firstNewEpisodeDate: Date, lastNewEpisodeDate: Date) : number {
   if (!isValidDate(firstNewEpisodeDate) || !isValidDate(lastNewEpisodeDate)) {
     throw new Error(`Could not upload metadata for ${cachedMetadata.title}: ` +
                     'Invalid date found for one of its episodes.');

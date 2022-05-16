@@ -157,6 +157,8 @@ const ArweaveProvider : React.FC<{ children: React.ReactNode }> = ({ children })
         toast(`Transaction${plural} failed to post to Arweave with metadata for:\n${message}`,
           { autohideDelay: 0, variant: 'danger' });
       }
+      // TODO: update subscriptions;
+      //       atm, some fields like `firstEpisodeDate` are only refreshed upon another refresh.
       setMetadataToSync(arsync.formatNewMetadataToSync(txs, metadataToSync));
       // setUnconfirmedArSyncTxs(prev => prev.concat(txs));
     }

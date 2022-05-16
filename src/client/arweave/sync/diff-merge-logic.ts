@@ -16,7 +16,6 @@ import {
 import { mergeArraysToLowerCase } from '../../metadata-filtering';
 
 /**
- *
  * @param oldEpisode
  * @param newEpisode
  * @returns The merged episodes metadata, where newer non-empty properties of duplicate
@@ -137,19 +136,18 @@ export function mergeBatchMetadata(metadataBatches: Partial<Podcast>[]
  *     NOTE: pending T251, removal of certain categories and keywords can still be accomplished
  *           by omitting the (e.g. downvoted) tx.id in preselection of GraphQL results.
  */
-const mergeSpecialTags = (acc: Partial<PodcastTags>,
-  metadata: Partial<PodcastTags>) => {
+const mergeSpecialTags = (acc: Partial<PodcastTags>, metadata: Partial<PodcastTags>) => {
   Object.entries(omitEmptyMetadata(metadata)).forEach(([tag, value]) => {
     switch (tag) {
       case 'episodes':
         break;
       case 'firstEpisodeDate':
         if (!acc.firstEpisodeDate || value < acc.firstEpisodeDate)
-          acc.firstEpisodeDate = toDate(value as Date) as Date;
+          acc.firstEpisodeDate = toDate(value as string | Date);
         break;
       case 'lastEpisodeDate':
         if (!acc.lastEpisodeDate || value > acc.lastEpisodeDate)
-          acc.lastEpisodeDate = toDate(value as Date) as Date;
+          acc.lastEpisodeDate = toDate(value as string | Date);
         break;
       case 'metadataBatch':
         acc.metadataBatch = Math.max(acc.metadataBatch || 0, parseInt(value as string, 10));

@@ -13,7 +13,7 @@ import { mergeBatchMetadata, mergeBatchTags } from './sync/diff-merge-logic';
 import {
   Podcast,
   PodcastTags,
-  ALLOWED_TAGS,
+  ALLOWED_ARWEAVE_TAGS,
 } from '../interfaces';
 
 const MAX_BATCH_NUMBER = 100;
@@ -25,6 +25,7 @@ type GetPodcastFeedForBatchReturnType = {
   metadata: Podcast | {};
   tags: PodcastTags | {};
 };
+type AllowedArweaveTags = typeof ALLOWED_ARWEAVE_TAGS[number];
 
 export async function getPodcastFeed(subscribeUrl: string) {
   const errorMessages : string[] = [];
@@ -125,7 +126,7 @@ async function getPodcastFeedForBatch(subscribeUrl: string,
   let tags : Partial<PodcastTags> = {};
   if (isNotEmpty(trx.tags)) {
     tags = trx.tags
-      .filter(tag => ALLOWED_TAGS.includes(fromTag(tag.name)))
+      .filter(tag => ALLOWED_ARWEAVE_TAGS.includes(fromTag(tag.name) as AllowedArweaveTags))
       .map(tag => ({
         ...tag,
         name: fromTag(tag.name),

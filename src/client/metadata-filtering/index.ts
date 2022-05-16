@@ -17,8 +17,8 @@ const SANITIZE_OPTIONS_ALLOWED_HTML = {
  * TODO: expand string sanitization; revise default options above.
  * @param str
  * @param allowHtml
- * @param {Object} sanitizeOptions @see SANITIZE_OPTIONS_NO_HTML
- * @returns {string} The sanitized string if not falsy, else: an empty string
+ * @param sanitizeOptions @see SANITIZE_OPTIONS_NO_HTML
+ * @returns The sanitized string if not falsy, else: an empty string
  */
 export function sanitizeString(str : string, allowHtml = false, sanitizeOptions = {}) : string {
   if (!str || typeof str !== 'string') return '';
@@ -36,8 +36,8 @@ export function sanitizeString(str : string, allowHtml = false, sanitizeOptions 
  *              these can be handled in f.i. sanitizeWeb3Uri()
  * @param uri
  * @param throwOnError
- * @returns {string} The sanitized `uri` if valid, else if `!throwOnError`: an empty string
- * @throws {Error} If `throwOnError` and `uri` is an invalid URI
+ * @returns The sanitized `uri` if valid, else if `!throwOnError`: an empty string
+ * @throws {Error} If `throwOnError = true` and `uri` is an invalid URI
  */
 export function sanitizeUri(uri : string, throwOnError = false) : string {
   let sanitizedUri = sanitizeString(uri, false);

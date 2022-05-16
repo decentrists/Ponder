@@ -22,15 +22,19 @@ import {
 } from '../metadata-filtering';
 import { initializeKeywords } from '../metadata-filtering/generation';
 
-interface RssPodcastFeed extends Parser.Output<any>, Omit<Podcast, 'title'> {
+interface RssPodcastFeed extends Parser.Output<any>, Omit<Podcast, 'title' | 'lastBuildDate'> {
   categories?: string[];
   keywords?: string[];
   owner?: {
     name?: string;
     email?: string;
   };
+  docs?: string;
   lastBuildDate?: string;
 }
+
+type OptionalPodcastTags = Omit<Podcast, 'id' | 'subscribeUrl' | 'title' | 'episodes'>;
+type OptionalEpisodeTags = Omit<Episode, 'title' | 'publishedAt'>;
 
 /**
  * @param feed
@@ -47,7 +51,7 @@ function formatPodcastFeed(feed: RssPodcastFeed, subscribeUrl: Podcast['subscrib
     .reduce((acc : string[], cat : { subs: { name: string } }) =>
       acc.concat(Array.isArray(cat.subs) ? cat.subs.map(subCat => subCat.name) : []), []);
 
-  const optionalPodcastTags : Omit<Podcast, 'id' | 'subscribeUrl' | 'title' | 'episodes'> = {
+  const optionalPodcastTags : OptionalPodcastTags = {
     categories:     mergeArraysToLowerCase(podcast.categories,
       (itunesData.categories || []).concat(itunesSubCategories)),
     subtitle:       sanitizeString(podcast.subtitle || itunesData.subtitle || ''),
@@ -72,7 +76,7 @@ function formatPodcastFeed(feed: RssPodcastFeed, subscribeUrl: Podcast['subscrib
   // TODO: same for:
   //       if sanitizeString(episode.contentHtml, false) ~= episode.summary ~= episode.subtitle
 
-  const episodesKeywords = new Set();
+  const episodesKeywords = new Set<string>();
   const episodes = (items || [])
     .map(episode => {
       const itunes = isNotEmpty(episode.itunes) ? episode.itunes : {};
@@ -81,7 +85,7 @@ function formatPodcastFeed(feed: RssPodcastFeed, subscribeUrl: Podcast['subscrib
       const episodeKeywords = mergeArraysToLowerCase(episode.keywords, itunes.keywords);
       episodeKeywords.forEach(key => episodesKeywords.add(key));
 
-      const optionalEpisodeTags : Omit<Episode, 'title' | 'publishedAt'> = {
+      const optionalEpisodeTags : OptionalEpisodeTags = {
         subtitle:    sanitizeString(episode.subtitle || itunes.subtitle || ''),
         contentHtml: sanitizeString(episode['content:encoded'] || episode.content || '', true),
         summary:     sanitizeString(itunes.summary || episode.contentSnippet || ''),
@@ -98,9 +102,11 @@ function formatPodcastFeed(feed: RssPodcastFeed, subscribeUrl: Podcast['subscrib
         keywords:    episodeKeywords,
       };
       // Select only the optionalEpisodeTags not yet present in the optionalPodcastTags
-      const selectedEpisodeTags : Omit<Episode, 'title' | 'publishedAt'> = {};
+      let selectedEpisodeTags : OptionalEpisodeTags = {};
       Object.entries(optionalEpisodeTags).forEach(([tagName, value]) => {
-        if (optionalPodcastTags[tagName] !== value) selectedEpisodeTags[tagName] = value;
+        if (optionalPodcastTags[tagName as keyof OptionalPodcastTags] !== value) {
+          selectedEpisodeTags = { ...selectedEpisodeTags, [tagName]: value };
+        }
       });
 
       const mandatoryEpisodeTags = {
@@ -111,7 +117,7 @@ function formatPodcastFeed(feed: RssPodcastFeed, subscribeUrl: Podcast['subscrib
     })
     .filter(episode => isValidString(episode.title) && isValidDate(episode.publishedAt));
 
-  // Add episode tags that must be GraphQL-searchable to top-level. TODO: integrate in other modules
+  // Add episode tags that must be GraphQL-searchable to top-level
   optionalPodcastTags.episodesKeywords = [...episodesKeywords];
 
   const mandatoryPodcastTags = {
@@ -136,7 +142,7 @@ function formatPodcastFeed(feed: RssPodcastFeed, subscribeUrl: Podcast['subscrib
 }
 
 /**
- * @param {*} subscribeUrl
+ * @param subscribeUrl
  * @returns {(Podcast|PodcastFeedError)}
  */
 export async function getPodcastFeed(subscribeUrl: Podcast['subscribeUrl']) :

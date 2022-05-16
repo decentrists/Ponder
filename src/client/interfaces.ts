@@ -1,5 +1,4 @@
 export interface Podcast extends PodcastTags {
-  [key: string]: any;
   episodes?: Episode[];
   infoUrl?: string;
   imageUrl?: string;
@@ -7,11 +6,14 @@ export interface Podcast extends PodcastTags {
   copyright?: string;
 }
 
-export const ALLOWED_STRING_TAGS = [
+export const MANDATORY_ARWEAVE_TAGS = [
   'subscribeUrl',
   'title',
-  'id',
   'description',
+] as const;
+
+export const OPTIONAL_ARWEAVE_STRING_TAGS = [
+  'id',
   'author',
   'summary',
   'explicit',
@@ -25,14 +27,23 @@ export const ALLOWED_STRING_TAGS = [
   'lastEpisodeDate',
   'metadataBatch',
   'lastBuildDate',
-];
+] as const;
 
-export const ALLOWED_TAGS = [
+/**
+ * These tags exist as e.g. multiple `Ponder-category` tags on an Arweave Transaction, but
+ * internally we refer to them as `categories: string[]` (mapped to plural through `fromTag()`).
+ */
+const OPTIONAL_ARWEAVE_PLURAL_TAGS = [
   'categories',
   'keywords',
   'episodesKeywords',
-  ...ALLOWED_STRING_TAGS,
-];
+] as const;
+
+export const ALLOWED_ARWEAVE_TAGS = [
+  ...MANDATORY_ARWEAVE_TAGS,
+  ...OPTIONAL_ARWEAVE_STRING_TAGS,
+  ...OPTIONAL_ARWEAVE_PLURAL_TAGS,
+] as const;
 
 
 export interface PodcastTags {
@@ -58,7 +69,7 @@ export interface PodcastTags {
   lastBuildDate?: Date;
 }
 
-export interface PodcastDTO extends Omit<PodcastTags, 'firstEpisodeDate' | 'lastEpisodeDate'
+export interface PodcastDTO extends Omit<Podcast, 'firstEpisodeDate' | 'lastEpisodeDate'
 | 'metadataBatch' | 'episodes' | 'lastBuildDate'> {
   firstEpisodeDate: string;
   lastEpisodeDate: string;
@@ -76,7 +87,6 @@ export interface PodcastFeedError {
 }
 
 export type Episode = {
-  [key: string]: any;
   title: string;
   publishedAt: Date;
   categories?: string[];

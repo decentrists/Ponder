@@ -50,6 +50,8 @@ const PodcastDetails : React.FC<Props> = ({
         <EpisodeList>
           {episodes.slice()
             .sort((a, b) => b.publishedAt.getTime() - a.publishedAt.getTime())
+            // TODO: specify explicit props instead of ...episode
+            //       use `imageUrl` instead of `episode.imageUrl` if the latter is invalid
             .map(episode => (
               <EpisodeDetails key={episode.title} {...episode} />
             ))}

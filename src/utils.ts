@@ -96,8 +96,7 @@ export function findMetadata(subscribeUrl: string,
   return arrayOfMetadata.find(obj => isNotEmpty(obj) && obj.subscribeUrl === subscribeUrl) || {};
 }
 
-export function podcastFromDTO(podcast : PodcastDTO,
-  sortEpisodes = true) : Podcast {
+export function podcastFromDTO(podcast : PodcastDTO, sortEpisodes = true) : Podcast {
   const conditionalSort = (episodes: PodcastDTO['episodes']) => (sortEpisodes ?
     episodes.sort((a, b) => new Date(b.publishedAt).getTime()
      - new Date(a.publishedAt).getTime()) : episodes);
@@ -105,7 +104,6 @@ export function podcastFromDTO(podcast : PodcastDTO,
   const episodes : Podcast['episodes'] = conditionalSort(
     (podcast.episodes || [])).map(episode => ({
     ...episode,
-    title: episode.title,
     publishedAt: toDate(episode.publishedAt),
   }),
   );
@@ -133,10 +131,10 @@ export function podcastsFromDTO(podcasts: PodcastDTO[], sortEpisodes = true) {
 export function omitEmptyMetadata(metadata : Partial<Podcast> | Partial<Episode>) {
   if (!isNotEmpty(metadata)) return {};
 
-  let result : Partial<Podcast> = {};
+  let result : Partial<Podcast> | Partial<Episode> = {};
   Object.entries(metadata).forEach(([prop, value]) => {
     let newValue = value;
-    // TODO: @ts-ignore seems not needed here
+    // @ts-ignore
     if (Array.isArray(newValue)) newValue = newValue.filter(elem => valuePresent(elem));
     if (valuePresent(newValue)) result = { ...result, [prop]: newValue };
   });
@@ -172,7 +170,6 @@ export function valuePresent(value: number | string | object) : boolean {
 }
 
 /**
- *
  * @param obj is an object that might be empty/undefined
  * @returns true if the given array or object is not empty
  */

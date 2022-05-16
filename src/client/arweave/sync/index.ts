@@ -26,9 +26,10 @@ export async function initArSyncTxs(subscriptions: Podcast[],
   const partitionedMetadataToSync : Partial<Podcast>[] = [];
 
   metadataToSync.forEach(podcastMetadataToSync => {
+    let cachedMetadata : Partial<Podcast> = {};
     if (hasMetadata(podcastMetadataToSync)) {
       const { subscribeUrl } = podcastMetadataToSync;
-      const cachedMetadata = findMetadata(subscribeUrl!, subscriptions);
+      cachedMetadata = findMetadata(subscribeUrl!, subscriptions);
 
       // A transaction will be created for each batchesToSync[i]
       const batchesToSync = partitionMetadataBatches(cachedMetadata, podcastMetadataToSync);
@@ -39,17 +40,18 @@ export async function initArSyncTxs(subscriptions: Podcast[],
   await Promise.all(partitionedMetadataToSync.map(async podcastToSync => {
     if (hasMetadata(podcastToSync)) {
       const { subscribeUrl } = podcastToSync;
-      const cachedMetadata = findMetadata(subscribeUrl!, subscriptions);
-      let newTxResult;
+      let cachedMetadata : Partial<Podcast> = {};
+      let newTxResult : Transaction | Error;
       try {
+        cachedMetadata = findMetadata(subscribeUrl!, subscriptions);
         newTxResult = await arweave.newMetadataTransaction(wallet, podcastToSync, cachedMetadata);
       }
       catch (ex) {
-        newTxResult = ex;
+        newTxResult = ex as Error;
       }
       const status = {
         subscribeUrl,
-        title: cachedMetadata.title,
+        title: cachedMetadata.title || '',
         resultObj: newTxResult,
         metadata: podcastToSync,
       };
