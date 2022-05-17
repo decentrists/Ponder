@@ -27,7 +27,7 @@ export const findAllDisjointGraphs = (nodes: DisjointGraphFunctionNode[],
   const graph = [firstUnvisitedNode];
   let relatedPodcast;
   do {
-    // eslint-disable-next-line @typescript-eslint/no-loop-func
+    // eslint-disable-next-line no-loop-func, @typescript-eslint/no-loop-func
     relatedPodcast = nodes.find(item => item.visited !== true
         && haveSharedElements(keywordsAndCategoriesInCommon, item.keywordsAndCategories));
     if (!relatedPodcast) break;
@@ -122,7 +122,7 @@ export const generateEdges = (disjointGraphs: Podcast[][]) => {
         const edge = {
           source: podcast.subscribeUrl,
           target: match.subscribeUrl,
-          label: relations.join(', '),
+          label: relations.join('\n'),
         };
         return { data: edge };
       });

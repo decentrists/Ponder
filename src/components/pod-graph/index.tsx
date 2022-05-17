@@ -28,6 +28,12 @@ interface Props {
   subscriptions: Podcast[];
 }
 
+declare global {
+  interface Window {
+    cy : ExtendedCore;
+  }
+}
+
 const PodGraph : React.FC<Props> = ({ subscriptions }) => {
   const el = useRef<HTMLDivElement>(null);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -45,6 +51,7 @@ const PodGraph : React.FC<Props> = ({ subscriptions }) => {
       setSelectedPodcastId: (id) => setSelectedPodcastId(id),
     });
     setCy(cyto);
+    window.cy = cyto;
 
     return () => {
       cyto.destroy();
