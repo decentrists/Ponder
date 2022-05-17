@@ -1,7 +1,7 @@
 import cytoscape, { CytoscapeOptions } from 'cytoscape';
 import dagre from 'cytoscape-dagre';
 import layout from './layout';
-import applyStyles from './styles';
+import styles from './styles';
 import applyPanzoom from './panzoom';
 import applyEvents from './events';
 import applyNodeGroups from './node-groups';
@@ -15,20 +15,22 @@ type Deps = {
 };
 
 export default function createCytoscape(container: CytoscapeOptions['container'],
-  elements:  CytoscapeOptions['elements'], deps: Deps) {
+  elements: CytoscapeOptions['elements'], deps: Deps) {
   const cy = cytoscape({
     container,
     layout,
     elements,
+    style: styles(),
     zoomingEnabled: true,
     userZoomingEnabled: true,
     autoungrabify: false,
   }) as ExtendedCore;
-  applyStyles(cy);
+
   applyEvents(cy, deps);
   applyPanzoom(cy);
   applyNodeGroups(cy);
   applyHtmlLabel(cy);
   cy.fit();
+
   return cy;
 }
