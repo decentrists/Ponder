@@ -12,15 +12,15 @@ dayjs.extend(relativeTime);
 
 interface Props {
   title: string,
-  url: string,
-  publishedAt?: Date,
+  publishedAt: Date,
+  mediaUrl?: string,
   imageUrl?: string,
 }
 const EpisodeDetails : React.FC<Props> = ({
-  title, url, publishedAt, imageUrl,
+  title, publishedAt, mediaUrl, imageUrl,
 }) => {
   return (
-    <EpisodeLink href={url}>
+    <EpisodeLink href={mediaUrl}>
       <DetailsCard>
         <CardBody>
           <EpisodeImage>

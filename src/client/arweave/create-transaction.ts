@@ -9,14 +9,19 @@ import {
   isValidInteger,
 } from '../../utils';
 import {
-  Episode, 
-  Podcast, 
+  Episode,
+  Podcast,
+  MANDATORY_ARWEAVE_TAGS,
+  OPTIONAL_ARWEAVE_STRING_TAGS,
 } from '../interfaces';
 import { JWKInterface } from 'arweave/node/lib/wallet';
 import Transaction from 'arweave/node/lib/transaction';
 
+type MandatoryTags = typeof MANDATORY_ARWEAVE_TAGS[number];
+
 async function newTransaction(wallet: JWKInterface, newMetadata: Partial<Podcast>,
   tags : [string, string][] = []) {
+
   try {
     const trx = await client.createTransaction({ data: JSON.stringify(newMetadata) }, wallet);
     trx.addTag('Content-Type', 'application/json');
@@ -60,8 +65,6 @@ export async function signAndPostTransaction(trx: Transaction, wallet: JWKInterf
   return trx;
 }
 
-type MandatoryTags = 'subscribeUrl' | 'title' | 'description';
-
 /**
  * @param wallet
  * @param newMetadata Assumed to already be a diff vs `cachedMetadata`
@@ -70,13 +73,8 @@ type MandatoryTags = 'subscribeUrl' | 'title' | 'description';
  * @throws if `newMetadata` is incomplete or if newTransaction() throws
  */
 export async function newMetadataTransaction(wallet: JWKInterface,
-  newMetadata: Partial<Podcast>, cachedMetadata : Partial<Podcast> = {}) {
-  const optionalPodcastTags = [
-    // TODO: expand this list to be as complete as possible.
-    // imgUrl and imageTitle are optional metadata as well, but these do not belong in the tags,
-    // as they do not have to be GraphQL-searchable.
-    'language',
-  ];
+  newMetadata: Partial<Podcast>, cachedMetadata : Partial<Podcast> = {}) : Promise<Transaction> {
+
   const mandatoryPodcastTags : [MandatoryTags, string | undefined][] = [
     ['subscribeUrl', newMetadata.subscribeUrl || cachedMetadata.subscribeUrl],
     ['title', newMetadata.title || cachedMetadata.title],
@@ -96,7 +94,7 @@ export async function newMetadataTransaction(wallet: JWKInterface,
   });
 
   const podcastTags = [...mandatoryPodcastTags] as [string, string][];
-  optionalPodcastTags.forEach(tagName => {
+  OPTIONAL_ARWEAVE_STRING_TAGS.forEach(tagName => {
     const val = newMetadata[tagName as keyof Podcast] as string;
     if (val) podcastTags.push([tagName, val]);
   });
@@ -104,8 +102,10 @@ export async function newMetadataTransaction(wallet: JWKInterface,
   // Add new categories and keywords in string => string format
   (newMetadata.categories || []).forEach(cat => podcastTags.push(['category', cat]));
   (newMetadata.keywords || []).forEach(key => podcastTags.push(['keyword', key]));
+  (newMetadata.episodesKeywords || []).forEach(key => podcastTags.push(['episodesKeyword', key]));
 
-  const episodeBatchTags = episodeTags(newMetadata.episodes, cachedMetadata);
+  const episodeBatchTags =
+    episodeTags(newMetadata.episodes, cachedMetadata, newMetadata.metadataBatch);
 
   return newTransaction(wallet, newMetadata, podcastTags.concat(episodeBatchTags));
 }
@@ -113,15 +113,17 @@ export async function newMetadataTransaction(wallet: JWKInterface,
 /**
  * @param newEpisodes
  * @param cachedMetadata
+ * @param metadataBatchNumber Iff null then metadataBatch is computed by @see getMetadataBatchNumber
  * @returns The metadata transaction tags for the given list of newEpisodes
  */
-function episodeTags(newEpisodes : Episode[] = [],
-  cachedMetadata : Partial<Podcast> = {}) : [string, string][] {
+function episodeTags(newEpisodes : Episode[] = [], cachedMetadata : Partial<Podcast> = {},
+  metadataBatchNumber : number | null = null) : [string, string][] {
   if (!newEpisodes.length) { return []; }
 
   const firstEpisodeDate = newEpisodes[newEpisodes.length - 1].publishedAt;
   const lastEpisodeDate = newEpisodes[0].publishedAt;
-  const metadataBatch = getMetadataBatchNumber(cachedMetadata, firstEpisodeDate, lastEpisodeDate);
+  const metadataBatch = (isValidInteger(metadataBatchNumber) ? metadataBatchNumber :
+    getMetadataBatchNumber(cachedMetadata, firstEpisodeDate, lastEpisodeDate));
 
   return [
     ['firstEpisodeDate', toISOString(firstEpisodeDate)],
@@ -137,8 +139,8 @@ function episodeTags(newEpisodes : Episode[] = [],
  * @returns
  *   An integer denoting the batch number for the [firstNewEpisodeDate, lastNewEpisodeDate] interval
  */
-function getMetadataBatchNumber(cachedMetadata : Partial<Podcast>,
-  firstNewEpisodeDate: Date, lastNewEpisodeDate: Date) {
+export function getMetadataBatchNumber(cachedMetadata : Partial<Podcast>,
+  firstNewEpisodeDate: Date, lastNewEpisodeDate: Date) : number {
   if (!isValidDate(firstNewEpisodeDate) || !isValidDate(lastNewEpisodeDate)) {
     throw new Error(`Could not upload metadata for ${cachedMetadata.title}: ` +
                     'Invalid date found for one of its episodes.');
@@ -155,7 +157,7 @@ function getMetadataBatchNumber(cachedMetadata : Partial<Podcast>,
   //   return cachedMetadata.firstBatch.count - 1;
   // }
 
-  if (cachedMetadata.lastEpisodeDate && 
+  if (cachedMetadata.lastEpisodeDate &&
     cachedMetadata.lastEpisodeDate > lastNewEpisodeDate) {
     // return queryMiddleMetadataBatchNumber(cachedMetadata,firstNewEpisodeDate,lastNewEpisodeDate);
     throw new Error('Supplementing existing metadata is not implemented yet.');

@@ -4,8 +4,9 @@
 import {
   Episode,
   Podcast,
-  PodcastDTO, 
+  PodcastDTO,
 } from './client/interfaces';
+import { initializeKeywords } from './client/metadata-filtering/generation';
 
 export function unixTimestamp(date : Date | null = null) {
   return Math.floor(date ? date.getTime() : Date.now() / 1000);
@@ -18,6 +19,14 @@ export function toISOString(date: Date) {
   catch (error) {
     return '';
   }
+}
+
+export function valueToLowerCase(value: any) : string {
+  return typeof value === 'string' ? value.toLowerCase() : '';
+}
+
+export function isValidString(str: unknown) : str is string {
+  return typeof str === 'string' && !!str.trim().length;
 }
 
 export function isValidInteger(number: unknown) : number is number {
@@ -37,16 +46,9 @@ export type Primitive = string | boolean | number;
 export type EmptyTypes = null | undefined | {};
 
 /**
- * @returns The given arrays, concatenated, omitting duplicate as well as falsy elements
- */
-export function mergeArrays<T extends Primitive>(arr1: T[], arr2: T[]) {
-  return [...new Set((arr1 || []).concat(arr2 || []))].filter(x => x);
-}
-
-/**
  * @param messages
  * @param  filterDuplicates
- * @returns 
+ * @returns
  */
 export function concatMessages(messages : string[] = [], filterDuplicates = false) {
   return (filterDuplicates ? [...new Set(messages.flat())] : messages.flat())
@@ -58,15 +60,15 @@ export function concatMessages(messages : string[] = [], filterDuplicates = fals
  * @param date
  * @returns One of the following:
  *   - A new Date object, if `date` is a valid date string.
- *   - null, if `date` is not a valid date string.
+ *   - A 0 Date object, if `date` is not a valid date string.
  *   - `date`, if `date` is already a Date object.
  */
-export function toDate(date: string | Date) {
-  if (!date) return null;
+export function toDate(date: string | Date | undefined) : Date {
+  if (!date) return new Date(0);
   if (date instanceof Date) return date;
 
   const dateObj = new Date(date);
-  return dateObj.getTime() ? dateObj : null;
+  return dateObj.getTime() ? dateObj : new Date(0);
 }
 
 /**
@@ -74,10 +76,10 @@ export function toDate(date: string | Date) {
  * @returns true if `metadata` has specific metadata other than:
  *   `subscribeUrl`, `publishedAt` and an empty episodes list
  */
-export function hasMetadata<T extends Partial<Podcast>[] 
+export function hasMetadata<T extends Partial<Podcast>[]
 | Partial<Episode>[], K extends Partial<Podcast>
 | Partial<Episode>>(metadata: K | T | EmptyTypes) : metadata is T | K {
- 
+
   if (!isNotEmpty(metadata)) return false;
   if (Array.isArray(metadata)) return true;
   if (metadata.title) return true;
@@ -94,41 +96,42 @@ export function findMetadata(subscribeUrl: string,
   return arrayOfMetadata.find(obj => isNotEmpty(obj) && obj.subscribeUrl === subscribeUrl) || {};
 }
 
-export function podcastWithDateObjects(podcast : PodcastDTO,
-  sortEpisodes = true) : Podcast {
+export function podcastFromDTO(podcast : PodcastDTO, sortEpisodes = true) : Podcast {
   const conditionalSort = (episodes: PodcastDTO['episodes']) => (sortEpisodes ?
     episodes.sort((a, b) => new Date(b.publishedAt).getTime()
      - new Date(a.publishedAt).getTime()) : episodes);
 
-  const episodes : Episode[] = conditionalSort(
+  const episodes : Podcast['episodes'] = conditionalSort(
     (podcast.episodes || [])).map(episode => ({
     ...episode,
-    publishedAt: toDate(episode.publishedAt) as Date,
+    publishedAt: toDate(episode.publishedAt),
   }),
   );
 
   return ({
     ...podcast,
+    keywords: initializeKeywords(podcast, podcast.keywords),
     episodes,
     metadataBatch: Number(podcast.metadataBatch),
-    firstEpisodeDate: toDate(podcast.firstEpisodeDate) as Date,
-    lastEpisodeDate: toDate(podcast.lastEpisodeDate) as Date,
+    firstEpisodeDate: toDate(podcast.firstEpisodeDate),
+    lastEpisodeDate: toDate(podcast.lastEpisodeDate),
+    lastBuildDate: toDate(podcast.lastBuildDate),
   });
 }
 
-export function podcastsWithDateObjects(podcasts: PodcastDTO[], sortEpisodes = true) {
+export function podcastsFromDTO(podcasts: PodcastDTO[], sortEpisodes = true) {
   return podcasts.filter(podcast => isNotEmpty(podcast))
-    .map(podcast => podcastWithDateObjects(podcast, sortEpisodes));
+    .map(podcast => podcastFromDTO(podcast, sortEpisodes));
 }
 
 /**
  * @param metadata
  * @returns The `metadata` exluding props where !valuePresent(value), @see valuePresent
  */
-export function omitEmptyMetadata(metadata : Partial<Podcast>) {
+export function omitEmptyMetadata(metadata : Partial<Podcast> | Partial<Episode>) {
   if (!isNotEmpty(metadata)) return {};
-  
-  let result : Partial<Podcast> = {};
+
+  let result : Partial<Podcast> | Partial<Episode> = {};
   Object.entries(metadata).forEach(([prop, value]) => {
     let newValue = value;
     // @ts-ignore
@@ -167,7 +170,6 @@ export function valuePresent(value: number | string | object) : boolean {
 }
 
 /**
- * 
  * @param obj is an object that might be empty/undefined
  * @returns true if the given array or object is not empty
  */
@@ -184,7 +186,7 @@ export function valuesEqual(a : object = {}, b : object = {}) : boolean {
   // See https://stackoverflow.com/a/32922084/8691102
   const ok = Object.keys, tx = typeof a, ty = typeof b;
   return tx === 'object' && tx === ty ? (
-    ok(a).length === ok(b).length 
+    ok(a).length === ok(b).length
     && ok(a).every(key => valuesEqual(a[key as keyof typeof a], b[key as keyof typeof b]))
   ) : (a === b);
 }

@@ -68,6 +68,7 @@ const mockError2 = new Error('mock error 2');
 
 /**
  * NOTE: newMetadataTransaction() is mocked here, as it's tested in create-transaction.test.js.
+ * TODO: test partitionMetadataBatches()
  */
 describe('initArSyncTxs', () => {
   const subscriptions = [podcast1, podcast2];
@@ -115,7 +116,7 @@ describe('initArSyncTxs', () => {
               subscribeUrl: 'https://example.com/podcast2',
               title: 'podcast2 cachedTitle',
               resultObj: mockTransaction,
-              metadata: metadataToSync[1],
+              metadata: { ...metadataToSync[1], metadataBatch: 0 },
             },
           ],
           failedTxs: [],
@@ -154,7 +155,7 @@ describe('initArSyncTxs', () => {
                 subscribeUrl: 'https://example.com/podcast2',
                 title: 'podcast2 cachedTitle',
                 resultObj: mockTransaction2,
-                metadata: metadataToSync[1],
+                metadata: { ...metadataToSync[1], metadataBatch: 0 },
               },
             ],
             failedTxs: [],
@@ -173,7 +174,7 @@ describe('initArSyncTxs', () => {
                 subscribeUrl: 'https://example.com/podcast2',
                 title: 'podcast2 cachedTitle',
                 resultObj: mockTransaction,
-                metadata: metadataToSync[1],
+                metadata: { ...metadataToSync[1], metadataBatch: 0 },
               },
             ],
             failedTxs: [
@@ -206,7 +207,7 @@ describe('initArSyncTxs', () => {
                 subscribeUrl: 'https://example.com/podcast2',
                 title: 'podcast2 cachedTitle',
                 resultObj: mockError2,
-                metadata: metadataToSync[1],
+                metadata: { ...metadataToSync[1], metadataBatch: 0 },
               },
             ],
           });
@@ -216,9 +217,6 @@ describe('initArSyncTxs', () => {
   });
 });
 
-/**
- * NOTE: startSync() works very similarly to initArSyncTxs(), so extensive tests are not required.
- */
 describe('startSync', () => {
   describe('When pendingTxs is empty', () => {
     const pendingTxs = [];

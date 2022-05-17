@@ -1,6 +1,7 @@
 const PLURAL_TAG_MAP = {
   category: 'categories',
   keyword: 'keywords',
+  episodesKeyword: 'episodesKeywords',
 };
 const TAG_EXCLUDES = ['Content-Type', 'Unix-Time'];
 
