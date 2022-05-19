@@ -4,10 +4,11 @@ import { valueToLowerCase } from '../../utils';
 
 /**
  * @param metadata sanitized metadata
- * @returns A keyword comprising the podcast author name or an empty string if not generable
+ * @returns A keyword comprising the podcast author name, or (as a last resort) the podcast title,
+ *   or an empty string if not generable
  */
 function getPrimaryKeyword(metadata : Partial<Podcast> | Partial<PodcastDTO>) : string {
-  const primaryKeyword = metadata.author || metadata.ownerName;
+  const primaryKeyword = metadata.author || metadata.ownerName || metadata.title;
   return valueToLowerCase(primaryKeyword);
 }
 

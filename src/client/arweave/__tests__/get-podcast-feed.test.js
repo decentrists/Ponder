@@ -5,6 +5,8 @@ import { toTag } from '../utils';
 
 jest.mock('../client');
 
+const FEED_URL = 'https://server.dummy/rss';
+
 function emptyGqlResponse() {
   return {
     data: {
@@ -29,7 +31,7 @@ function gqlResponse(metadataBatch, firstEpisodeDate, lastEpisodeDate) {
                 { name: 'Content-Type', value: 'application/json' },
                 { name: 'Unix-Time', value: '1620172800' },
                 { name: 'version', value: 'bestVersion' },
-                { name: 'subscribeUrl', value: 'https://server.dummy/rss' },
+                { name: 'subscribeUrl', value: FEED_URL },
                 { name: 'title', value: 'That Podcast' },
                 { name: 'description', value: 'The best of That Podcast' },
                 { name: 'keyword', value: 'comedY' },
@@ -78,7 +80,7 @@ const episodes = [
 
 function mergedBatchesResult(metadataBatch, firstEpisodeDate, lastEpisodeDate) {
   return {
-    subscribeUrl: 'https://server.dummy/rss',
+    subscribeUrl: FEED_URL,
     title: 'That Podcast',
     description: 'The best of That Podcast',
     categories: ['politics', 'cats'],
@@ -113,8 +115,8 @@ describe('Successful fetch', () => {
       transactions.getData.mockResolvedValueOnce(getDataJson(0, 4));
       expect(transactions.getData).not.toHaveBeenCalled();
 
-      await expect(getPodcastFeed('https://server.dummy/rss'))
-        .resolves.toEqual(mergedBatchesResult(0, ep1date, ep4date));
+      await expect(getPodcastFeed(FEED_URL)).resolves
+        .toEqual(mergedBatchesResult(0, ep1date, ep4date));
 
       expect(api.post).toHaveBeenCalledTimes(2);
       expect(transactions.getData).toHaveBeenCalledTimes(1);
@@ -132,8 +134,8 @@ describe('Successful fetch', () => {
 
       api.post.mockResolvedValueOnce(emptyGqlResponse());
 
-      await expect(getPodcastFeed('https://server.dummy/rss'))
-        .resolves.toEqual(mergedBatchesResult(1, ep1date, ep4date));
+      await expect(getPodcastFeed(FEED_URL)).resolves
+        .toEqual(mergedBatchesResult(1, ep1date, ep4date));
 
       expect(api.post).toHaveBeenCalledTimes(3);
       expect(transactions.getData).toHaveBeenCalledTimes(2);
@@ -157,8 +159,8 @@ describe('Successful fetch', () => {
 
       api.post.mockResolvedValueOnce(emptyGqlResponse());
 
-      await expect(getPodcastFeed('https://server.dummy/rss'))
-        .resolves.toEqual(mergedBatchesResult(2, ep1date, ep4date));
+      await expect(getPodcastFeed(FEED_URL)).resolves
+        .toEqual(mergedBatchesResult(2, ep1date, ep4date));
 
       expect(api.post).toHaveBeenCalledTimes(4);
       expect(transactions.getData).toHaveBeenCalledTimes(3);
@@ -183,8 +185,8 @@ describe('Error handling', () => {
 
       api.post.mockResolvedValueOnce(emptyGqlResponse());
 
-      await expect(getPodcastFeed('https://server.dummy/rss'))
-        .resolves.toEqual(mergedBatchesResult(2, ep1date, ep4date));
+      await expect(getPodcastFeed(FEED_URL)).resolves
+        .toEqual(mergedBatchesResult(2, ep1date, ep4date));
 
       expect(api.post).toHaveBeenCalledTimes(4);
       expect(transactions.getData).toHaveBeenCalledTimes(3);
@@ -198,7 +200,7 @@ describe('Error handling', () => {
     api.post.mockRejectedValue(mockError);
     transactions.getData.mockResolvedValue(getDataJson(0, 4));
 
-    await expect(getPodcastFeed('https://server.dummy/rss')).resolves
+    await expect(getPodcastFeed(FEED_URL)).resolves
       .toMatchObject({ errorMessage: expect.stringMatching(/GraphQL/) });
 
     expect(api.post).toHaveBeenCalledTimes(1);
