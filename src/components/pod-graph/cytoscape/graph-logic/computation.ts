@@ -3,42 +3,66 @@ import { v4 as uuid } from 'uuid';
 import { Podcast } from '../../../../client/interfaces';
 import {
   findSharedCategoriesAndKeywords, haveSharedElements,
+  haveSharedKeywords,
   removeDuplicateElements,
+  SharedKeywords,
 } from './utils';
 
-export interface DisjointGraphFunctionNode extends Pick<Podcast, 'subscribeUrl'> {
+export interface DisjointGraphNode extends Pick<Podcast, 'subscribeUrl'> {
   keywordsAndCategories: string[];
   visited: boolean;
 }
+
+interface DisjointGraph {
+  nodes: DisjointGraphNode[],
+  sharedKeywordsAndCategories: SharedKeywords[]
+}
+
+
+export const countKeywordOccurances = (currentKeywords: SharedKeywords[],
+  keywords: string[]) => {
+  let result = [...currentKeywords];
+  keywords.forEach((keyword) => {
+    const item = result.find((el) => el.name === keyword);
+    if (!item) result = [...result, { name: keyword, occurance: 1 }];
+    else {
+      item.occurance += 1;
+    }
+  });
+  return result;
+};
+
 /**
  * @param nodes
  * @param disjointGraphs The intermediate result through recursion
  * @returns
  *   An array of graph representations grouped by shared keywords & categories
  */
-export const findAllDisjointGraphs = (nodes: DisjointGraphFunctionNode[],
-  disjointGraphs : DisjointGraphFunctionNode[][] = []) : DisjointGraphFunctionNode[][] => {
+export const findAllDisjointGraphs = (nodes: DisjointGraphNode[],
+  disjointGraphs : DisjointGraph[] = []) : DisjointGraph[] => {
   const firstUnvisitedNode = nodes.find(item => item.visited !== true);
   if (!firstUnvisitedNode) return disjointGraphs;
 
   firstUnvisitedNode.visited = true;
-  let keywordsAndCategoriesInCommon = firstUnvisitedNode.keywordsAndCategories;
+  let sharedKeywordsAndCategories = countKeywordOccurances([],
+    firstUnvisitedNode.keywordsAndCategories);
 
   const graph = [firstUnvisitedNode];
   let relatedPodcast;
   do {
     // eslint-disable-next-line no-loop-func, @typescript-eslint/no-loop-func
     relatedPodcast = nodes.find(item => item.visited !== true
-        && haveSharedElements(keywordsAndCategoriesInCommon, item.keywordsAndCategories));
+        && haveSharedKeywords(sharedKeywordsAndCategories, item.keywordsAndCategories));
     if (!relatedPodcast) break;
 
     relatedPodcast.visited = true;
-    keywordsAndCategoriesInCommon = removeDuplicateElements([...keywordsAndCategoriesInCommon,
-      ...relatedPodcast.keywordsAndCategories]);
+    sharedKeywordsAndCategories = countKeywordOccurances(sharedKeywordsAndCategories,
+      relatedPodcast.keywordsAndCategories);
     graph.push(relatedPodcast);
   } while (relatedPodcast);
 
-  disjointGraphs.push(graph);
+  disjointGraphs.push({ nodes: graph, 
+    sharedKeywordsAndCategories: sharedKeywordsAndCategories.filter((el) => el.occurance > 1) });
 
   return findAllDisjointGraphs(nodes, disjointGraphs);
 };
@@ -49,8 +73,8 @@ export const findAllDisjointGraphs = (nodes: DisjointGraphFunctionNode[],
  * @returns The findAllDisjointGraphs result mapped onto the subscriptions metadata
  */
 const finalizeDisjointGraphsObject = (subscriptions: Podcast[],
-  disjointGraphs:DisjointGraphFunctionNode[][]) => disjointGraphs
-  .map(graph => graph
+  disjointGraphs:DisjointGraph[]) => disjointGraphs
+  .map(graph => graph.nodes
     .map(node => subscriptions
       .find(subscription => subscription.subscribeUrl === node.subscribeUrl)!));
 
@@ -68,7 +92,9 @@ export const groupSubscriptionsBySharedKeywords = (subscriptions: Podcast[]) => 
     ]),
     visited: false,
   }));
-  return finalizeDisjointGraphsObject(subscriptions, findAllDisjointGraphs(nodes));
+  const result = findAllDisjointGraphs(nodes);
+  console.log('result', result);
+  return finalizeDisjointGraphsObject(subscriptions, result);
 };
 
 export const generateNodes = (disjointGraphs: Podcast[][]) => {
