@@ -16,6 +16,7 @@
     "eject": "react-scripts eject",
     "test": "npm run jest && npm run cy:run",
     "jest": "jest -i",
+    "jestcov": "jest --coverage -i",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "cy:run": "npm run cy -- run",
     "cy:open": "npm run cy -- open",

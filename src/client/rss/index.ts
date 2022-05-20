@@ -135,7 +135,7 @@ function formatPodcastFeed(feed: RssPodcastFeed, subscribeUrl: Podcast['subscrib
   optionalPodcastTags.episodesKeywords = [...episodesKeywords];
 
   const mandatoryPodcastTags = {
-    subscribeUrl:   sanitizeString(podcast.feedUrl || subscribeUrl || ''),
+    subscribeUrl,
     title:          sanitizeString(podcast.title || ''),
     episodes,
     keywords:       mergeArraysToLowerCase(podcast.keywords, podItunes.keywords),

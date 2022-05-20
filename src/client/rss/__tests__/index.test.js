@@ -46,11 +46,11 @@ const COMPLETE_EPISODE_2_NO_ITUNES = {
   length:     '12345678',
   enclosure: {
     type:     'audio/mpeg',
-    url:      'https://test_url.crypto/ep1.mp3',
+    url:      'https://test_url.crypto/ep2.mp3',
   },
   subtitle:   '<b>Ep2 subtitle</b>',
   content:    '<b>html</b> Ep2 description',
-  guid:       'e6aa1148-e2c6-4fae-969c-0a38a977ce91',
+  guid:       'f6aa1148-e2c6-4fae-969c-0a38a977ce92',
   link:       'https://test_url.crypto/info',
   duration:   '02:02',
   explicit:   'no',
@@ -63,8 +63,6 @@ const COMPLETE_EPISODE_2_NO_ITUNES = {
 const MINIMAL_EPISODE_3 = {
   title:    'Ep3 title',
   isoDate:  ep3date,
-  keywords: ['Ep3key'],
-
 };
 const INVALID_EPISODE_4 = {
   title:    '',
@@ -73,7 +71,7 @@ const INVALID_EPISODE_4 = {
 };
 const INVALID_EPISODE_5 = {
   title:    'Ep5 title',
-  isoDate:  '',
+  isoDate:  'foo',
   keywords: ['another skipped episodesKeyword'],
 };
 const INVALID_EPISODE_6 = {
@@ -191,8 +189,8 @@ describe('getPodcastFeed', () => {
           subtitle: 'Ep2 subtitle',
           contentHtml: '<b>html</b> Ep2 description',
           summary: 'Ep2 summary',
-          guid: 'e6aa1148-e2c6-4fae-969c-0a38a977ce91',
-          mediaUrl: 'https://test_url.crypto/ep1.mp3',
+          guid: 'f6aa1148-e2c6-4fae-969c-0a38a977ce92',
+          mediaUrl: 'https://test_url.crypto/ep2.mp3',
           mediaType: 'audio/mpeg',
           mediaLength: '12345678',
           duration: '02:02',
@@ -204,7 +202,6 @@ describe('getPodcastFeed', () => {
         {
           title: 'Ep3 title',
           publishedAt: new Date(ep3date),
-          keywords: ['ep3key'],
         },
       ],
       keywords: ['podcast author', 'key1', 'key2'],
@@ -223,7 +220,7 @@ describe('getPodcastFeed', () => {
       copyright: 'Podcast copyright',
       managingEditor: 'Podcast editor',
       lastBuildDate: new Date(podcastDate),
-      episodesKeywords: ['ep1key1', 'ep1key2', 'ep2key', 'ep3key'],
+      episodesKeywords: ['ep1key1', 'ep1key2', 'ep2key'],
     };
 
     it('returns a formatted Podcast object with 3 episodes', async () => {
@@ -258,11 +255,9 @@ describe('getPodcastFeed', () => {
           {
             title: 'Ep3 title',
             publishedAt: new Date(ep3date),
-            keywords: ['ep3key'],
           },
         ],
         keywords: ['my podcast'],
-        episodesKeywords: ['ep3key'],
       });
     });
   });
@@ -279,7 +274,15 @@ describe('getPodcastFeed', () => {
     });
 
     describe('With a podcast feed without valid episodes', () => {
-      it('returns an error message object', async () => {
+      it('returns an error message object (no episodes)', async () => {
+        const mockFeed = { title: 'Title' };
+        parser.parseURL.mockResolvedValue(mockFeed);
+
+        await expect(getPodcastFeed(FEED_URL)).resolves
+          .toMatchObject({ errorMessage: expect.stringMatching(/'episodes' is empty/) });
+      });
+
+      it('returns an error message object (invalid episodes)', async () => {
         const mockFeed = { title: 'Title', items: [INVALID_EPISODE_4] };
         parser.parseURL.mockResolvedValue(mockFeed);
 
