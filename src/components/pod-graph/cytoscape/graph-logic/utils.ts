@@ -4,7 +4,7 @@ import { Podcast } from '../../../../client/interfaces';
 
 export interface SharedKeywords {
   name: string;
-  occurance: number;
+  count: number;
 }
 
 export const findSharedCategoriesAndKeywords = (podcast1: Podcast, podcast2: Podcast) => {

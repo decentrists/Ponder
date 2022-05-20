@@ -13,20 +13,19 @@ export interface DisjointGraphNode extends Pick<Podcast, 'subscribeUrl'> {
   visited: boolean;
 }
 
-interface DisjointGraph {
+export interface DisjointGraph {
   nodes: DisjointGraphNode[],
   sharedKeywordsAndCategories: SharedKeywords[]
 }
 
 
-export const countKeywordOccurances = (currentKeywords: SharedKeywords[],
-  keywords: string[]) => {
+export const countKeywordsCounts = (keywords: string[], currentKeywords: SharedKeywords[] = []) => {
   let result = [...currentKeywords];
   keywords.forEach((keyword) => {
     const item = result.find((el) => el.name === keyword);
-    if (!item) result = [...result, { name: keyword, occurance: 1 }];
+    if (!item) result = [...result, { name: keyword, count: 1 }];
     else {
-      item.occurance += 1;
+      item.count += 1;
     }
   });
   return result;
@@ -44,8 +43,7 @@ export const findAllDisjointGraphs = (nodes: DisjointGraphNode[],
   if (!firstUnvisitedNode) return disjointGraphs;
 
   firstUnvisitedNode.visited = true;
-  let sharedKeywordsAndCategories = countKeywordOccurances([],
-    firstUnvisitedNode.keywordsAndCategories);
+  let sharedKeywordsAndCategories = countKeywordsCounts(firstUnvisitedNode.keywordsAndCategories);
 
   const graph = [firstUnvisitedNode];
   let relatedPodcast;
@@ -56,13 +54,12 @@ export const findAllDisjointGraphs = (nodes: DisjointGraphNode[],
     if (!relatedPodcast) break;
 
     relatedPodcast.visited = true;
-    sharedKeywordsAndCategories = countKeywordOccurances(sharedKeywordsAndCategories,
-      relatedPodcast.keywordsAndCategories);
+    sharedKeywordsAndCategories = countKeywordsCounts(relatedPodcast.keywordsAndCategories,
+      sharedKeywordsAndCategories);
     graph.push(relatedPodcast);
   } while (relatedPodcast);
 
-  disjointGraphs.push({ nodes: graph, 
-    sharedKeywordsAndCategories: sharedKeywordsAndCategories.filter((el) => el.occurance > 1) });
+  disjointGraphs.push({ nodes: graph, sharedKeywordsAndCategories });
 
   return findAllDisjointGraphs(nodes, disjointGraphs);
 };
