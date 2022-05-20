@@ -35,6 +35,14 @@ interface RssPodcastFeed extends Parser.Output<any>, Omit<Podcast, 'title' | 'la
 
 type OptionalPodcastTags = Omit<Podcast, 'id' | 'subscribeUrl' | 'title' | 'episodes'>;
 type OptionalEpisodeTags = Omit<Episode, 'title' | 'publishedAt'>;
+type CategoriesWithSubs = {
+  name?: string,
+  subs?: [
+    {
+      name: string,
+    },
+  ],
+};
 
 /**
  * @param feed
@@ -44,29 +52,29 @@ type OptionalEpisodeTags = Omit<Episode, 'title' | 'publishedAt'>;
  */
 function formatPodcastFeed(feed: RssPodcastFeed, subscribeUrl: Podcast['subscribeUrl']) : Podcast {
   const { items, ...podcast } = feed;
-  const itunesData = isNotEmpty(podcast.itunes) ? podcast.itunes : {};
+  const podItunes = isNotEmpty(podcast.itunes) ? podcast.itunes : {};
 
   // Any subcategories are nested within podcast.itunes.categoriesWithSubs[i].subs[j].name
-  const itunesSubCategories = (itunesData.categoriesWithSubs || [])
-    .reduce((acc : string[], cat : { subs: { name: string } }) =>
+  const itunesSubCategories = (podItunes.categoriesWithSubs || [])
+    .reduce((acc : string[], cat : CategoriesWithSubs) =>
       acc.concat(Array.isArray(cat.subs) ? cat.subs.map(subCat => subCat.name) : []), []);
 
   const optionalPodcastTags : OptionalPodcastTags = {
     categories:     mergeArraysToLowerCase(podcast.categories,
-      (itunesData.categories || []).concat(itunesSubCategories)),
-    subtitle:       sanitizeString(podcast.subtitle || itunesData.subtitle || ''),
-    description:    sanitizeString(podcast.description || itunesData.description || ''),
-    summary:        sanitizeString(podcast.summary || itunesData.summary || ''),
+      (podItunes.categories || []).concat(itunesSubCategories)),
+    subtitle:       sanitizeString(podcast.subtitle || podItunes.subtitle || ''),
+    description:    sanitizeString(podcast.description || podItunes.description || ''),
+    summary:        sanitizeString(podcast.summary || podItunes.summary || ''),
     infoUrl:        sanitizeUri(podcast.link || podcast.docs || ''),
-    imageUrl:       sanitizeUri(podcast.image?.url || itunesData.image || ''),
+    imageUrl:       sanitizeUri(podcast.image?.url || podItunes.image || ''),
     imageTitle:     sanitizeString(podcast.image?.title || ''),
-    language:       sanitizeString(podcast.language || itunesData.language || ''),
-    explicit:       sanitizeString(podcast.explicit || itunesData.explicit || ''),
-    author:         sanitizeString(itunesData.author || podcast.author || podcast.creator || ''),
-    ownerName:      sanitizeString(podcast.owner?.name || itunesData.owner?.name || ''),
-    ownerEmail:     sanitizeString(podcast.owner?.email || itunesData.owner?.email || ''),
-    copyright:      sanitizeString(podcast.copyright || itunesData.copyright || ''),
-    managingEditor: sanitizeString(podcast.managingEditor || itunesData.managingEditor || ''),
+    language:       sanitizeString(podcast.language || podItunes.language || ''),
+    explicit:       sanitizeString(podcast.explicit || podItunes.explicit || ''),
+    author:         sanitizeString(podItunes.author || podcast.author || podcast.creator || ''),
+    ownerName:      sanitizeString(podcast.owner?.name || podItunes.owner?.name || ''),
+    ownerEmail:     sanitizeString(podcast.owner?.email || podItunes.owner?.email || ''),
+    copyright:      sanitizeString(podcast.copyright || podItunes.copyright || ''),
+    managingEditor: sanitizeString(podcast.managingEditor || podItunes.managingEditor || ''),
     lastBuildDate:  toDate(podcast.lastBuildDate),
   };
   // TODO: data optimization:
@@ -77,13 +85,12 @@ function formatPodcastFeed(feed: RssPodcastFeed, subscribeUrl: Podcast['subscrib
   //       if sanitizeString(episode.contentHtml, false) ~= episode.summary ~= episode.subtitle
 
   const episodesKeywords = new Set<string>();
-  const episodes = (items || [])
+  const episodes : Episode[] = (items || [])
     .map(episode => {
       const itunes = isNotEmpty(episode.itunes) ? episode.itunes : {};
 
       // TODO: find a way to parse episodes' guest(s) to episodeKeywords
       const episodeKeywords = mergeArraysToLowerCase(episode.keywords, itunes.keywords);
-      episodeKeywords.forEach(key => episodesKeywords.add(key));
 
       const optionalEpisodeTags : OptionalEpisodeTags = {
         subtitle:    sanitizeString(episode.subtitle || itunes.subtitle || ''),
@@ -113,23 +120,32 @@ function formatPodcastFeed(feed: RssPodcastFeed, subscribeUrl: Podcast['subscrib
         title:       sanitizeString(episode.title || itunes.title),
         publishedAt: toDate(episode.isoDate || episode.pubDate),
       };
-      return omitEmptyMetadata({ ...mandatoryEpisodeTags, ...selectedEpisodeTags }) as Episode;
+      const formattedEpisode =
+        omitEmptyMetadata({ ...mandatoryEpisodeTags, ...selectedEpisodeTags }) as Episode;
+
+      if (isValidString(formattedEpisode.title) && isValidDate(formattedEpisode.publishedAt)) {
+        episodeKeywords.forEach(key => episodesKeywords.add(key));
+        return formattedEpisode;
+      }
+      else return {} as Episode;
     })
-    .filter(episode => isValidString(episode.title) && isValidDate(episode.publishedAt));
+    .filter(episode => Object.keys(episode).length !== 0);
 
   // Add episode tags that must be GraphQL-searchable to top-level
   optionalPodcastTags.episodesKeywords = [...episodesKeywords];
 
   const mandatoryPodcastTags = {
-    subscribeUrl:   sanitizeString(podcast.feedUrl || subscribeUrl || ''),
+    subscribeUrl,
     title:          sanitizeString(podcast.title || ''),
     episodes,
-    keywords:       mergeArraysToLowerCase(podcast.keywords, itunesData.keywords),
+    keywords:       mergeArraysToLowerCase(podcast.keywords, podItunes.keywords),
   };
 
   // We should at least add one keyword referencing the Podcast Author(s)
-  mandatoryPodcastTags.keywords =
-    initializeKeywords(optionalPodcastTags, mandatoryPodcastTags.keywords);
+  mandatoryPodcastTags.keywords = initializeKeywords({
+    ...optionalPodcastTags,
+    title: mandatoryPodcastTags.title,
+  }, mandatoryPodcastTags.keywords);
 
   Object.entries(mandatoryPodcastTags).forEach(([tagName, value]) => {
     if (!valuePresent(value)) {
@@ -147,6 +163,7 @@ function formatPodcastFeed(feed: RssPodcastFeed, subscribeUrl: Podcast['subscrib
  */
 export async function getPodcastFeed(subscribeUrl: Podcast['subscribeUrl']) :
 Promise<Podcast | PodcastFeedError> {
+
   let errorMessage;
   let feed;
   try {

@@ -45,7 +45,6 @@ export const ALLOWED_ARWEAVE_TAGS = [
   ...OPTIONAL_ARWEAVE_PLURAL_TAGS,
 ] as const;
 
-
 export interface PodcastTags {
   subscribeUrl: string;
   title: string;

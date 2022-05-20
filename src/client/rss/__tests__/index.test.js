@@ -3,312 +3,302 @@ import { getPodcastFeed } from '..';
 
 jest.mock('../parser');
 
-const TEST_URL = 'https://thejimmydoreshow.libsyn.com/rss';
+const FEED_URL = 'https://test_url.crypto/rss';
 
-const BASE_MOCK_RESPONSE = {
-  title: 'Dowel and Clamp Super Sunday',
-  items: [],
+const ep1date = '2021-11-08T04:00:00.000Z';
+const ep2date = '2021-11-08T05:00:00.000Z';
+const ep3date = '2021-11-09T15:06:18.000Z';
+const ep4date = '2021-11-10T15:06:18.000Z';
+const podcastDate = '2022-01-01T04:00:00.000Z';
+
+const COMPLETE_EPISODE_1 = {
+  pubDate:    ep1date,
+  title:      '',
+  categories: ['Ep1cat1'],
+  keywords:   ['Ep1key1'],
+  enclosure: {
+    length:   '12345678',
+    type:     'audio/mpeg',
+    url:      'https://test_url.crypto/ep1.mp3',
+  },
+  docs:       'https://test_url.crypto/info',
+  image: {
+    title:    'My imageTitle',
+  },
+  'content:encoded': '<b>html</b> Ep1 description',
+  itunes: {
+    title:       'Ep1 title',
+    subtitle:    '<b>Ep1 subtitle</b>',
+    summary:     'Ep1 summary',
+    guid:        'e6aa1148-e2c6-4fae-969c-0a38a977ce91',
+    duration:    '01:01',
+    image:       'https://test_url.crypto/ep1image.jpeg',
+    explicit:    'no',
+    categories:  ['ep1cat1', 'Ep1cat2'],
+    keywords:    ['Ep1key2'],
+  },
+};
+const COMPLETE_EPISODE_2_NO_ITUNES = {
+  isoDate:    ep2date,
+  title:      'Ep2 title',
+  categories: ['Ep2cat'],
+  keywords:   ['Ep2key'],
+  length:     '12345678',
+  enclosure: {
+    type:     'audio/mpeg',
+    url:      'https://test_url.crypto/ep2.mp3',
+  },
+  subtitle:   '<b>Ep2 subtitle</b>',
+  content:    '<b>html</b> Ep2 description',
+  guid:       'f6aa1148-e2c6-4fae-969c-0a38a977ce92',
+  link:       'https://test_url.crypto/info',
+  duration:   '02:02',
+  explicit:   'no',
+  contentSnippet: 'Ep2 summary',
+  image: {
+    url:      'https://test_url.crypto/ep2image.jpeg',
+    title:    'Specific imageTitle',
+  },
+};
+const MINIMAL_EPISODE_3 = {
+  title:    'Ep3 title',
+  isoDate:  ep3date,
+};
+const INVALID_EPISODE_4 = {
+  title:    '',
+  isoDate:  ep4date,
+  keywords: ['skipped episodesKeyword'],
+};
+const INVALID_EPISODE_5 = {
+  title:    'Ep5 title',
+  isoDate:  'foo',
+  keywords: ['another skipped episodesKeyword'],
+};
+const INVALID_EPISODE_6 = {
+  title:    'Ep6 title',
+  keywords: ['yet another skipped episodesKeyword'],
+};
+const EPISODES = [
+  COMPLETE_EPISODE_1,
+  COMPLETE_EPISODE_2_NO_ITUNES,
+  MINIMAL_EPISODE_3,
+  INVALID_EPISODE_4,
+  INVALID_EPISODE_5,
+  INVALID_EPISODE_6,
+];
+
+const COMPLETE_PODCAST = {
+  feedUrl:    FEED_URL,
+  title:      'My podcast',
+  categories: ['cat1'],
+  keywords:   ['key1'],
+  docs:       'https://test_url.crypto/info',
+  link:       '',
+  image: {
+    title:    'My imageTitle',
+  },
+  unknownField: 'skipped field',
+  lastBuildDate: podcastDate,
+  itunes: {
+    keywords:   ['key2'],
+    categories: ['cat2'],
+    categoriesWithSubs: [
+      {
+        name: 'cat1',
+        subs: [
+          { name: 'subcat1' },
+          { name: 'subcat2' },
+        ],
+      },
+      {
+        name: 'cat2',
+        subs: null,
+      },
+    ],
+    subtitle:    '<b>Podcast subtitle</b>',
+    description: 'Podcast description',
+    summary:     'Podcast summary',
+    image:       'https://test_url.crypto/podcast.jpeg',
+    language:    'en',
+    explicit:    'no',
+    author:      'Podcast author',
+    owner: {
+      email:     'mail@test_url.crypto',
+      name:      'Podcast owner',
+    },
+    copyright:   'Podcast copyright',
+    managingEditor: 'Podcast editor',
+  },
+};
+const COMPLETE_PODCAST_NO_ITUNES = {
+  itunes:      {},
+  feedUrl:     FEED_URL,
+  title:       'My podcast',
+  categories:  ['cat1', 'cat2'],
+  keywords:    ['key1', 'key2'],
+  docs:        '',
+  link:        'https://test_url.crypto/info',
+  image: {
+    title:     'My imageTitle',
+    url:       'https://test_url.crypto/podcast.jpeg',
+  },
+  subtitle:    '<b>Podcast subtitle</b>',
+  description: 'Podcast description',
+  summary:     'Podcast summary',
+  language:    'en',
+  explicit:    'no',
+  author:      '',
+  creator:     'Podcast author',
+  owner: {
+    email:     'mail@test_url.crypto',
+    name:      'Podcast owner',
+  },
+  copyright:   'Podcast copyright',
+  lastBuildDate: podcastDate,
+  managingEditor: 'Podcast editor',
+};
+const MINIMAL_PODCAST = {
+  feedUrl: FEED_URL,
+  title:   'My podcast',
 };
 
-// TODO: rewrite tests
-xdescribe('getPodcastFeed', () => {
-  function createRequest(fn) {
-    return () => expect(getPodcastFeed(TEST_URL).then(fn));
-  }
-
-  describe('description', () => {
-    const request = createRequest(({ description }) => description);
-
-    test('Null if provided with no value', async () => {
-      parser.parseURL.mockResolvedValue(BASE_MOCK_RESPONSE);
-      await request().resolves.toBeNull();
-    });
-
-    test('Uses itunes summary if description isn\'t available', async () => {
-      parser.parseURL.mockResolvedValue({
-        ...BASE_MOCK_RESPONSE,
-        itunes: { summary: 'Dowel me timbers' },
-      });
-      await request().resolves.toBe('Dowel me timbers');
-    });
-
-    test('Favours description over itunes summary', async () => {
-      parser.parseURL.mockResolvedValue({
-        ...BASE_MOCK_RESPONSE,
-        description: 'A clamping good time',
-        itunes: { summary: 'Dowel me timbers' },
-      });
-      await request().resolves.toBe('A clamping good time');
-    });
-  });
-
-  describe('imageUrl', () => {
-    const request = createRequest(({ imageUrl }) => imageUrl);
-
-    test('Null if provided with no value', async () => {
-      parser.parseURL.mockResolvedValue(BASE_MOCK_RESPONSE);
-      await request().resolves.toBeNull();
-    });
-
-    test('Uses itunes image if image url isn\'t available', async () => {
-      parser.parseURL.mockResolvedValue({
-        ...BASE_MOCK_RESPONSE,
-        itunes: { image: 'https://server.dummy/steve-buscemi' },
-      });
-      await request().resolves.toBe('https://server.dummy/steve-buscemi');
-    });
-
-    test('Favours description over itunes summary', async () => {
-      parser.parseURL.mockResolvedValue({
-        ...BASE_MOCK_RESPONSE,
-        itunes: {
-          ...BASE_MOCK_RESPONSE.itunes,
-          image: 'https://server.dummy/steve-buscemi',
+describe('getPodcastFeed', () => {
+  describe('With a complete podcast feed with 3 complete episodes and 3 invalid episodes', () => {
+    const expected = {
+      subscribeUrl: 'https://test_url.crypto/rss',
+      title: 'My podcast',
+      episodes: [
+        {
+          title: 'Ep1 title',
+          publishedAt: new Date(ep1date),
+          subtitle: 'Ep1 subtitle',
+          contentHtml: '<b>html</b> Ep1 description',
+          summary: 'Ep1 summary',
+          guid: 'e6aa1148-e2c6-4fae-969c-0a38a977ce91',
+          mediaUrl: 'https://test_url.crypto/ep1.mp3',
+          mediaType: 'audio/mpeg',
+          mediaLength: '12345678',
+          duration: '01:01',
+          imageUrl: 'https://test_url.crypto/ep1image.jpeg',
+          categories: ['ep1cat1', 'ep1cat2'],
+          keywords: ['ep1key1', 'ep1key2'],
         },
-        image: {
-          ...BASE_MOCK_RESPONSE.image,
-          url: 'https://server.dummy/christopher-walken',
+        {
+          title: 'Ep2 title',
+          publishedAt: new Date(ep2date),
+          subtitle: 'Ep2 subtitle',
+          contentHtml: '<b>html</b> Ep2 description',
+          summary: 'Ep2 summary',
+          guid: 'f6aa1148-e2c6-4fae-969c-0a38a977ce92',
+          mediaUrl: 'https://test_url.crypto/ep2.mp3',
+          mediaType: 'audio/mpeg',
+          mediaLength: '12345678',
+          duration: '02:02',
+          imageUrl: 'https://test_url.crypto/ep2image.jpeg',
+          imageTitle: 'Specific imageTitle',
+          categories: ['ep2cat'],
+          keywords: ['ep2key'],
         },
-      });
-      await request().resolves.toBe('https://server.dummy/christopher-walken');
-    });
-  });
-
-  test('imageUrl', async () => {
-    const request = createRequest(({ imageUrl }) => imageUrl);
-
-    parser.parseURL.mockResolvedValue(BASE_MOCK_RESPONSE);
-    await request().resolves.toBeNull();
-
-    parser.parseURL.mockResolvedValue({
-      ...BASE_MOCK_RESPONSE,
-      itunes: { image: 'https://server.dummy/steve-buscemi' },
-    });
-    await request().resolves.toBe('https://server.dummy/steve-buscemi');
-
-    parser.parseURL.mockResolvedValue({
-      ...BASE_MOCK_RESPONSE,
-      itunes: {
-        ...BASE_MOCK_RESPONSE.itunes,
-        image: 'https://server.dummy/steve-buscemi',
-      },
-      image: {
-        ...BASE_MOCK_RESPONSE.image,
-        url: 'https://server.dummy/christopher-walken',
-      },
-    });
-    await request().resolves.toBe('https://server.dummy/christopher-walken');
-  });
-
-  describe('imageTitle', () => {
-    const request = createRequest(({ imageTitle }) => imageTitle);
-
-    test('Null if not defined', async () => {
-      parser.parseURL.mockResolvedValue(BASE_MOCK_RESPONSE);
-      await request().resolves.toBeNull();
-    });
-
-    test('Uses image title for value', async () => {
-      parser.parseURL.mockResolvedValue({
-        ...BASE_MOCK_RESPONSE,
-        image: {
-          ...BASE_MOCK_RESPONSE.image,
-          title: 'Steve Buscemi',
+        {
+          title: 'Ep3 title',
+          publishedAt: new Date(ep3date),
         },
-      });
-      await request().resolves.toBe('Steve Buscemi');
-    });
-  });
-
-  describe('language', () => {
-    const request = createRequest(({ language }) => language);
-
-    test('Null if not defined', async () => {
-      parser.parseURL.mockResolvedValue(BASE_MOCK_RESPONSE);
-      await request().resolves.toBeNull();
-    });
-
-    test('Uses language for value', async () => {
-      parser.parseURL.mockResolvedValue({
-        ...BASE_MOCK_RESPONSE,
-        language: 'Newfoundlandish',
-      });
-      await request().resolves.toBe('Newfoundlandish');
-    });
-  });
-
-  describe('categories', () => {
-    const request = createRequest(({ categories }) => categories);
-
-    test('Empty array if not defined', async () => {
-      parser.parseURL.mockResolvedValue(BASE_MOCK_RESPONSE);
-      await request().resolves.toEqual([]);
-    });
-
-    test('Merges values from categories and itunes categories', async () => {
-      parser.parseURL.mockResolvedValue({
-        ...BASE_MOCK_RESPONSE,
-        categories: ['comedy', 'news'],
-        itunes: {
-          ...BASE_MOCK_RESPONSE.itunes,
-          categories: ['dramedy', 'apples'],
-        },
-      });
-      await request().resolves.toEqual(['comedy', 'news', 'dramedy', 'apples']);
-    });
-  });
-
-  describe('keywords', () => {
-    const request = createRequest(({ keywords }) => keywords);
-
-    test('Empty array if not defined', async () => {
-      parser.parseURL.mockResolvedValue(BASE_MOCK_RESPONSE);
-      await request().resolves.toEqual([]);
-    });
-
-    test('Merges values from categories and itunes categories', async () => {
-      parser.parseURL.mockResolvedValue({
-        ...BASE_MOCK_RESPONSE,
-        keywords: ['comedy', 'news'],
-        itunes: {
-          ...BASE_MOCK_RESPONSE.itunes,
-          keywords: ['dramedy', 'apples'],
-        },
-      });
-      await request().resolves.toEqual(['comedy', 'news', 'dramedy', 'apples']);
-    });
-  });
-
-  describe('episodes', () => {
-    const BASE_EPISODE_RESPONSE = {
-      title: 'Mr. Bean vs. Mike Tyson',
+      ],
+      keywords: ['podcast author', 'key1', 'key2'],
+      categories: ['cat1', 'cat2', 'subcat1', 'subcat2'],
+      subtitle: 'Podcast subtitle',
+      description: 'Podcast description',
+      summary: 'Podcast summary',
+      infoUrl: 'https://test_url.crypto/info',
+      imageUrl: 'https://test_url.crypto/podcast.jpeg',
+      imageTitle: 'My imageTitle',
+      language: 'en',
+      explicit: 'no',
+      author: 'Podcast author',
+      ownerName: 'Podcast owner',
+      ownerEmail: 'mail@test_url.crypto',
+      copyright: 'Podcast copyright',
+      managingEditor: 'Podcast editor',
+      lastBuildDate: new Date(podcastDate),
+      episodesKeywords: ['ep1key1', 'ep1key2', 'ep2key'],
     };
 
-    test('If not provided is an empty array', async () => {
-      parser.parseURL.mockResolvedValue(BASE_MOCK_RESPONSE);
-      await expect(getPodcastFeed(TEST_URL).then(({ episodes }) => episodes))
-        .resolves.toEqual([]);
+    it('returns a formatted Podcast object with 3 episodes', async () => {
+      const mockFeed = { ...COMPLETE_PODCAST, items: EPISODES };
+      parser.parseURL.mockResolvedValue(mockFeed);
+
+      const result = await getPodcastFeed(FEED_URL);
+      expect(result).toEqual(expected);
     });
 
-    test('title', async () => {
-      parser.parseURL.mockResolvedValue({
-        ...BASE_MOCK_RESPONSE,
-        items: [BASE_EPISODE_RESPONSE],
+    describe('When using alternate fields and feed.itunes is empty', () => {
+      it('returns the same formatted Podcast object except for itunes subcategories', async () => {
+        const mockFeed = { ...COMPLETE_PODCAST_NO_ITUNES, items: EPISODES };
+        parser.parseURL.mockResolvedValue(mockFeed);
+
+        const result = await getPodcastFeed(FEED_URL);
+        expect(result).toEqual({ ...expected, categories: ['cat1', 'cat2'] });
       });
-      await expect(getPodcastFeed(TEST_URL).then(({ episodes }) => episodes[0].title))
-        .resolves.toBe('Mr. Bean vs. Mike Tyson');
     });
+  });
 
-    test('url', async () => {
-      parser.parseURL.mockResolvedValue({
-        ...BASE_MOCK_RESPONSE,
-        items: [BASE_EPISODE_RESPONSE],
-      });
-      await expect(getPodcastFeed(TEST_URL).then(({ episodes }) => episodes[0].url))
-        .resolves.toBeNull();
+  describe('With a minimal podcast feed with 1 minimal episode', () => {
+    it('returns a formatted Podcast object', async () => {
+      const mockFeed = { ...MINIMAL_PODCAST, items: [MINIMAL_EPISODE_3] };
+      parser.parseURL.mockResolvedValue(mockFeed);
 
-      parser.parseURL.mockResolvedValue({
-        ...BASE_MOCK_RESPONSE,
-        items: [{
-          ...BASE_EPISODE_RESPONSE,
-          link: 'https://myurl.crypto/',
-        }],
-      });
-      await expect(getPodcastFeed(TEST_URL).then(({ episodes }) => episodes[0].url))
-        .resolves.toBe('https://myurl.crypto/');
-    });
-
-    test('publishedAt', async () => {
-      parser.parseURL.mockResolvedValue({
-        ...BASE_MOCK_RESPONSE,
-        items: [BASE_EPISODE_RESPONSE],
-      });
-      await expect(getPodcastFeed(TEST_URL).then(({ episodes }) => episodes[0].publishedAt))
-        .resolves.toBeNull();
-
-      parser.parseURL.mockResolvedValue({
-        ...BASE_MOCK_RESPONSE,
-        items: [{
-          ...BASE_EPISODE_RESPONSE,
-          pubDate: new Date('1991-09-05'),
-        }],
-      });
-      await expect(getPodcastFeed(TEST_URL).then(({ episodes }) => episodes[0].publishedAt))
-        .resolves.toEqual(new Date('1991-09-05'));
-
-      parser.parseURL.mockResolvedValue({
-        ...BASE_MOCK_RESPONSE,
-        items: [{
-          ...BASE_EPISODE_RESPONSE,
-          isoDate: new Date('1995-02-12'),
-        }],
-      });
-      await expect(getPodcastFeed(TEST_URL).then(({ episodes }) => episodes[0].publishedAt))
-        .resolves.toEqual(new Date('1995-02-12'));
-
-      parser.parseURL.mockResolvedValue({
-        ...BASE_MOCK_RESPONSE,
-        items: [{
-          ...BASE_EPISODE_RESPONSE,
-          pubDate: new Date('1991-09-05'),
-          isoDate: new Date('1995-02-12'),
-        }],
-      });
-      await expect(getPodcastFeed(TEST_URL).then(({ episodes }) => episodes[0].publishedAt))
-        .resolves.toEqual(new Date('1995-02-12'));
-    });
-
-    test('imageUrl', async () => {
-      parser.parseURL.mockResolvedValue({
-        ...BASE_MOCK_RESPONSE,
-        items: [BASE_EPISODE_RESPONSE],
-      });
-      await expect(getPodcastFeed(TEST_URL).then(({ episodes }) => episodes[0].imageUrl))
-        .resolves.toBeNull();
-    });
-
-    test('categories', async () => {
-      parser.parseURL.mockResolvedValue({
-        ...BASE_MOCK_RESPONSE,
-        items: [BASE_EPISODE_RESPONSE],
-      });
-      await expect(getPodcastFeed(TEST_URL).then(({ episodes }) => episodes[0].categories))
-        .resolves.toEqual([]);
-
-      parser.parseURL.mockResolvedValue({
-        ...BASE_MOCK_RESPONSE,
-        items: [{
-          ...BASE_EPISODE_RESPONSE,
-          categories: ['a', 'b', 'd'],
-          itunes: {
-            categories: ['b', 'c', 'a'],
+      const result = await getPodcastFeed(FEED_URL);
+      expect(result).toEqual({
+        subscribeUrl: 'https://test_url.crypto/rss',
+        title: 'My podcast',
+        episodes: [
+          {
+            title: 'Ep3 title',
+            publishedAt: new Date(ep3date),
           },
-        }],
+        ],
+        keywords: ['my podcast'],
       });
-      await expect(getPodcastFeed(TEST_URL).then(({ episodes }) => episodes[0].categories))
-        .resolves.toEqual(['a', 'b', 'd', 'c']);
+    });
+  });
+
+  describe('Error handling', () => {
+    describe('With a podcast feed without title', () => {
+      it('returns an error message object', async () => {
+        const mockFeed = { title: '', items: EPISODES };
+        parser.parseURL.mockResolvedValue(mockFeed);
+
+        await expect(getPodcastFeed(FEED_URL)).resolves
+          .toMatchObject({ errorMessage: expect.stringMatching(/'title' is empty/) });
+      });
     });
 
-    test('keywords', async () => {
-      parser.parseURL.mockResolvedValue({
-        ...BASE_MOCK_RESPONSE,
-        items: [BASE_EPISODE_RESPONSE],
-      });
-      await expect(getPodcastFeed(TEST_URL).then(({ episodes }) => episodes[0].keywords))
-        .resolves.toEqual([]);
+    describe('With a podcast feed without valid episodes', () => {
+      it('returns an error message object (no episodes)', async () => {
+        const mockFeed = { title: 'Title' };
+        parser.parseURL.mockResolvedValue(mockFeed);
 
-      parser.parseURL.mockResolvedValue({
-        ...BASE_MOCK_RESPONSE,
-        items: [{
-          ...BASE_EPISODE_RESPONSE,
-          keywords: ['foo', 'bar'],
-          itunes: {
-            keywords: ['ray', 'dar'],
-          },
-        }],
+        await expect(getPodcastFeed(FEED_URL)).resolves
+          .toMatchObject({ errorMessage: expect.stringMatching(/'episodes' is empty/) });
       });
-      await expect(getPodcastFeed(TEST_URL).then(({ episodes }) => episodes[0].keywords))
-        .resolves.toEqual(['foo', 'bar', 'ray', 'dar']);
+
+      it('returns an error message object (invalid episodes)', async () => {
+        const mockFeed = { title: 'Title', items: [INVALID_EPISODE_4] };
+        parser.parseURL.mockResolvedValue(mockFeed);
+
+        await expect(getPodcastFeed(FEED_URL)).resolves
+          .toMatchObject({ errorMessage: expect.stringMatching(/'episodes' is empty/) });
+      });
+    });
+
+    describe('When the RSS Parser throws an error', () => {
+      it('returns an error message object', async () => {
+        const mockError = new Error('Parser Error');
+        parser.parseURL.mockRejectedValue(mockError);
+
+        await expect(getPodcastFeed(FEED_URL)).resolves
+          .toMatchObject({ errorMessage: expect.stringMatching(/Parser Error/) });
+      });
     });
   });
 });
