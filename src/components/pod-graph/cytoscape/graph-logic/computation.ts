@@ -19,14 +19,12 @@ export interface DisjointGraph {
 }
 
 
-export const countKeywordsCounts = (keywords: string[], currentKeywords: SharedKeywords[] = []) => {
+export const countSharedKeywords = (keywords: string[], currentKeywords: SharedKeywords[] = []) => {
   let result = [...currentKeywords];
   keywords.forEach((keyword) => {
     const item = result.find((el) => el.name === keyword);
     if (!item) result = [...result, { name: keyword, count: 1 }];
-    else {
-      item.count += 1;
-    }
+    else item.count += 1;
   });
   return result;
 };
@@ -43,7 +41,7 @@ export const findAllDisjointGraphs = (nodes: DisjointGraphNode[],
   if (!firstUnvisitedNode) return disjointGraphs;
 
   firstUnvisitedNode.visited = true;
-  let sharedKeywordsAndCategories = countKeywordsCounts(firstUnvisitedNode.keywordsAndCategories);
+  let sharedKeywordsAndCategories = countSharedKeywords(firstUnvisitedNode.keywordsAndCategories);
 
   const graph = [firstUnvisitedNode];
   let relatedPodcast;
@@ -54,8 +52,8 @@ export const findAllDisjointGraphs = (nodes: DisjointGraphNode[],
     if (!relatedPodcast) break;
 
     relatedPodcast.visited = true;
-    sharedKeywordsAndCategories = countKeywordsCounts(relatedPodcast.keywordsAndCategories,
-      sharedKeywordsAndCategories);
+    sharedKeywordsAndCategories = 
+      countSharedKeywords(relatedPodcast.keywordsAndCategories, sharedKeywordsAndCategories);
     graph.push(relatedPodcast);
   } while (relatedPodcast);
 

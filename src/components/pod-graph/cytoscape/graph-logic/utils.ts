@@ -18,7 +18,7 @@ export const haveSharedElements = <T extends Primitive>(arr1: T[] = [], arr2: T[
   arr1.some(item => arr2.includes(item));
 
 export const haveSharedKeywords = (currentKeywords: SharedKeywords[], keywords: string[]) => {
-  return keywords.some((el) => currentKeywords.some((item) => item.name === el));
+  return keywords.some((keyword) => currentKeywords.some((item) => item.name === keyword));
 };
 
 /**
