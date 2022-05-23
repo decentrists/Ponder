@@ -4,9 +4,9 @@ import {
 import { Podcast } from '../../client/interfaces';
 
 export default function getElementsFromSubscriptions(subscriptions: Podcast[]) {
-  const disjointGraphs = groupSubscriptionsBySharedKeywords(subscriptions);
-  const nodes = generateNodes(disjointGraphs);
-  const edges = generateEdges(disjointGraphs);
+  const { disjointGraphs, podcasts } = groupSubscriptionsBySharedKeywords(subscriptions);
+  const nodes = generateNodes(podcasts);
+  const edges = generateEdges(podcasts, disjointGraphs);
 
   return [...nodes, ...edges];
 }

@@ -87,9 +87,9 @@ export const groupSubscriptionsBySharedKeywords = (subscriptions: Podcast[]) => 
     ]),
     visited: false,
   }));
-  const result = findAllDisjointGraphs(nodes);
-  console.log('result', result);
-  return finalizeDisjointGraphsObject(subscriptions, result);
+  const disjointGraphs = findAllDisjointGraphs(nodes);
+  const podcasts = finalizeDisjointGraphsObject(subscriptions, disjointGraphs);
+  return { podcasts, disjointGraphs };
 };
 
 export const generateNodes = (disjointGraphs: Podcast[][]) => {
@@ -126,8 +126,38 @@ export const generateNodes = (disjointGraphs: Podcast[][]) => {
   return nodes;
 };
 
-export const generateEdges = (disjointGraphs: Podcast[][]) => {
-  const eachDisjointGraphEdges = disjointGraphs.map(graph => graph
+const getKeywordScore = (keywords: SharedKeywords[],
+  keyword: string) => keywords.find((element) => element.name === keyword)!.count;
+
+/**
+ * @see https://phab.decentapps.eu/T243 
+ */
+const computeEdgeWeight = (disjointGraphs: DisjointGraph[],
+  sourceId: string, targetId: string) => {
+  let target! : DisjointGraphNode, source! : DisjointGraphNode, graph!: DisjointGraph;
+  disjointGraphs.forEach((item) => {
+    const sourceIndex = item.nodes.findIndex((node) => node.subscribeUrl === sourceId);
+    const targetIndex = item.nodes.findIndex((node) => node.subscribeUrl === targetId);
+    if (sourceIndex !== -1 && targetIndex !== -1) {
+      source = item.nodes[sourceIndex];
+      target = item.nodes[targetIndex];
+      graph  = item;
+    }
+  });
+  const sourceScore = source.keywordsAndCategories.reduce(
+    (acc, keyword) =>  acc + getKeywordScore(graph.sharedKeywordsAndCategories, keyword), 0);
+
+  const targetScore = target.keywordsAndCategories.reduce(
+    (acc, keyword) =>  acc + getKeywordScore(graph.sharedKeywordsAndCategories, keyword), 0);
+
+  const totalScore = graph.sharedKeywordsAndCategories.reduce(
+    (acc, keyword) =>  acc + getKeywordScore(graph.sharedKeywordsAndCategories, keyword.name), 0);
+
+  return (sourceScore + targetScore) / totalScore;
+};
+
+export const generateEdges = (podcasts: Podcast[][], disjointGraphs: DisjointGraph[]) => {
+  const eachDisjointGraphEdges = podcasts.map(graph => graph
     .reduce((acc: EdgeDefinition[], podcast, _, arrayReference) => {
       // A match is any other podcast that has one same category or keyword
       let matches = arrayReference.filter(({ categories, keywords }) => (
@@ -144,6 +174,7 @@ export const generateEdges = (disjointGraphs: Podcast[][]) => {
           source: podcast.subscribeUrl,
           target: match.subscribeUrl,
           label: relations.join('\n'),
+          weight: computeEdgeWeight(disjointGraphs, podcast.subscribeUrl, match.subscribeUrl),
         };
         return { data: edge };
       });
