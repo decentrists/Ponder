@@ -83,9 +83,8 @@ export async function newMetadataTransaction(wallet: JWKInterface,
     ['description', newMetadata.description || cachedMetadata.description],
   ];
 
-  const getMandatoryTagsValues = (key: MandatoryTags) => {
-    return mandatoryPodcastTags.find((element) => element[0] === key)![1];
-  };
+  const getMandatoryTagsValues = (key: MandatoryTags) => 
+    mandatoryPodcastTags.find((element) => element[0] === key)![1];
 
   mandatoryPodcastTags.forEach(([name, value]) => {
     if (!value) {

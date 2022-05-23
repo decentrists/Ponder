@@ -18,8 +18,7 @@ interface Props {
 }
 const EpisodeDetails : React.FC<Props> = ({
   title, publishedAt, mediaUrl, imageUrl,
-}) => {
-  return (
+}) => (
     <EpisodeLink href={mediaUrl}>
       <DetailsCard>
         <CardBody>
@@ -42,7 +41,6 @@ const EpisodeDetails : React.FC<Props> = ({
         </CardBody>
       </DetailsCard>
     </EpisodeLink>
-  );
-};
+);
 
 export default EpisodeDetails;

@@ -36,8 +36,7 @@ const PodcastDetails : React.FC<Props> = ({
   imageTitle,
   isOpen = false,
   episodes = [],
-}) => {
-  return (
+}) => (
     <Modal show={isOpen} onHide={close} animation centered scrollable backdrop="static">
       <Modal.Header>{title}</Modal.Header>
       <Modal.Body>
@@ -61,7 +60,6 @@ const PodcastDetails : React.FC<Props> = ({
         <Button type="button" variant="warning" onClick={close}>Close</Button>
       </Modal.Footer>
     </Modal>
-  );
-};
+);
 
 export default PodcastDetails;

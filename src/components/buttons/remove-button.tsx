@@ -29,15 +29,13 @@ interface Props {
 const RemoveBtn : React.FC<Props> = ({
   onClick,
   ...props
-}) => {
-  return (
+}) => (
     <DeleteBtn
       onClick={onClick}
       {...props}
     >
       <MinusIcon />
     </DeleteBtn>
-  );
-};
+);
 
 export default RemoveBtn;
