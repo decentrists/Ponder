@@ -132,18 +132,20 @@ const getKeywordScore = (keywords: SharedKeywords[],
 /**
  * @see https://phab.decentapps.eu/T243 
  */
-const computeEdgeWeight = (disjointGraphs: DisjointGraph[],
+export const computeEdgeWeight = (disjointGraphs: DisjointGraph[],
   sourceId: string, targetId: string) => {
   let target! : DisjointGraphNode, source! : DisjointGraphNode, graph!: DisjointGraph;
-  disjointGraphs.forEach((item) => {
+  for (const item of disjointGraphs) {
     const sourceIndex = item.nodes.findIndex((node) => node.subscribeUrl === sourceId);
     const targetIndex = item.nodes.findIndex((node) => node.subscribeUrl === targetId);
     if (sourceIndex !== -1 && targetIndex !== -1) {
       source = item.nodes[sourceIndex];
       target = item.nodes[targetIndex];
       graph  = item;
+      break;
     }
-  });
+  }
+  if (!source || !target || !graph) throw new Error('Incorrect source or target id');
   const sourceScore = source.keywordsAndCategories.reduce(
     (acc, keyword) =>  acc + getKeywordScore(graph.sharedKeywordsAndCategories, keyword), 0);
 
