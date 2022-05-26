@@ -19,8 +19,6 @@ import {
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { QueryTransactionsArgs, TagFilter } from 'arlocal/bin/graphql/types.d';
 
-const MAX_BATCH_NUMBER = 100;
-const MAX_GRAPHQL_NODES = 100;
 
 interface TransactionNode { id: string, tags: { name: string, value: string }[] }
 
@@ -34,6 +32,9 @@ type TagsToFilter = {
   [key: string]: string | string[];
 };
 
+const MAX_BATCH_NUMBER = 100;
+const MAX_GRAPHQL_NODES = 100;
+
 /** Helper function mapping each {tag: value, ...} to [{name: tag, values: value}, ...] */
 const toTagFilter = (tagsToFilter: TagsToFilter) : TagFilter[] => {
   return Object.entries(tagsToFilter).map(([tag, value]) => ({
@@ -42,8 +43,8 @@ const toTagFilter = (tagsToFilter: TagsToFilter) : TagFilter[] => {
   }));
 };
 
-export async function getPodcastFeed(subscribeUrl: Podcast['subscribeUrl']) :
-Promise<Podcast | PodcastFeedError> {
+export async function getPodcastFeed(
+  subscribeUrl: Podcast['subscribeUrl']) : Promise<Podcast | PodcastFeedError> {
 
   const errorMessages : string[] = [];
   const metadataBatches = [];
@@ -98,8 +99,8 @@ type GetPodcastFeedForGqlQueryReturnType = {
   tags: PodcastTags | {};
 };
 
-async function getPodcastFeedForGqlQuery(gqlQuery: GraphQLQuery) :
-Promise<GetPodcastFeedForGqlQueryReturnType> {
+async function getPodcastFeedForGqlQuery(
+  gqlQuery: GraphQLQuery) : Promise<GetPodcastFeedForGqlQueryReturnType> {
 
   let edges;
   let errorMessage;

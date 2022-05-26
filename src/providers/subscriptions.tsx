@@ -26,22 +26,22 @@ export const SubscriptionsContext = createContext<SubscriptionContextType>({
   subscriptions: [],
   isRefreshing: false,
   lastRefreshTime: 0,
+  subscribe: async () => false,
+  unsubscribe: async () => {},
   refresh: async () => [null, null],
   metadataToSync: [],
   setMetadataToSync: () => {},
-  subscribe: async () => false,
-  unsubscribe: async () => {},
 });
 
 function readCachedPodcasts() {
-  // TODO: catch errors; see ArweaveProvider's call to readCachedArSyncTxs()
+  // TODO: use e.g. WebSQL instead of localStorage
+  // https://stackoverflow.com/questions/6116053/javascript-library-to-bridge-indexeddb-and-websql
   const cachedSubscriptions = localStorage.getItem('subscriptions');
   const podcasts = cachedSubscriptions ? JSON.parse(cachedSubscriptions) : [];
   return podcastsFromDTO(podcasts);
 }
 
 function readMetadataToSync() {
-  // TODO: catch errors
   const cachedMetadata = localStorage.getItem('metadataToSync');
   const podcasts = cachedMetadata ? JSON.parse(cachedMetadata) : [];
   return podcastsFromDTO(podcasts);

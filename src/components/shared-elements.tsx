@@ -4,7 +4,7 @@ import { Image } from 'react-bootstrap';
 export const Wrapper = styled.div`
   margin-top:  32px;
   min-width: 100%;
-  display: block;
+  display: flex;
   padding: 0 16px;
   @media only screen and (max-width: 960px) {
     flex-direction: column;
@@ -41,16 +41,6 @@ export const ListItem = styled.div`
   display: flex;
   &:hover {
     background-color: #030303;
-  }
-`;
-
-export const EventWrapper = styled.div`
-  margin-top:  32px;
-  min-width: 100%;
-  display: flex;
-  padding: 0 16px;
-  @media only screen and (max-width: 960px) {
-    flex-direction: column;
   }
 `;
 

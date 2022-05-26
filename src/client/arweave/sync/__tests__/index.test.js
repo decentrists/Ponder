@@ -66,9 +66,6 @@ const mockTransaction2 = { addTag, id: 'transaction 2' };
 const mockTransaction3 = { addTag, id: 'transaction 3' };
 const mockError = new Error('mock error');
 const mockError2 = new Error('mock error 2');
-const mockMetadata1 = { subscribeUrl: 'https://example.com/podcast1' };
-const mockMetadata2 = { subscribeUrl: 'https://example.com/podcast2' };
-const mockMetadata3 = { subscribeUrl: 'https://example.com/podcast3' };
 const NON_EMPTY_STRING = expect.stringMatching(/.+/);
 /**
  * NOTE: newMetadataTransaction() is mocked here, as it's tested in create-transaction.test.js.
@@ -121,6 +118,7 @@ describe('initArSyncTxs', () => {
             title: 'podcast2 cachedTitle',
             resultObj: mockTransaction,
             metadata: { ...metadataToSync[1], metadataBatch: 0 },
+            numEpisodes: 3,
             status: ArSyncTxStatus.INITIALIZED,
           },
         ]);
@@ -153,6 +151,7 @@ describe('initArSyncTxs', () => {
               title: 'cachedTitle',
               resultObj: mockTransaction,
               metadata: metadataToSync[0],
+              numEpisodes: 0,
               status: ArSyncTxStatus.INITIALIZED,
             },
             {
@@ -161,6 +160,7 @@ describe('initArSyncTxs', () => {
               title: 'podcast2 cachedTitle',
               resultObj: mockTransaction2,
               metadata: { ...metadataToSync[1], metadataBatch: 0 },
+              numEpisodes: 3,
               status: ArSyncTxStatus.INITIALIZED,
             },
           ]);
@@ -179,6 +179,7 @@ describe('initArSyncTxs', () => {
               title: 'cachedTitle',
               resultObj: mockError,
               metadata: metadataToSync[0],
+              numEpisodes: 0,
               status: ArSyncTxStatus.ERRORED,
             },
             {
@@ -187,6 +188,7 @@ describe('initArSyncTxs', () => {
               title: 'podcast2 cachedTitle',
               resultObj: mockTransaction,
               metadata: { ...metadataToSync[1], metadataBatch: 0 },
+              numEpisodes: 3,
               status: ArSyncTxStatus.INITIALIZED,
             },
           ]);
@@ -205,6 +207,7 @@ describe('initArSyncTxs', () => {
               title: 'cachedTitle',
               resultObj: mockError,
               metadata: metadataToSync[0],
+              numEpisodes: 0,
               status: ArSyncTxStatus.ERRORED,
             },
             {
@@ -213,6 +216,7 @@ describe('initArSyncTxs', () => {
               title: 'podcast2 cachedTitle',
               resultObj: mockError2,
               metadata: { ...metadataToSync[1], metadataBatch: 0 },
+              numEpisodes: 3,
               status: ArSyncTxStatus.ERRORED,
             },
           ]);
@@ -223,6 +227,10 @@ describe('initArSyncTxs', () => {
 });
 
 describe('startSync', () => {
+  const mockMetadata1 = { subscribeUrl: 'https://example.com/podcast1' };
+  const mockMetadata2 = { subscribeUrl: 'https://example.com/podcast2' };
+  const mockMetadata3 = { subscribeUrl: 'https://example.com/podcast3' };
+
   describe('When pendingTxs is empty', () => {
     const pendingTxs = [];
 
@@ -240,6 +248,7 @@ describe('startSync', () => {
         title: 'cachedTitle',
         resultObj: mockTransaction,
         metadata: mockMetadata1,
+        numEpisodes: 0,
         status: ArSyncTxStatus.INITIALIZED,
       },
       {
@@ -248,6 +257,7 @@ describe('startSync', () => {
         title: 'podcast2 cachedTitle',
         resultObj: mockTransaction,
         metadata: mockMetadata2,
+        numEpisodes: 0,
         status: ArSyncTxStatus.INITIALIZED,
       },
     ];
@@ -263,6 +273,7 @@ describe('startSync', () => {
           title: 'cachedTitle',
           resultObj: mockError,
           metadata: mockMetadata1,
+          numEpisodes: 0,
           status: ArSyncTxStatus.ERRORED,
         },
         {
@@ -271,6 +282,7 @@ describe('startSync', () => {
           title: 'podcast2 cachedTitle',
           resultObj: mockTransaction,
           metadata: mockMetadata2,
+          numEpisodes: 0,
           status: ArSyncTxStatus.POSTED,
         },
       ]);
@@ -285,6 +297,7 @@ describe('startSync', () => {
         title: 'cachedTitle',
         resultObj: mockTransaction,
         metadata: mockMetadata1,
+        numEpisodes: 0,
         status: ArSyncTxStatus.ERRORED,
       },
       {
@@ -293,6 +306,7 @@ describe('startSync', () => {
         title: 'podcast2 cachedTitle',
         resultObj: mockTransaction2,
         metadata: mockMetadata2,
+        numEpisodes: 0,
         status: ArSyncTxStatus.INITIALIZED,
       },
       {
@@ -301,6 +315,7 @@ describe('startSync', () => {
         title: 'podcast3 cachedTitle',
         resultObj: mockTransaction3,
         metadata: mockMetadata3,
+        numEpisodes: 0,
         status: ArSyncTxStatus.CONFIRMED,
       },
     ];
@@ -315,6 +330,7 @@ describe('startSync', () => {
           title: 'cachedTitle',
           resultObj: mockTransaction,
           metadata: mockMetadata1,
+          numEpisodes: 0,
           status: ArSyncTxStatus.ERRORED,
         },
         {
@@ -323,6 +339,7 @@ describe('startSync', () => {
           title: 'podcast2 cachedTitle',
           resultObj: mockTransaction2,
           metadata: mockMetadata2,
+          numEpisodes: 0,
           status: ArSyncTxStatus.POSTED,
         },
         {
@@ -331,6 +348,7 @@ describe('startSync', () => {
           title: 'podcast3 cachedTitle',
           resultObj: mockTransaction3,
           metadata: mockMetadata3,
+          numEpisodes: 0,
           status: ArSyncTxStatus.CONFIRMED,
         },
       ]);

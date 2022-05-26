@@ -4,7 +4,7 @@ import 'cytoscape-panzoom/cytoscape.js-panzoom.css';
 export default createGlobalStyle`
   :root {
     --color-body: #000000fc;
-    --color-label: #797979; // Unsure if named well #000000
+    --color-label: #797979;
   }
 
   html,
@@ -17,6 +17,8 @@ export default createGlobalStyle`
     padding-bottom: 4.25rem;
     background-color: var(--color-body);
   }
+
+
 
   /* Toasts */
   .toast {
@@ -43,25 +45,44 @@ export default createGlobalStyle`
   }
 
   /* ====== Material UI ====== */
+  .tabheader {
+    text-transform: inherit !important;
+  }
+
+  .tabpanel-element {
+    visibility: visible;
+    height: inherit;
+  }
+  .tabpanel-element.hidden {
+    visibility: hidden;
+    height: 0;
+  }
+
   // TODO: Remove the need for !important, see:
   //       https://mui.com/material-ui/guides/interoperability/#global-css
   .MuiTab-textColorPrimary {
     color: white !important;
   }
 
+  // The indicator DOM element looks like:
+  // <span class="MuiTabs-indicator css-1aquho2-MuiTabs-indicator"
+  //       style="left: 151.477px; width: 146.406px;"></span>
+  // Since we don't use state to track active tabs, the indicator is hard to update, so we hide it.
   .MuiTabs-indicator {
-    background-color: #4b9b73 !important;
+    visibility: hidden !important;
+    height: 0 !important;
   }
 
   .Mui-selected {
     color: #4b9b73 !important;
+    font-weight: bold !important;
   }
 
   .MuiBox-root {
     padding: 0.5rem 0 0 0 !important,
   }
 
-  /* =================== global boot strap =========================*/
+  /* ====== global bootstrap ====== */
   .form-control {
     outline: 2px solid transparent;
     outline-offset: 2px;
@@ -89,7 +110,43 @@ export default createGlobalStyle`
     }
   }
 
-  /* =================== panzoom  =========================*/
+  /* ====== Scrollbar ====== */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  /* Track */
+  ::-webkit-scrollbar-track {
+    box-shadow: inset 0 0 5px rgb(44, 43, 43);
+    border-radius: 5px;
+  }
+
+  /* Handle */
+  ::-webkit-scrollbar-thumb {
+    background: #2b2c2b;
+    border-radius: 5px;
+  }
+
+  /* Handle on hover */
+  ::-webkit-scrollbar-thumb:hover {
+    background: #2b2c2b;
+  }
+
+  /* ====== Modal ====== */
+  .modal-content {
+    background-color: #16181a;
+    color: #868686;
+
+  }
+  .modal-header {
+    border-bottom: 1px solid #2c2c2c;
+  }
+
+  .modal-footer {
+    border-top: 1px solid #2c2c2c;
+  }
+
+  /* ====== Cytoscape ====== */
   .cy-panzoom {
     top: 1rem;
     color: #666;
@@ -113,45 +170,7 @@ export default createGlobalStyle`
     border: 1px solid #262626;
   }
 
-  /* =================== scroll bar =========================*/
-  /* width */
-  ::-webkit-scrollbar {
-    width: 8px;
-  }
-
-  /* Track */
-  ::-webkit-scrollbar-track {
-    box-shadow: inset 0 0 5px rgb(44, 43, 43);
-    border-radius: 5px;
-  }
-
-  /* Handle */
-  ::-webkit-scrollbar-thumb {
-    background: #2b2c2b;
-    border-radius: 5px;
-  }
-
-  /* Handle on hover */
-  ::-webkit-scrollbar-thumb:hover {
-    background: #2b2c2b;
-  }
-
-  /* =================== Modal =========================*/
-  .modal-content {
-    background-color: #16181a;
-    color: #868686;
-
-  }
-  .modal-header {
-    border-bottom: 1px solid #2c2c2c;
-  }
-
-  .modal-footer {
-    border-top: 1px solid #2c2c2c;
-  }
-
-  /* =================== Nodes Card =========================*/
-
+  /* ====== cy-node-html-label Nodes ====== */
   .card-front__heading {
     background: black;
     text-align: center;
@@ -254,7 +273,7 @@ export default createGlobalStyle`
 
   }
 
-  /* =================== GROUPS Nodes Card ========================= */
+  /* ====== cy-node-html-label Disjoint Graphs ====== */
   .group {
     display: none;
     flex-direction: column;

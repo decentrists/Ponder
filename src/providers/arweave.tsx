@@ -7,8 +7,9 @@ import { ToastContext } from './toast';
 import useRerenderEffect from '../hooks/use-rerender-effect';
 import { SubscriptionsContext } from './subscriptions';
 import {
-  isNotEmpty, valuesEqual,
-  concatMessages, episodesCount,
+  isNotEmpty,
+  valuesEqual,
+  concatMessages,
 } from '../utils';
 import { JWKInterface } from 'arweave/node/lib/wallet';
 import * as arweave from '../client/arweave';
@@ -23,7 +24,7 @@ interface ArweaveContextType {
   arSyncTxs: arsync.ArSyncTx[],
   prepareSync: () => Promise<void>,
   startSync: () => Promise<void>,
-  removeArSyncTxs: (txIds?: string[]) => void,
+  removeArSyncTxs: (ids?: string[] | null) => void,
   hasPendingTxs: boolean,
 }
 
@@ -56,7 +57,12 @@ function readCachedArSyncTxs() {
 function writeCachedArSyncTxs(arSyncTxs: arsync.ArSyncTx[]) {
   // Skip txs that are in Initialized state
   const txsToCache = arSyncTxs.filter(tx => tx.status !== arsync.ArSyncTxStatus.INITIALIZED);
-  localStorage.setItem('arSyncTxs', JSON.stringify(txsToCache));
+  const arSyncTxsDto : arsync.ArSyncTx[] = txsToCache.map((tx: arsync.ArSyncTx) => ({
+    ...tx,
+    metadata: {},
+  }));
+
+  localStorage.setItem('arSyncTxs', JSON.stringify(arSyncTxsDto));
 }
 
 // TODO: ArSync v1.5+, test me
@@ -186,7 +192,7 @@ const ArweaveProvider : React.FC<{ children: React.ReactNode }> = ({ children })
     try {
       if (isNotEmpty(postedTxs)) {
         const message = concatMessages(postedTxs.map(elem =>
-          `${elem.title} (${episodesCount(elem.metadata)} new episodes)`));
+          `${elem.title} (${elem.numEpisodes} new episodes)`));
         toast(`${postedTxs.length} Transaction${pluralize(postedTxs)} successfully posted to ` +
           `Arweave with metadata for:\n${message}`, { autohideDelay: 10000, variant: 'success' });
       }
@@ -249,14 +255,14 @@ const ArweaveProvider : React.FC<{ children: React.ReactNode }> = ({ children })
   }
 
   /**
-   * Removes elements matching `txIds` from `arSyncTxs`.
-   * Clears all `arSyncTxs` if `txIds` is null.
-   * @param txIds
+   * Removes elements matching `ids` from `arSyncTxs`.
+   * Clears all `arSyncTxs` if `ids` is null.
+   * @param ids
    */
-  function removeArSyncTxs(txIds: string[] | null = null) {
-    if (txIds === null) setArSyncTxs([]);
-    else if (isNotEmpty(txIds)) {
-      const newValue : arsync.ArSyncTx[] = arSyncTxs.filter(tx => !txIds.includes(tx.id));
+  function removeArSyncTxs(ids: string[] | null = null) {
+    if (ids === null) setArSyncTxs([]);
+    else {
+      const newValue : arsync.ArSyncTx[] = arSyncTxs.filter(tx => !ids.includes(tx.id));
       setArSyncTxs(newValue);
     }
   }

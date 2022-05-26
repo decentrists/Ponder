@@ -205,8 +205,8 @@ export function corsApiHeaders() {
 }
 
 export function corsProxyURL() {
-  return 'https://corsanywhere.herokuapp.com/';
-  // return 'https://cors-anywhere.herokuapp.com/';
+  // return 'https://corsanywhere.herokuapp.com/';
+  return 'https://cors-anywhere.herokuapp.com/';
 }
 
 export function withCorsProxy(url: string) {

@@ -2,7 +2,7 @@ import { v4 as uuid } from 'uuid';
 import Transaction from 'arweave/node/lib/transaction';
 import { JWKInterface } from 'arweave/node/lib/wallet';
 import { Podcast } from '../../interfaces';
-import { findMetadata, hasMetadata } from '../../../utils';
+import { episodesCount, findMetadata, hasMetadata } from '../../../utils';
 import { getMetadataBatchNumber } from '../create-transaction';
 import { rightDiff } from './diff-merge-logic';
 import * as arweave from '..';
@@ -23,9 +23,16 @@ export interface ArSyncTx {
   title?: string,
   resultObj: Transaction | TransactionDTO | Error,
   metadata: Partial<Podcast>,
+  numEpisodes: number,
   status: ArSyncTxStatus,
   // TODO: add `timestamp`
 }
+
+
+/** To reduce the size per transaction */
+const MAX_EPISODES_PER_BATCH = 50;
+/** Fail-safe through which we sync max 1000 episodes per podcast */
+const MAX_BATCHES = 20;
 
 /** Helper function in order to retain numeric ArSyncTxStatus enums */
 export const statusToString = (status: ArSyncTxStatus) => {
@@ -44,11 +51,6 @@ export const statusToString = (status: ArSyncTxStatus) => {
       return 'Unknown';
   }
 };
-
-/** To reduce the size per transaction */
-const MAX_EPISODES_PER_BATCH = 50;
-/** Fail-safe through which we sync max 1000 episodes per podcast */
-const MAX_BATCHES = 20;
 
 export const findErroredTxs = (txs: ArSyncTx[]) : ArSyncTx[] =>
   txs.filter(tx => tx.status === ArSyncTxStatus.ERRORED);
@@ -107,6 +109,7 @@ export async function initArSyncTxs(
         title: cachedMetadata.title || podcastToSync.title || '',
         resultObj: newTxResult,
         metadata: podcastToSync,
+        numEpisodes: episodesCount(podcastToSync),
         status: newTxResult instanceof Error ? ArSyncTxStatus.ERRORED : ArSyncTxStatus.INITIALIZED,
       };
       result.push(arSyncTx);

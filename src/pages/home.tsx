@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React, { useContext, useRef } from 'react';
 import {
   Box, Tabs, Tab,
 } from '@mui/material';
@@ -7,12 +7,11 @@ import { ArweaveContext } from '../providers/arweave';
 import PodGraph from '../components/pod-graph';
 import HeaderComponent from '../components/layout/header-component';
 import {
-  EventWrapper, LeftPane, RightPane,
+  Wrapper, LeftPane, RightPane,
 } from '../components/shared-elements';
 import CategoriesList from '../components/categories-list';
 import PodcastList from '../components/podcast-list';
 import TransactionList from '../components/transaction-list';
-
 
 function HomePage() {
   interface TabPanelProps {
@@ -23,36 +22,47 @@ function HomePage() {
 
   const { subscriptions, subscribe, unsubscribe } = useContext(SubscriptionsContext);
   const { arSyncTxs, removeArSyncTxs } = useContext(ArweaveContext);
-  const [tab, setTab] = React.useState(0);
+  const activeTab = useRef(0);
 
-  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
-    setTab(newValue);
+  const handleTabChange = (clickedTab: number) => {
+    const toggleClass = (elementId: string, className: string, enabled: boolean) => {
+      const el = document.getElementById(elementId);
+      if (el) enabled ? el.classList.add(className) : el.classList.remove(className);
+    };
+
+    const changeTabVisibility = (tabId: number, hidden: boolean) => {
+      toggleClass(`simple-tabpanel-${tabId}`, 'hidden', hidden);
+      toggleClass(`simple-tab-${tabId}`, 'Mui-selected', !hidden);
+    };
+
+    changeTabVisibility(activeTab.current, true);
+    changeTabVisibility(clickedTab, false);
+    activeTab.current = clickedTab;
   };
 
-  const tabProps = (index: number) => {
+  const tabHeaderProps = (index: number) => {
     return {
       id: `simple-tab-${index}`,
       'aria-controls': `simple-tabpanel-${index}`,
+      onClick: () => handleTabChange(index),
     };
   };
 
-  // TODO: every time we switch tabs, the podcast images (some 3000x3000) are reloaded;
-  //       perhaps use `visibility` class instead of `hidden` prop
-  function TabPanel(props: TabPanelProps) {
+  const TabPanel = (props: TabPanelProps) => {
     const { children, value, index, ...other } = props;
 
     return (
       <div
-        role="tabpanel"
-        hidden={value !== index}
+        role='tabpanel'
+        className={`tabpanel-element ${index !== value ? 'hidden' : ''}`}
         id={`simple-tabpanel-${index}`}
         aria-labelledby={`simple-tab-${index}`}
         {...other}
       >
-        {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
+        {<Box sx={{ p: 3 }}>{children}</Box>}
       </div>
     );
-  }
+  };
 
   async function search({ query } : { query: string }) {
     subscribe(query);
@@ -66,26 +76,24 @@ function HomePage() {
         <PodGraph subscriptions={subscriptions} />
       )}
 
-      <EventWrapper>
+      <Wrapper>
         <LeftPane>
           <CategoriesList categories={[]} />
         </LeftPane>
         <RightPane>
           <Box sx={{ width: '100%' }}>
             <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-              <Tabs
-                value={tab}
-                onChange={handleTabChange}
-                aria-label='Info tabs'
-              >
-                <Tab label='Subscriptions' {...tabProps(0)} />
-                <Tab label='Transactions' {...tabProps(1)} />
+              <Tabs value={activeTab.current} aria-label='Info tabs'>
+                <Tab className='tabheader' label='Subscriptions' {...tabHeaderProps(0)} />
+                <Tab className='tabheader' label='Transactions' {...tabHeaderProps(1)} />
               </Tabs>
             </Box>
-            <TabPanel value={tab} index={0}>
+
+            <TabPanel value={activeTab.current} index={0}>
               <PodcastList subscriptions={subscriptions} unsubscribe={unsubscribe} />
             </TabPanel>
-            <TabPanel value={tab} index={1}>
+
+            <TabPanel value={activeTab.current} index={1}>
               <TransactionList
                 subscriptions={subscriptions}
                 txs={arSyncTxs}
@@ -94,7 +102,7 @@ function HomePage() {
             </TabPanel>
           </Box>
         </RightPane>
-      </EventWrapper>
+      </Wrapper>
     </div>
   );
 }

@@ -21,7 +21,7 @@ dayjs.extend(relativeTime);
 interface Props {
   subscriptions: Podcast[];
   txs: ArSyncTx[];
-  removeArSyncTxs: (txIds?: string[]) => void;
+  removeArSyncTxs: (ids?: string[] | null) => void;
 }
 
 const TransactionList : React.FC<Props> = ({ subscriptions, txs, removeArSyncTxs }) => {
@@ -61,7 +61,6 @@ const TransactionList : React.FC<Props> = ({ subscriptions, txs, removeArSyncTxs
               </ActionBtn>
             </CallToAction>
           </ListItem>
-
           {
             [...txs].reverse().map(tx => {
               const image = findImageUrl(tx.subscribeUrl);
@@ -92,7 +91,6 @@ const TransactionList : React.FC<Props> = ({ subscriptions, txs, removeArSyncTxs
                     <ActionBtn>
                       <RemoveBtn onClick={() => removeArSyncTxs([tx.id])} />
                     </ActionBtn>
-
                   </CallToAction>
                 </ListItem>
 
