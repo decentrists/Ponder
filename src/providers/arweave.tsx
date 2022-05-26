@@ -7,8 +7,9 @@ import { ToastContext } from './toast';
 import useRerenderEffect from '../hooks/use-rerender-effect';
 import { SubscriptionsContext } from './subscriptions';
 import {
-  isNotEmpty, valuesEqual,
-  concatMessages, episodesCount,
+  isNotEmpty,
+  valuesEqual,
+  concatMessages,
 } from '../utils';
 import { JWKInterface } from 'arweave/node/lib/wallet';
 import * as arweave from '../client/arweave';
@@ -191,7 +192,7 @@ const ArweaveProvider : React.FC<{ children: React.ReactNode }> = ({ children })
     try {
       if (isNotEmpty(postedTxs)) {
         const message = concatMessages(postedTxs.map(elem =>
-          `${elem.title} (${episodesCount(elem.metadata)} new episodes)`));
+          `${elem.title} (${elem.numEpisodes} new episodes)`));
         toast(`${postedTxs.length} Transaction${pluralize(postedTxs)} successfully posted to ` +
           `Arweave with metadata for:\n${message}`, { autohideDelay: 10000, variant: 'success' });
       }

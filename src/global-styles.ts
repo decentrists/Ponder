@@ -18,7 +18,13 @@ export default createGlobalStyle`
     background-color: var(--color-body);
   }
 
+<<<<<<< HEAD
   /* ====== Toasts ====== */
+=======
+
+
+  /* Toasts */
+>>>>>>> Tab change without rerendering; refactor some more styles
   .toast {
     width: max-content;
     min-width: 400px;
@@ -42,8 +48,50 @@ export default createGlobalStyle`
     background-color: #e9c98a;
   }
 
+<<<<<<< HEAD
 
   /* ====== Global bootstrap ====== */
+=======
+  /* ====== Material UI ====== */
+  .tabheader {
+    text-transform: inherit !important;
+  }
+
+  .tabpanel-element {
+    visibility: visible;
+    height: inherit;
+  }
+  .tabpanel-element.hidden {
+    visibility: hidden;
+    height: 0;
+  }
+
+  // TODO: Remove the need for !important, see:
+  //       https://mui.com/material-ui/guides/interoperability/#global-css
+  .MuiTab-textColorPrimary {
+    color: white !important;
+  }
+
+  // The indicator DOM element looks like:
+  // <span class="MuiTabs-indicator css-1aquho2-MuiTabs-indicator"
+  //       style="left: 151.477px; width: 146.406px;"></span>
+  // Since we don't use state to track active tabs, the indicator is hard to update, so we hide it.
+  .MuiTabs-indicator {
+    visibility: hidden !important;
+    height: 0 !important;
+  }
+
+  .Mui-selected {
+    color: #4b9b73 !important;
+    font-weight: bold !important;
+  }
+
+  .MuiBox-root {
+    padding: 0.5rem 0 0 0 !important,
+  }
+
+  /* ====== global bootstrap ====== */
+>>>>>>> Tab change without rerendering; refactor some more styles
   .form-control {
     outline: 2px solid transparent;
     outline-offset: 2px;
