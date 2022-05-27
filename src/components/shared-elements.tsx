@@ -18,7 +18,7 @@ export const Header = styled.h5`
 `;
 
 export const ListContainer = styled.div`
-  overflow: overlay;
+  overflow-y: auto;
   padding: 0.75rem;
   background-color: rgba(13, 13, 13, 1);
   border: 2px solid rgba(38, 38, 38, 1);

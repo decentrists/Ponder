@@ -62,27 +62,30 @@ export async function refreshSubscriptions(subscriptions: Podcast[],
     podcastsToRefresh.map(subscribeUrl => getPodcast(subscribeUrl, metadataToSync)),
   );
 
+  const replaceOldSubscription = (subscription: Podcast, errorMessage: string = '') => {
+    const oldPodcastMetadataToSync = findMetadata(subscription.subscribeUrl, metadataToSync);
+    if (errorMessage) {
+      errorMessages.push(`${subscription.title} failed to refresh due to:\n${errorMessage}`);
+    }
+    newSubscriptions.push(subscription);
+    if (hasMetadata(oldPodcastMetadataToSync)) newMetadataToSync.push(oldPodcastMetadataToSync);
+  };
+
   subscriptions.forEach((subscription) => {
-    const getPodcastResult = getPodcastResults.find(result => hasMetadata(result.newPodcastMetadata)
-      && result.newPodcastMetadata.subscribeUrl === subscription.subscribeUrl);
-    if (getPodcastResult) {
-      const { errorMessage, newPodcastMetadata, newPodcastMetadataToSync } = getPodcastResult;
+    const getPodcastResultIndex = podcastsToRefresh.findIndex(x => x === subscription.subscribeUrl);
+    if (getPodcastResultIndex > -1) {
+      const { errorMessage, newPodcastMetadata, newPodcastMetadataToSync } =
+        getPodcastResults[getPodcastResultIndex];
 
       if (hasMetadata(newPodcastMetadata)) {
         newSubscriptions.push(newPodcastMetadata);
-        if (hasMetadata(newPodcastMetadataToSync)) newMetadataToSync.push(newPodcastMetadataToSync);
-      }
-      else {
-        // Don't update this subscription's metadata and metadataToSync
-        const oldPodcastMetadataToSync = findMetadata(subscription.subscribeUrl, metadataToSync);
-
-        if (errorMessage) {
-          errorMessages.push(`${subscription.title} failed to refresh due to:\n${errorMessage}`);
+        if (hasMetadata(newPodcastMetadataToSync)) {
+          newMetadataToSync.push(newPodcastMetadataToSync);
         }
-        newSubscriptions.push(subscription);
-        if (hasMetadata(oldPodcastMetadataToSync)) newMetadataToSync.push(oldPodcastMetadataToSync);
       }
+      else replaceOldSubscription(subscription, errorMessage);
     }
+    else replaceOldSubscription(subscription, '');
   });
 
   return {
