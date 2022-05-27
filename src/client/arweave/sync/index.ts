@@ -2,9 +2,15 @@ import { v4 as uuid } from 'uuid';
 import Transaction from 'arweave/node/lib/transaction';
 import { JWKInterface } from 'arweave/node/lib/wallet';
 import { Podcast } from '../../interfaces';
-import { episodesCount, findMetadata, hasMetadata } from '../../../utils';
+import {
+  episodesCount,
+  findMetadata,
+  getFirstEpisodeDate,
+  getLastEpisodeDate,
+  hasMetadata,
+} from '../../../utils';
 import { getMetadataBatchNumber } from '../create-transaction';
-import { rightDiff } from './diff-merge-logic';
+import { mergeBatchMetadata, rightDiff } from './diff-merge-logic';
 import * as arweave from '..';
 
 export enum ArSyncTxStatus {
@@ -84,7 +90,6 @@ export async function initArSyncTxs(
         partitionedMetadataToSync.push(...batchesToSync);
       }
       catch (ex) {
-        // This would only occur due to an unforeseen error in our code
         console.error(`Failed to sync ${subscribeUrl} due to: ${ex}`);
       }
     }
@@ -160,24 +165,31 @@ function partitionMetadataBatches(
   const { episodes, ...mainMetadata } = { ...podcastMetadataToSync };
   if (!hasMetadata(episodes)) return [podcastMetadataToSync];
 
-  // Episodes are sorted from new to old
-  const firstBatch = { ...mainMetadata, episodes: (episodes || []).slice(-MAX_EPISODES_PER_BATCH) };
-  const firstBatchNumber = getMetadataBatchNumber(cachedMetadata,
-    firstBatch.episodes[firstBatch.episodes.length - 1].publishedAt,
-    firstBatch.episodes[0].publishedAt);
-
-  const batches : Partial<Podcast>[] = [{ ...firstBatch, metadataBatch: firstBatchNumber }];
+  const batches : Partial<Podcast>[] = [];
   const numBatches = Math.min(MAX_BATCHES, Math.ceil(episodes.length / MAX_EPISODES_PER_BATCH));
+  let priorMetadata = cachedMetadata;
 
-  for (let count = 2; count <= numBatches; count++) {
+  for (let count = 1; count <= numBatches; count++) {
+    // Episodes are sorted from new to old
+    const batchEpisodes = count === 1 ? (episodes || []).slice(-MAX_EPISODES_PER_BATCH) :
+      episodes.slice(-(MAX_EPISODES_PER_BATCH * count), -(MAX_EPISODES_PER_BATCH * (count - 1)));
     const currentBatch = {
       ...mainMetadata,
-      episodes: (episodes || [])
-        .slice(-(MAX_EPISODES_PER_BATCH * count), -(MAX_EPISODES_PER_BATCH * (count - 1))),
+      episodes: batchEpisodes,
     };
-    const previousVsCurrentDiff =
-      rightDiff(batches[count - 2], currentBatch, ['subscribeUrl', 'title']);
-    batches.push({ ...previousVsCurrentDiff, metadataBatch: (firstBatchNumber + count - 1) });
+    const previousBatch = batches.length ? batches[batches.length - 1] : {};
+    const previousVsCurrentDiff = rightDiff(previousBatch, currentBatch, ['subscribeUrl', 'title']);
+    priorMetadata = mergeBatchMetadata([priorMetadata, previousBatch], true);
+
+    const firstEpisodeDate = getFirstEpisodeDate(currentBatch);
+    const lastEpisodeDate = getLastEpisodeDate(currentBatch);
+    const metadataBatch = getMetadataBatchNumber(priorMetadata, firstEpisodeDate, lastEpisodeDate);
+    batches.push({
+      ...previousVsCurrentDiff,
+      firstEpisodeDate,
+      lastEpisodeDate,
+      metadataBatch,
+    });
   }
 
   return batches.filter(batch => hasMetadata(batch));
@@ -192,7 +204,9 @@ export function formatNewMetadataToSync(
       const { subscribeUrl, metadata } = tx;
       const prevPodcastToSyncDiff = findMetadata(subscribeUrl, diffs);
       let newDiff : Partial<Podcast> = {};
-      if (hasMetadata(prevPodcastToSyncDiff)) newDiff = rightDiff(metadata, prevPodcastToSyncDiff);
+      if (hasMetadata(prevPodcastToSyncDiff)) {
+        newDiff = rightDiff(metadata, prevPodcastToSyncDiff, ['subscribeUrl', 'title']);
+      }
 
       diffs = diffs.filter(oldDiff => oldDiff.subscribeUrl !== subscribeUrl);
       if (hasMetadata(newDiff)) diffs.push(newDiff);

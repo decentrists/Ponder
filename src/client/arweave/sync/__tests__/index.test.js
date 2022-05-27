@@ -69,7 +69,6 @@ const mockError2 = new Error('mock error 2');
 const NON_EMPTY_STRING = expect.stringMatching(/.+/);
 /**
  * NOTE: newMetadataTransaction() is mocked here, as it's tested in create-transaction.test.js.
- * TODO: test partitionMetadataBatches()
  */
 describe('initArSyncTxs', () => {
   const subscriptions = [podcast1, podcast2];
@@ -117,7 +116,12 @@ describe('initArSyncTxs', () => {
             subscribeUrl: 'https://example.com/podcast2',
             title: 'podcast2 cachedTitle',
             resultObj: mockTransaction,
-            metadata: { ...metadataToSync[1], metadataBatch: 0 },
+            metadata: {
+              ...metadataToSync[1],
+              firstEpisodeDate: podcast2episodes[2].publishedAt,
+              lastEpisodeDate: podcast2episodes[0].publishedAt,
+              metadataBatch: 0,
+            },
             numEpisodes: 3,
             status: ArSyncTxStatus.INITIALIZED,
           },
@@ -159,7 +163,12 @@ describe('initArSyncTxs', () => {
               subscribeUrl: 'https://example.com/podcast2',
               title: 'podcast2 cachedTitle',
               resultObj: mockTransaction2,
-              metadata: { ...metadataToSync[1], metadataBatch: 0 },
+              metadata: {
+                ...metadataToSync[1],
+                firstEpisodeDate: podcast2episodes[2].publishedAt,
+                lastEpisodeDate: podcast2episodes[0].publishedAt,
+                metadataBatch: 0,
+              },
               numEpisodes: 3,
               status: ArSyncTxStatus.INITIALIZED,
             },
@@ -187,7 +196,12 @@ describe('initArSyncTxs', () => {
               subscribeUrl: 'https://example.com/podcast2',
               title: 'podcast2 cachedTitle',
               resultObj: mockTransaction,
-              metadata: { ...metadataToSync[1], metadataBatch: 0 },
+              metadata: {
+                ...metadataToSync[1],
+                firstEpisodeDate: podcast2episodes[2].publishedAt,
+                lastEpisodeDate: podcast2episodes[0].publishedAt,
+                metadataBatch: 0,
+              },
               numEpisodes: 3,
               status: ArSyncTxStatus.INITIALIZED,
             },
@@ -215,7 +229,12 @@ describe('initArSyncTxs', () => {
               subscribeUrl: 'https://example.com/podcast2',
               title: 'podcast2 cachedTitle',
               resultObj: mockError2,
-              metadata: { ...metadataToSync[1], metadataBatch: 0 },
+              metadata: {
+                ...metadataToSync[1],
+                firstEpisodeDate: podcast2episodes[2].publishedAt,
+                lastEpisodeDate: podcast2episodes[0].publishedAt,
+                metadataBatch: 0,
+              },
               numEpisodes: 3,
               status: ArSyncTxStatus.ERRORED,
             },

@@ -113,14 +113,14 @@ const ArweaveProvider : React.FC<{ children: React.ReactNode }> = ({ children })
   }, [wallet, loadNewWallet]);
 
   async function prepareSync() {
-    if (!wallet) throw new Error('wallet is undefined');
+    if (!wallet) return cancelSync('Wallet is undefined');
     if (isSyncing || hasPendingTxs()) return;
 
-    confirmArSyncTxs(); // TODO: instead, use setInterval elsewhere
+    await confirmArSyncTxs(); // TODO: instead, use setInterval elsewhere
 
     setIsSyncing(true);
 
-    const [newSubscriptions, newMetadataToSync] = await refresh(true, 600); // MVP: change to 30
+    const [newSubscriptions, newMetadataToSync] = await refresh(null, true, 600); // MVP: set to 30
 
     if (!isNotEmpty(newSubscriptions)) {
       return cancelSync('Failed to refresh subscriptions.');
@@ -148,7 +148,6 @@ const ArweaveProvider : React.FC<{ children: React.ReactNode }> = ({ children })
     }
 
     // TODO: pending T252, add txs to transaction cache
-    // TODO: check that each txs.resultObj is a valid Arweave Transaction object
     setArSyncTxs(prev => prev.concat(newTxs));
     setIsSyncing(false);
   }
@@ -164,7 +163,7 @@ const ArweaveProvider : React.FC<{ children: React.ReactNode }> = ({ children })
     if (hasPendingTxs()) {
       toast('Pending transactions have been cleared, but their data is still cached.',
         { variant: 'warning' });
-      setArSyncTxs([]);
+      setArSyncTxs(arSyncTxs.filter(tx => tx.status !== arsync.ArSyncTxStatus.INITIALIZED));
     }
   }
 
@@ -202,10 +201,6 @@ const ArweaveProvider : React.FC<{ children: React.ReactNode }> = ({ children })
         toast(`${erroredTxs.length} Transaction${pluralize(erroredTxs)} failed to post to ` +
           `Arweave with metadata for:\n${message}`, { autohideDelay: 0, variant: 'danger' });
       }
-      // TODO: atm, some fields like `firstEpisodeDate` are only updated upon another refresh.
-      //       we could: either update subscriptions here,
-      //       or update SubscriptionsProvider.readCachedPodcasts() to include
-      //       arsync.findPostedTxs(arSyncTxs)
       setMetadataToSync(arsync.formatNewMetadataToSync(allTxs, metadataToSync));
     }
     catch (ex) {
@@ -224,33 +219,36 @@ const ArweaveProvider : React.FC<{ children: React.ReactNode }> = ({ children })
     if (isSyncing) return;
 
     console.debug('Refreshing transaction status');
+
     const postedTxs = arsync.findPostedTxs(arSyncTxs);
     const newArSyncTxs : arsync.ArSyncTx[] = [...arSyncTxs];
-    let updated = false;
+    const confirmedTxs : arsync.ArSyncTx[] = [];
 
-    await Promise.all(postedTxs.map(async tx => {
+    await Promise.all(postedTxs.map(async postedTx => {
       const status : TransactionStatusResponse =
-        await arweave.getTxConfirmationStatus(tx.resultObj as arsync.TransactionDTO);
+        await arweave.getTxConfirmationStatus(postedTx.resultObj as arsync.TransactionDTO);
 
       // TODO: adjust for mainnet https://github.com/ArweaveTeam/arweave-js#get-a-transaction-status
       //       * change `status.confirmed` to `isNotEmpty(status.confirmed)`
       //       * test status.confirmed.number_of_confirmations
       if (status.status === 200 && status.confirmed) {
-        const index = newArSyncTxs.findIndex(item => item.id === tx.id);
+        const index = newArSyncTxs.findIndex(item => item.id === postedTx.id);
         if (index > -1) {
-          updated = true;
           newArSyncTxs[index] = {
-            ...tx,
+            ...postedTx,
             status: arsync.ArSyncTxStatus.CONFIRMED,
           };
+          confirmedTxs.push(newArSyncTxs[index]);
         }
       }
       // TODO: set status to REJECTED if now - tx.timestamp > 1 hour
     }));
 
-    if (updated) {
+    if (confirmedTxs.length) {
       console.debug('At least one posted transaction has been confirmed.');
       setArSyncTxs(newArSyncTxs);
+      const confirmedPodcastIds = new Set<string>(confirmedTxs.map(tx => tx.subscribeUrl));
+      await refresh([...confirmedPodcastIds], true, 0);
     }
   }
 

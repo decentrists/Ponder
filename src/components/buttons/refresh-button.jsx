@@ -12,7 +12,7 @@ function RefreshButton() {
     <SpinButton
       disabled={isRefreshing || isSyncing || hasPendingTxs}
       className={isRefreshing ? 'spinning' : ''}
-      onClick={() => refresh(false)}
+      onClick={() => refresh(null, false)}
       title={'Refresh subscriptions from RSS & Arweave'}
       alt={'Refresh'}
     >

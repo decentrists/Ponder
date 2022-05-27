@@ -49,6 +49,20 @@ export function episodesCount(metadata: Partial<Podcast>) : number {
   return isNotEmpty(metadata.episodes) ? metadata.episodes.length : 0;
 }
 
+export function getFirstEpisodeDate(metadata: Partial<Podcast>) : Date {
+  if (!episodesCount(metadata)) return new Date(0);
+
+  const result = metadata.episodes![metadata.episodes!.length - 1].publishedAt;
+  return isValidDate(result) ? result : new Date(0);
+}
+
+export function getLastEpisodeDate(metadata: Partial<Podcast>) : Date {
+  if (!episodesCount(metadata)) return new Date(0);
+
+  const result = metadata.episodes![0].publishedAt;
+  return isValidDate(result) ? result : new Date(0);
+}
+
 /**
  * @param messages
  * @param filterDuplicates
