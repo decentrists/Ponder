@@ -123,7 +123,7 @@ export function mergeBatchMetadata(
       return { ...acc, ...omitEmptyMetadata(batch) };
     }, {}),
     episodes: mergedEpisodes,
-  };
+  } as Podcast;
 }
 
 /**
