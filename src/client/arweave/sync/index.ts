@@ -24,7 +24,7 @@ export enum ArSyncTxStatus {
 export interface TransactionDTO extends Transaction {}
 
 export interface ArSyncTx {
-  id: string,
+  id: string, // uuid, not to be confused with `(resultObj as Transaction).id`
   subscribeUrl: string, // TODO: pending T244, change to 'podcastId'
   title?: string,
   resultObj: Transaction | TransactionDTO | Error,

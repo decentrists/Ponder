@@ -241,7 +241,7 @@ const ArweaveProvider : React.FC<{ children: React.ReactNode }> = ({ children })
           confirmedTxs.push(newArSyncTxs[index]);
         }
       }
-      // TODO: set status to REJECTED if now - tx.timestamp > 1 hour
+      // TODO: set status to REJECTED if !confirmed && (now - tx.timestamp) > 1 hour
     }));
 
     if (confirmedTxs.length) {

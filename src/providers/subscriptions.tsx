@@ -103,8 +103,6 @@ const SubscriptionsProvider : React.FC<{ children: React.ReactNode }> = ({ child
 
     setIsRefreshing(true);
     try {
-      // TODO: T250 ArSync v1.2, include `ArweaveProvider.unconfirmedArSyncTxs.map(x => x.metadata)`
-      // in newSubscriptions and exclude it from newMetadataToSync
       const { errorMessages, newSubscriptions, newMetadataToSync } =
         await refreshSubscriptions(subscriptions, metadataToSync, idsToRefresh);
 
