@@ -1,4 +1,4 @@
-import React, { useContext, useRef } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import {
   Box, Tabs, Tab,
 } from '@mui/material';
@@ -7,46 +7,34 @@ import { ArweaveContext } from '../providers/arweave';
 import PodGraph from '../components/pod-graph';
 import HeaderComponent from '../components/layout/header-component';
 import {
-  Wrapper, LeftPane, RightPane,
+  Wrapper,
 } from '../components/shared-elements';
 import CategoriesList from '../components/categories-list';
 import PodcastList from '../components/podcast-list';
 import TransactionList from '../components/transaction-list';
+import style from './home.module.scss';
+
+interface TabPanelProps {
+  children?: React.ReactNode;
+  index: number;
+  value: number;
+}
 
 function HomePage() {
-  interface TabPanelProps {
-    children?: React.ReactNode;
-    index: number;
-    value: number;
-  }
 
   const { subscriptions, subscribe, unsubscribe } = useContext(SubscriptionsContext);
   const { arSyncTxs, removeArSyncTxs } = useContext(ArweaveContext);
-  const activeTab = useRef(0);
+  const { isSyncing } = useContext(ArweaveContext);
 
-  const handleTabChange = (clickedTab: number) => {
-    const toggleClass = (elementId: string, className: string, enabled: boolean) => {
-      const el = document.getElementById(elementId);
-      if (el) enabled ? el.classList.add(className) : el.classList.remove(className);
-    };
+  const [tab, setTab] = useState(0);
 
-    const changeTabVisibility = (tabId: number, hidden: boolean) => {
-      toggleClass(`simple-tabpanel-${tabId}`, 'hidden', hidden);
-      toggleClass(`simple-tab-${tabId}`, 'Mui-selected', !hidden);
-    };
-
-    changeTabVisibility(activeTab.current, true);
-    changeTabVisibility(clickedTab, false);
-    activeTab.current = clickedTab;
+  const handleChange = (event: React.SyntheticEvent, newValue: number) => {
+    setTab(newValue);
   };
 
-  const tabHeaderProps = (index: number) => {
-    return {
-      id: `simple-tab-${index}`,
-      'aria-controls': `simple-tabpanel-${index}`,
-      onClick: () => handleTabChange(index),
-    };
-  };
+  useEffect(() => {
+    if (isSyncing) setTab(1);
+  }, [isSyncing]);
 
   const TabPanel = (props: TabPanelProps) => {
     const { children, value, index, ...other } = props;
@@ -54,9 +42,7 @@ function HomePage() {
     return (
       <div
         role='tabpanel'
-        className={`tabpanel-element ${index !== value ? 'hidden' : ''}`}
-        id={`simple-tabpanel-${index}`}
-        aria-labelledby={`simple-tab-${index}`}
+        hidden={value !== index}
         {...other}
       >
         {<Box sx={{ p: 3 }}>{children}</Box>}
@@ -67,7 +53,6 @@ function HomePage() {
   async function search({ query } : { query: string }) {
     subscribe(query);
   }
-
   return (
     <div>
       <HeaderComponent onSubmit={search} />
@@ -77,31 +62,29 @@ function HomePage() {
       )}
 
       <Wrapper>
-        <LeftPane>
+        <Box className={style.leftPane}>
           <CategoriesList categories={[]} />
-        </LeftPane>
-        <RightPane>
-          <Box sx={{ width: '100%' }}>
-            <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-              <Tabs value={activeTab.current} aria-label='Info tabs'>
-                <Tab className='tabheader' label='Subscriptions' {...tabHeaderProps(0)} />
-                <Tab className='tabheader' label='Transactions' {...tabHeaderProps(1)} />
-              </Tabs>
-            </Box>
-
-            <TabPanel value={activeTab.current} index={0}>
-              <PodcastList subscriptions={subscriptions} unsubscribe={unsubscribe} />
-            </TabPanel>
-
-            <TabPanel value={activeTab.current} index={1}>
-              <TransactionList
-                subscriptions={subscriptions}
-                txs={arSyncTxs}
-                removeArSyncTxs={removeArSyncTxs}
-              />
-            </TabPanel>
+        </Box>
+        <Box className={style.rightPane}>
+          <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+            <Tabs onChange={handleChange} value={tab} aria-label='Info tabs'>
+              <Tab className={style.tabHeader} label='Subscriptions' />
+              <Tab className={style.tabHeader} label='Transactions' />
+            </Tabs>
           </Box>
-        </RightPane>
+
+          <TabPanel value={tab} index={0}>
+            <PodcastList subscriptions={subscriptions} unsubscribe={unsubscribe} />
+          </TabPanel>
+
+          <TabPanel value={tab} index={1}>
+            <TransactionList
+              subscriptions={subscriptions}
+              txs={arSyncTxs}
+              removeArSyncTxs={removeArSyncTxs}
+            />
+          </TabPanel>
+        </Box>
       </Wrapper>
     </div>
   );

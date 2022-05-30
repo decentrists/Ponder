@@ -44,18 +44,6 @@ export const ListItem = styled.div`
   }
 `;
 
-export const LeftPane = styled.div`
-  display: inline;
-  max-width: 270px;
-  @media only screen and (max-width: 960px) {
-    max-width: 100%;
-  }
-`;
-
-export const RightPane = styled.div`
-  width: 100%;
-  padding-left: 2rem;
-`;
 
 export const TitleHeader = styled.div`
   color: rgba(255, 255, 255, 1);

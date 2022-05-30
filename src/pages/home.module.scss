@@ -1,0 +1,16 @@
+.leftPane {
+  display: inline;
+  max-width: 270px;
+  @media only screen and (max-width: 960px) {
+    max-width: 100%;
+  }
+}
+
+.rightPane {
+  width: 100%;
+  padding-left: 2rem;
+}
+
+.tabHeader {
+  text-transform: inherit;
+}

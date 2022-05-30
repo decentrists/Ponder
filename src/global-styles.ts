@@ -45,18 +45,6 @@ export default createGlobalStyle`
   }
 
   /* ====== Material UI ====== */
-  .tabheader {
-    text-transform: inherit !important;
-  }
-
-  .tabpanel-element {
-    visibility: visible;
-    height: inherit;
-  }
-  .tabpanel-element.hidden {
-    visibility: hidden;
-    height: 0;
-  }
 
   // TODO: Remove the need for !important, see:
   //       https://mui.com/material-ui/guides/interoperability/#global-css
@@ -64,22 +52,9 @@ export default createGlobalStyle`
     color: white !important;
   }
 
-  // The indicator DOM element looks like:
-  // <span class="MuiTabs-indicator css-1aquho2-MuiTabs-indicator"
-  //       style="left: 151.477px; width: 146.406px;"></span>
-  // Since we don't use state to track active tabs, the indicator is hard to update, so we hide it.
-  .MuiTabs-indicator {
-    visibility: hidden !important;
-    height: 0 !important;
-  }
-
   .Mui-selected {
     color: #4b9b73 !important;
     font-weight: bold !important;
-  }
-
-  .MuiBox-root {
-    padding: 0.5rem 0 0 0 !important,
   }
 
   /* ====== global bootstrap ====== */
