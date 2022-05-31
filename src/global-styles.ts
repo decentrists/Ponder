@@ -44,18 +44,6 @@ export default createGlobalStyle`
     background-color: #e9c98a;
   }
 
-  /* ====== Material UI ====== */
-
-  // TODO: Remove the need for !important, see:
-  //       https://mui.com/material-ui/guides/interoperability/#global-css
-  .MuiTab-textColorPrimary {
-    color: white !important;
-  }
-
-  .Mui-selected {
-    color: #4b9b73 !important;
-    font-weight: bold !important;
-  }
 
   /* ====== global bootstrap ====== */
   .form-control {

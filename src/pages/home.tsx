@@ -34,6 +34,7 @@ function HomePage() {
 
   useEffect(() => {
     if (isSyncing) setTab(1);
+    else setTab(0);
   }, [isSyncing]);
 
   const TabPanel = (props: TabPanelProps) => {
