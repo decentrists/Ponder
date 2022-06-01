@@ -13,6 +13,10 @@ export function unixTimestamp(date : Date | null = null) {
   return Math.floor(date ? date.getTime() : Date.now() / 1000);
 }
 
+export function addLastMutatedAt(subscription: Podcast) : Podcast {
+  return { ...subscription, lastMutatedAt: unixTimestamp() };
+}
+
 export function toISOString(date: Date) {
   try {
     return date.toISOString();
@@ -93,7 +97,7 @@ export function toDate(date: string | Date | undefined) : Date {
 /**
  * @param metadata
  * @returns true if `metadata` has specific metadata other than:
- *   `subscribeUrl`, `publishedAt` and an empty episodes list
+ *   `subscribeUrl`, `publishedAt`, `lastMutatedAt` and an empty episodes list
  */
 export function hasMetadata<T extends Partial<Podcast>[] | Partial<Episode>[],
 K extends Partial<Podcast> | Partial<Episode>>(metadata: K | T | EmptyTypes) : metadata is T | K {
@@ -103,7 +107,9 @@ K extends Partial<Podcast> | Partial<Episode>>(metadata: K | T | EmptyTypes) : m
   if (metadata.title) return true;
 
   // @ts-ignore
-  const { subscribeUrl, publishedAt, episodes, ...specificMetadata } = { ...metadata };
+  const { subscribeUrl, publishedAt, lastMutatedAt, episodes, ...specificMetadata } = {
+    ...metadata,
+  };
   if (episodes?.length) return true;
 
   return !!Object.values(specificMetadata).flat().filter(x => x).length;

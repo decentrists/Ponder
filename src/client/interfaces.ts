@@ -1,11 +1,3 @@
-export interface Podcast extends PodcastTags {
-  episodes?: Episode[];
-  infoUrl?: string;
-  imageUrl?: string;
-  imageTitle?: string;
-  copyright?: string;
-}
-
 export const MANDATORY_ARWEAVE_TAGS = [
   'subscribeUrl',
   'title',
@@ -45,6 +37,15 @@ export const ALLOWED_ARWEAVE_TAGS = [
   ...OPTIONAL_ARWEAVE_PLURAL_TAGS,
 ] as const;
 
+export interface Podcast extends PodcastTags {
+  lastMutatedAt?: number; /** @see unixTimestamp() */
+  episodes?: Episode[];
+  infoUrl?: string;
+  imageUrl?: string;
+  imageTitle?: string;
+  copyright?: string;
+}
+
 export interface PodcastTags {
   subscribeUrl: string;
   title: string;
@@ -79,6 +80,10 @@ export interface PodcastDTO extends Omit<Podcast, 'firstEpisodeDate' | 'lastEpis
 
 export interface EpisodeDTO extends Omit<Episode, 'publishedAt'> {
   publishedAt: string;
+}
+
+export interface EpisodesDBTable extends Pick<Podcast, 'subscribeUrl'> {
+  episodes: Episode[];
 }
 
 export type ErrorStruct = {

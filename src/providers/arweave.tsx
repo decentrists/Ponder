@@ -47,6 +47,7 @@ export const ArweaveContext = createContext<ArweaveContextType>({
   hasPendingTxs: false,
 });
 
+// TODO: Migrate to IndexedDB
 function readCachedArSyncTxs() {
   const cachedJson = localStorage.getItem('arSyncTxs');
   if (!cachedJson) return [];
@@ -71,7 +72,7 @@ function writeCachedArSyncTxs(arSyncTxs: ArSyncTx[]) {
   localStorage.setItem('arSyncTxs', JSON.stringify(arSyncTxsDto));
 }
 
-const TX_CONFIRMATION_INTERVAL = 30000; // ms
+const TX_CONFIRMATION_INTERVAL = 180000; // ms
 
 // TODO: ArSync v1.5+, test me
 const ArweaveProvider : React.FC<{ children: React.ReactNode }> = ({ children }) => {
