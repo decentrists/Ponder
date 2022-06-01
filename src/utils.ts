@@ -5,6 +5,7 @@ import {
   Episode,
   Podcast,
   PodcastDTO,
+  PodcastFeedError,
 } from './client/interfaces';
 import { initializeKeywords } from './client/metadata-filtering/generation';
 
@@ -111,6 +112,19 @@ K extends Partial<Podcast> | Partial<Episode>>(metadata: K | T | EmptyTypes) : m
 export function findMetadata(subscribeUrl: Podcast['subscribeUrl'],
   arrayOfMetadata: Partial<Podcast>[] = []) : Partial<Podcast> {
   return arrayOfMetadata.find(obj => isNotEmpty(obj) && obj.subscribeUrl === subscribeUrl) || {};
+}
+
+export function partialToPodcast(partialMetadata: Partial<Podcast>) : Podcast | PodcastFeedError {
+  const result : Podcast = {
+    ...partialMetadata,
+    subscribeUrl: partialMetadata.subscribeUrl || '',
+    title: partialMetadata.title || '',
+  };
+
+  if (!result.subscribeUrl) return { errorMessage: 'Feed URL is missing.' };
+  if (!result.title) return { errorMessage: `Feed ${result.subscribeUrl} is missing a title.` };
+
+  return result;
 }
 
 export function podcastFromDTO(podcast : PodcastDTO, sortEpisodes = true) : Podcast {

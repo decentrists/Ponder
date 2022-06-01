@@ -1,6 +1,6 @@
 import * as arweave from './arweave';
 import * as rss from './rss';
-import { findMetadata, hasMetadata } from '../utils';
+import { findMetadata, hasMetadata, partialToPodcast } from '../utils';
 import { mergeBatchMetadata, simpleDiff, rightDiff } from './arweave/sync/diff-merge-logic';
 import { Podcast } from './interfaces';
 
@@ -42,8 +42,11 @@ export async function getPodcast(subscribeUrl: Podcast['subscribeUrl'],
   const metadataToSyncWithNewEpisodes =
     mergeBatchMetadata([rssDiffnewToArweave, currentPodcastMetadataToSync], false);
 
-  const newPodcastMetadata =
+  const newPartialPodcastMetadata : Partial<Podcast> =
     mergeBatchMetadata([feed.arweave, metadataToSyncWithNewEpisodes], true);
+  const newPodcastMetadata = partialToPodcast(newPartialPodcastMetadata);
+  if ('errorMessage' in newPodcastMetadata) return newPodcastMetadata;
+
   const newPodcastMetadataToSync =
     rightDiff(feed.arweave, metadataToSyncWithNewEpisodes, ['subscribeUrl', 'title']);
 
@@ -79,13 +82,11 @@ export async function refreshSubscriptions(subscriptions: Podcast[],
 
       if (hasMetadata(newPodcastMetadata)) {
         newSubscriptions.push(newPodcastMetadata);
-        if (hasMetadata(newPodcastMetadataToSync)) {
-          newMetadataToSync.push(newPodcastMetadataToSync);
-        }
+        if (hasMetadata(newPodcastMetadataToSync)) newMetadataToSync.push(newPodcastMetadataToSync);
       }
       else replaceOldSubscription(subscription, errorMessage);
     }
-    else replaceOldSubscription(subscription, '');
+    else replaceOldSubscription(subscription);
   });
 
   return {

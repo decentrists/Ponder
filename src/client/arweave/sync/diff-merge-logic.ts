@@ -109,10 +109,10 @@ export function mergeEpisodeBatches(episodeBatches: PartialEpisodeWithDate[][]) 
  *   (read above for exceptions) and episodes are merged by @see mergeEpisodeBatches
  */
 export function mergeBatchMetadata(
-  metadataBatches: Partial<Podcast>[], applyMergeSpecialTags = false) : Podcast {
+  metadataBatches: Partial<Podcast>[], applyMergeSpecialTags = false) : Partial<Podcast> {
 
   if (!isNotEmpty(metadataBatches) || metadataBatches.every(batch => !hasMetadata(batch))) {
-    return {} as Podcast;
+    return {} as Partial<Podcast>;
   }
 
   const mergedEpisodes = mergeEpisodeBatches(metadataBatches.map(batch => batch.episodes || []));
@@ -123,7 +123,7 @@ export function mergeBatchMetadata(
       return { ...acc, ...omitEmptyMetadata(batch) };
     }, {}),
     episodes: mergedEpisodes,
-  } as Podcast;
+  };
 }
 
 /**
