@@ -271,7 +271,6 @@ const ArweaveProvider : React.FC<{ children: React.ReactNode }> = ({ children })
     console.debug('arSyncTxs has been updated to:', arSyncTxs);
 
     // TODO: warn upon leaving page if there are pending Initialized arSyncTxs
-    // TODO: switch tab from 'Subscriptions' to 'Transactions'?
 
     try {
       writeCachedArSyncTxs(arSyncTxs);

@@ -23,8 +23,7 @@ interface TabPanelProps {
 function HomePage() {
 
   const { subscriptions, subscribe, unsubscribe } = useContext(SubscriptionsContext);
-  const { arSyncTxs, removeArSyncTxs } = useContext(ArweaveContext);
-  const { isSyncing } = useContext(ArweaveContext);
+  const { arSyncTxs, isSyncing, removeArSyncTxs } = useContext(ArweaveContext);
 
   const [tab, setTab] = useState(0);
 
@@ -34,7 +33,6 @@ function HomePage() {
 
   useEffect(() => {
     if (isSyncing) setTab(1);
-    else setTab(0);
   }, [isSyncing]);
 
   const TabPanel = (props: TabPanelProps) => {
