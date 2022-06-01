@@ -4,7 +4,7 @@ import 'cytoscape-panzoom/cytoscape.js-panzoom.css';
 export default createGlobalStyle`
   :root {
     --color-body: #000000fc;
-    --color-label: #797979; // Unsure if named well #000000
+    --color-label: #797979;
   }
 
   html,
@@ -18,6 +18,9 @@ export default createGlobalStyle`
     background-color: var(--color-body);
   }
 
+
+
+  /* Toasts */
   .toast {
     width: max-content;
     min-width: 400px;
@@ -41,7 +44,8 @@ export default createGlobalStyle`
     background-color: #e9c98a;
   }
 
-  /* =================== global boot strap =========================*/
+
+  /* ====== global bootstrap ====== */
   .form-control {
     outline: 2px solid transparent;
     outline-offset: 2px;
@@ -69,7 +73,43 @@ export default createGlobalStyle`
     }
   }
 
-  /* =================== panzoom  =========================*/
+  /* ====== Scrollbar ====== */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  /* Track */
+  ::-webkit-scrollbar-track {
+    box-shadow: inset 0 0 5px rgb(44, 43, 43);
+    border-radius: 5px;
+  }
+
+  /* Handle */
+  ::-webkit-scrollbar-thumb {
+    background: #2b2c2b;
+    border-radius: 5px;
+  }
+
+  /* Handle on hover */
+  ::-webkit-scrollbar-thumb:hover {
+    background: #2b2c2b;
+  }
+
+  /* ====== Modal ====== */
+  .modal-content {
+    background-color: #16181a;
+    color: #868686;
+
+  }
+  .modal-header {
+    border-bottom: 1px solid #2c2c2c;
+  }
+
+  .modal-footer {
+    border-top: 1px solid #2c2c2c;
+  }
+
+  /* ====== Cytoscape ====== */
   .cy-panzoom {
     top: 1rem;
     color: #666;
@@ -93,45 +133,7 @@ export default createGlobalStyle`
     border: 1px solid #262626;
   }
 
-  /* =================== scroll bar =========================*/
-  /* width */
-  ::-webkit-scrollbar {
-    width: 1px;
-  }
-
-  /* Track */
-  ::-webkit-scrollbar-track {
-    box-shadow: inset 0 0 5px rgb(44, 43, 43);
-    border-radius: 5px;
-  }
-
-  /* Handle */
-  ::-webkit-scrollbar-thumb {
-    background: #2b2c2b;
-    border-radius: 5px;
-  }
-
-  /* Handle on hover */
-  ::-webkit-scrollbar-thumb:hover {
-    background:#2b2c2b;
-  }
-
-  /* =================== Modal =========================*/
-  .modal-content {
-    background-color: #16181a;
-    color: #868686;
-
-  }
-  .modal-header {
-    border-bottom: 1px solid #2c2c2c;
-  }
-
-  .modal-footer {
-    border-top: 1px solid #2c2c2c;
-  }
-
-  /* =================== Nodes Card =========================*/
-
+  /* ====== cy-node-html-label Nodes ====== */
   .card-front__heading {
     background: black;
     text-align: center;
@@ -234,7 +236,7 @@ export default createGlobalStyle`
 
   }
 
-  /* =================== GROUPS Nodes Card ========================= */
+  /* ====== cy-node-html-label Disjoint Graphs ====== */
   .group {
     display: none;
     flex-direction: column;

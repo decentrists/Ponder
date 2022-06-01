@@ -22,10 +22,7 @@ const SpinButton = styled(BsButton)`
     opacity: 1;
     fill: #fff;
   }
-  &&:hover svg {
-    fill: #4b9b73;
-  }
-  &&:focus svg {
+  &&:hover svg, &&.hasPendingTxs svg {
     fill: #4b9b73;
   }
   &&.spinning svg {

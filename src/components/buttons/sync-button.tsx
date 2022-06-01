@@ -7,15 +7,27 @@ import { ArweaveContext } from '../../providers/arweave';
 
 const SyncButton : React.FC = () => {
   const { isRefreshing } = useContext(SubscriptionsContext);
-  const { isSyncing, prepareSync } = useContext(ArweaveContext);
+  const { isSyncing, prepareSync, startSync, hasPendingTxs } = useContext(ArweaveContext);
+
+  let disabled = isRefreshing || isSyncing;
+  let classes = isSyncing ? 'spinning' : '';
+  let onClick = prepareSync;
+  let title = 'Prepare pending metadata for upload to Arweave';
+
+  if (hasPendingTxs) {
+    disabled = isRefreshing;
+    classes += ' hasPendingTxs';
+    onClick = startSync;
+    title = 'Post the pending transactions to Arweave';
+  }
 
   return (
     <SpinButton
-      disabled={isRefreshing || isSyncing}
-      className={isSyncing ? 'spinning' : ''}
-      onClick={prepareSync}
-      title={'Upload pending metadata to Arweave'}
-      alt={'Upload pending metadata to Arweave'}
+      disabled={disabled}
+      className={classes}
+      onClick={onClick}
+      title={title}
+      alt={title}
     >
       <ArSyncIcon
         width={'1.5rem'}

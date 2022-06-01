@@ -19,8 +19,9 @@ import Transaction from 'arweave/node/lib/transaction';
 
 type MandatoryTags = typeof MANDATORY_ARWEAVE_TAGS[number];
 
-async function newTransaction(wallet: JWKInterface, newMetadata: Partial<Podcast>,
-  tags : [string, string][] = []) {
+async function newTransaction(
+  wallet: JWKInterface, newMetadata: Partial<Podcast>, tags : [string, string][] = [])
+  : Promise<Transaction> {
 
   try {
     const trx = await client.createTransaction({ data: JSON.stringify(newMetadata) }, wallet);
@@ -44,7 +45,8 @@ async function newTransaction(wallet: JWKInterface, newMetadata: Partial<Podcast
  * @returns `trx` if signed and posted successfully
  * @throws if signing or posting fails
  */
-export async function signAndPostTransaction(trx: Transaction, wallet: JWKInterface) {
+export async function signAndPostTransaction(trx: Transaction, wallet: JWKInterface)
+  : Promise<Transaction> {
   let postResponse;
   try {
     await client.transactions.sign(trx, wallet); // has no return value

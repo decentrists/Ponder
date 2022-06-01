@@ -16,7 +16,8 @@ interface SubscriptionContextType {
   lastRefreshTime: number,
   subscribe: (id: string) => Promise<boolean>,
   unsubscribe: (id: string) => Promise<void>,
-  refresh: (silent?: boolean) => Promise<[null, null] | [Podcast[], Partial<Podcast>[]]>,
+  refresh: (silent?: boolean, maxLastRefreshAge?: number) => Promise<[null, null] |
+  [Podcast[], Partial<Podcast>[]]>,
   metadataToSync: Partial<Podcast>[],
   setMetadataToSync: (value: Partial<Podcast>[]) => void,
 }
@@ -25,14 +26,16 @@ export const SubscriptionsContext = createContext<SubscriptionContextType>({
   subscriptions: [],
   isRefreshing: false,
   lastRefreshTime: 0,
+  subscribe: async () => false,
+  unsubscribe: async () => {},
   refresh: async () => [null, null],
   metadataToSync: [],
   setMetadataToSync: () => {},
-  subscribe: async () => false,
-  unsubscribe: async () => {},
 });
 
 function readCachedPodcasts() {
+  // TODO: use e.g. WebSQL instead of localStorage
+  // https://stackoverflow.com/questions/6116053/javascript-library-to-bridge-indexeddb-and-websql
   const cachedSubscriptions = localStorage.getItem('subscriptions');
   const podcasts = cachedSubscriptions ? JSON.parse(cachedSubscriptions) : [];
   return podcastsFromDTO(podcasts);
@@ -53,7 +56,7 @@ const SubscriptionsProvider : React.FC<{ children: React.ReactNode }> = ({ child
   const [lastRefreshTime, setLastRefreshTime] = useState(0);
 
   async function subscribe(subscribeUrl: string) {
-    // TODO: sanitizeUri(subscribeUrl)
+    // TODO: sanitizeUri(subscribeUrl, true)
     if (subscriptions.some(subscription => subscription.subscribeUrl === subscribeUrl)) {
       toast(`You are already subscribed to ${subscribeUrl}.`, { variant: 'danger' });
       return true;
@@ -61,6 +64,7 @@ const SubscriptionsProvider : React.FC<{ children: React.ReactNode }> = ({ child
 
     const { errorMessage, newPodcastMetadata, newPodcastMetadataToSync } =
       await getPodcast(subscribeUrl, metadataToSync);
+
     if (hasMetadata(newPodcastMetadata)) {
       toast(`Successfully subscribed to ${newPodcastMetadata.title}.`, { variant: 'success' });
 
@@ -86,9 +90,17 @@ const SubscriptionsProvider : React.FC<{ children: React.ReactNode }> = ({ child
     }
   }
 
-  const refresh = async (silent = false) : Promise<[null, null]
+  /**
+   * @param silent If true, toasts are skipped
+   * @param maxLastRefreshAge
+   *   Only refresh if the last refresh occurred over `maxLastRefreshAge` seconds ago
+   * @returns An array with the resulting subscriptions and metadataToSync
+   */
+  const refresh = async (silent = false, maxLastRefreshAge = 1) : Promise<[null, null]
   | [Podcast[], Partial<Podcast>[]]> => {
+
     if (isRefreshing) return [null, null];
+    if (getLastRefreshAge() <= maxLastRefreshAge) return [subscriptions, metadataToSync];
 
     setIsRefreshing(true);
     try {
@@ -128,6 +140,15 @@ const SubscriptionsProvider : React.FC<{ children: React.ReactNode }> = ({ child
   const handleMetadataToSync = (value: Partial<Podcast>[]) => {
     setMetadataToSync(value);
   };
+
+  /**
+   * @returns The number of seconds since the last refresh
+   */
+  function getLastRefreshAge() : number {
+    if (!lastRefreshTime) return Infinity;
+
+    return Math.max(0, unixTimestamp() - lastRefreshTime);
+  }
 
   useRerenderEffect(() => {
     console.debug('subscriptions have been updated to:', subscriptions);
