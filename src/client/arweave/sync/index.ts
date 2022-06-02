@@ -57,18 +57,14 @@ export const statusToString = (status: ArSyncTxStatus) => {
   }
 };
 
-// TODO: Refactor to implement high-order functions
-export const findErroredTxs = (txs: ArSyncTx[]) : ArSyncTx[] =>
-  txs.filter(tx => tx.status === ArSyncTxStatus.ERRORED);
-
-export const findInitializedTxs = (txs: ArSyncTx[]) : ArSyncTx[] =>
-  txs.filter(tx => tx.status === ArSyncTxStatus.INITIALIZED);
-
-export const findPostedTxs = (txs: ArSyncTx[]) : ArSyncTx[] =>
-  txs.filter(tx => tx.status === ArSyncTxStatus.POSTED);
-
-export const findConfirmedTxs = (txs: ArSyncTx[]) : ArSyncTx[] =>
-  txs.filter(tx => tx.status === ArSyncTxStatus.CONFIRMED);
+export const isErrored = (tx: ArSyncTx) => tx.status === ArSyncTxStatus.ERRORED;
+export const isNotErrored = (tx: ArSyncTx) => tx.status !== ArSyncTxStatus.ERRORED;
+export const isInitialized = (tx: ArSyncTx) => tx.status === ArSyncTxStatus.INITIALIZED;
+export const isNotInitialized = (tx: ArSyncTx) => tx.status !== ArSyncTxStatus.INITIALIZED;
+export const isPosted = (tx: ArSyncTx) => tx.status === ArSyncTxStatus.POSTED;
+export const isNotPosted = (tx: ArSyncTx) => tx.status !== ArSyncTxStatus.POSTED;
+export const isConfirmed = (tx: ArSyncTx) => tx.status === ArSyncTxStatus.CONFIRMED;
+export const isNotConfirmed = (tx: ArSyncTx) => tx.status !== ArSyncTxStatus.CONFIRMED;
 
 export async function initArSyncTxs(
   subscriptions: Podcast[], metadataToSync: Partial<Podcast>[], wallet: JWKInterface)
@@ -128,7 +124,7 @@ export async function initArSyncTxs(
 export async function startSync(allTxs: ArSyncTx[], wallet: JWKInterface) : Promise<ArSyncTx[]> {
   const result : ArSyncTx[] = [...allTxs];
   await Promise.all(allTxs.map(async (tx, index) => {
-    if (tx.status === ArSyncTxStatus.INITIALIZED) {
+    if (isInitialized(tx)) {
       let postedTxResult : Transaction | Error;
       try {
         postedTxResult =
@@ -200,7 +196,7 @@ export function formatNewMetadataToSync(
 
   let diffs = prevMetadataToSync;
   allTxs.forEach(tx => {
-    if (tx.status === ArSyncTxStatus.POSTED || ArSyncTxStatus.CONFIRMED) {
+    if (isPosted(tx) || isConfirmed(tx)) {
       const { subscribeUrl, metadata } = tx;
       const prevPodcastToSyncDiff = findMetadata(subscribeUrl, diffs);
       let newDiff : Partial<Podcast> = {};

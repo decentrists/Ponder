@@ -16,12 +16,19 @@ import * as arweave from '../client/arweave';
 import * as arsync from '../client/arweave/sync';
 import { TransactionStatusResponse } from 'arweave/node/transactions';
 
+// Convenience aliases
+interface ArSyncTx extends arsync.ArSyncTx {}
+const isErrored = arsync.isErrored;
+const isInitialized = arsync.isInitialized;
+const isNotInitialized = arsync.isNotInitialized;
+const isPosted = arsync.isPosted;
+
 interface ArweaveContextType {
   isSyncing: boolean,
   wallet: JWKInterface | undefined,
   walletAddress: string,
   loadNewWallet: (newWallet?: JWKInterface) => Promise<void>,
-  arSyncTxs: arsync.ArSyncTx[],
+  arSyncTxs: ArSyncTx[],
   prepareSync: () => Promise<void>,
   startSync: () => Promise<void>,
   removeArSyncTxs: (ids?: string[] | null) => void,
@@ -45,19 +52,18 @@ function readCachedArSyncTxs() {
   if (!cachedJson) return [];
 
   const arSyncTxsDto = JSON.parse(cachedJson);
-  const arSyncTxsObject : arsync.ArSyncTx[] = arSyncTxsDto.map((tx: arsync.ArSyncTx) => ({
+  const arSyncTxsObject : ArSyncTx[] = arSyncTxsDto.map((tx: ArSyncTx) => ({
     ...tx,
     resultObj: ('errorMessage' in tx.resultObj ? tx.resultObj as unknown as Error :
       tx.resultObj as arsync.TransactionDTO),
-  } as arsync.ArSyncTx));
+  } as ArSyncTx));
 
   return arSyncTxsObject;
 }
 
-function writeCachedArSyncTxs(arSyncTxs: arsync.ArSyncTx[]) {
-  // Skip txs that are in Initialized state
-  const txsToCache = arSyncTxs.filter(tx => tx.status !== arsync.ArSyncTxStatus.INITIALIZED);
-  const arSyncTxsDto : arsync.ArSyncTx[] = txsToCache.map((tx: arsync.ArSyncTx) => ({
+function writeCachedArSyncTxs(arSyncTxs: ArSyncTx[]) {
+  const txsToCache = arSyncTxs.filter(isNotInitialized);
+  const arSyncTxsDto : ArSyncTx[] = txsToCache.map((tx: ArSyncTx) => ({
     ...tx,
     metadata: {},
   }));
@@ -77,7 +83,7 @@ const ArweaveProvider : React.FC<{ children: React.ReactNode }> = ({ children })
   const loadingWallet = useRef(false);
   const [isSyncing, setIsSyncing] = useState(false);
 
-  let cachedArSyncTxs : arsync.ArSyncTx[] = [];
+  let cachedArSyncTxs : ArSyncTx[] = [];
   try {
     cachedArSyncTxs = readCachedArSyncTxs();
   }
@@ -86,10 +92,10 @@ const ArweaveProvider : React.FC<{ children: React.ReactNode }> = ({ children })
     toast(`Error while reading the cached transactions: ${ex}.\nCached transactions have been ` +
           'cleared.', { autohideDelay: 0, variant: 'danger' });
   }
-  const [arSyncTxs, setArSyncTxs] = useState<arsync.ArSyncTx[]>(cachedArSyncTxs);
+  const [arSyncTxs, setArSyncTxs] = useState<ArSyncTx[]>(cachedArSyncTxs);
 
   function hasPendingTxs() {
-    return !!arsync.findInitializedTxs(arSyncTxs).length;
+    return !!arSyncTxs.filter(isInitialized).length;
   }
 
   async function prepareSync() {
@@ -107,7 +113,7 @@ const ArweaveProvider : React.FC<{ children: React.ReactNode }> = ({ children })
       return cancelSync('Subscribed podcasts are already up-to-date.', 'info');
     }
 
-    let newTxs : arsync.ArSyncTx[];
+    let newTxs : ArSyncTx[];
     try {
       newTxs = await arsync.initArSyncTxs(newSubscriptions, newMetadataToSync, wallet);
     }
@@ -116,8 +122,8 @@ const ArweaveProvider : React.FC<{ children: React.ReactNode }> = ({ children })
       return cancelSync(`Failed to sync with Arweave: ${ex}`);
     }
 
-    const failedTxs = arsync.findErroredTxs(newTxs);
-    if (!arsync.findInitializedTxs(newTxs).length) {
+    const failedTxs = newTxs.filter(isErrored);
+    if (!newTxs.filter(isInitialized).length) {
       if (!failedTxs.length) {
         return cancelSync('Subscribed podcasts are already up-to-date.', 'info');
       }
@@ -141,7 +147,7 @@ const ArweaveProvider : React.FC<{ children: React.ReactNode }> = ({ children })
     if (hasPendingTxs()) {
       toast('Pending transactions have been cleared, but their data is still cached.',
         { variant: 'warning' });
-      setArSyncTxs(arSyncTxs.filter(tx => tx.status !== arsync.ArSyncTxStatus.INITIALIZED));
+      setArSyncTxs(arSyncTxs.filter(isNotInitialized));
     }
   }
 
@@ -151,9 +157,9 @@ const ArweaveProvider : React.FC<{ children: React.ReactNode }> = ({ children })
 
     setIsSyncing(true);
 
-    const txsToSync = arsync.findInitializedTxs(arSyncTxs);
+    const txsToSync = arSyncTxs.filter(isInitialized);
     const txsToSyncIds = txsToSync.map(tx => tx.id);
-    let allTxs : arsync.ArSyncTx[];
+    let allTxs : ArSyncTx[];
     try {
       allTxs = await arsync.startSync(arSyncTxs, wallet);
     }
@@ -163,8 +169,8 @@ const ArweaveProvider : React.FC<{ children: React.ReactNode }> = ({ children })
     }
 
     const syncResultTxs = allTxs.filter(tx => txsToSyncIds.includes(tx.id));
-    const postedTxs = arsync.findPostedTxs(syncResultTxs);
-    const erroredTxs = arsync.findErroredTxs(syncResultTxs);
+    const postedTxs = syncResultTxs.filter(isPosted);
+    const erroredTxs = syncResultTxs.filter(isErrored);
     const pluralize = (array: any[]) => array.length > 1 ? 's' : '';
     try {
       if (isNotEmpty(postedTxs)) {
@@ -198,7 +204,7 @@ const ArweaveProvider : React.FC<{ children: React.ReactNode }> = ({ children })
   function removeArSyncTxs(ids: string[] | null = null) {
     if (ids === null) setArSyncTxs([]);
     else {
-      const newValue : arsync.ArSyncTx[] = arSyncTxs.filter(tx => !ids.includes(tx.id));
+      const newValue : ArSyncTx[] = arSyncTxs.filter(tx => !ids.includes(tx.id));
       setArSyncTxs(newValue);
     }
   }
@@ -211,9 +217,9 @@ const ArweaveProvider : React.FC<{ children: React.ReactNode }> = ({ children })
 
     console.debug('Refreshing transaction status');
 
-    const postedTxs = arsync.findPostedTxs(arSyncTxs);
-    const newArSyncTxs : arsync.ArSyncTx[] = [...arSyncTxs];
-    const confirmedTxs : arsync.ArSyncTx[] = [];
+    const postedTxs = arSyncTxs.filter(isPosted);
+    const newArSyncTxs : ArSyncTx[] = [...arSyncTxs];
+    const confirmedTxs : ArSyncTx[] = [];
 
     await Promise.all(postedTxs.map(async postedTx => {
       const status : TransactionStatusResponse =
