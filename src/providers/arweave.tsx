@@ -65,9 +65,12 @@ function writeCachedArSyncTxs(arSyncTxs: arsync.ArSyncTx[]) {
   localStorage.setItem('arSyncTxs', JSON.stringify(arSyncTxsDto));
 }
 
+const TX_CONFIRMATION_INTERVAL = 30000; // ms
+
 // TODO: ArSync v1.5+, test me
 const ArweaveProvider : React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { refresh, metadataToSync, setMetadataToSync } = useContext(SubscriptionsContext);
+  const { isRefreshing, refresh, metadataToSync, setMetadataToSync } =
+    useContext(SubscriptionsContext);
   const toast = useContext(ToastContext);
   const [wallet, setWallet] = useState<JWKInterface>();
   const [walletAddress, setWalletAddress] = useState('');
@@ -89,34 +92,9 @@ const ArweaveProvider : React.FC<{ children: React.ReactNode }> = ({ children })
     return !!arsync.findInitializedTxs(arSyncTxs).length;
   }
 
-  /**
-   * Loads the state variables `wallet` and `walletAddress` for the given `newWallet`.
-   * If !newWallet, a new developer wallet is created and some AR tokens are minted.
-   * @param newWallet
-   */
-  const loadNewWallet = useCallback(async (newWallet?: JWKInterface) => {
-    if (!loadingWallet.current) {
-      loadingWallet.current = true;
-
-      const userOrDevWallet = newWallet || await arweave.createNewDevWallet();
-      if (!valuesEqual(wallet, userOrDevWallet)) {
-        setWalletAddress(await arweave.getWalletAddress(userOrDevWallet));
-        setWallet(userOrDevWallet);
-      }
-
-      loadingWallet.current = false;
-    }
-  }, [wallet]);
-
-  useEffect(() => {
-    loadNewWallet(wallet);
-  }, [wallet, loadNewWallet]);
-
   async function prepareSync() {
     if (!wallet) return cancelSync('Wallet is undefined');
-    if (isSyncing || hasPendingTxs()) return;
-
-    await confirmArSyncTxs(); // TODO: instead, use setInterval elsewhere
+    if (isSyncing || isRefreshing || hasPendingTxs()) return;
 
     setIsSyncing(true);
 
@@ -213,10 +191,23 @@ const ArweaveProvider : React.FC<{ children: React.ReactNode }> = ({ children })
   }
 
   /**
+   * Removes elements matching `ids` from `arSyncTxs`.
+   * Clears all `arSyncTxs` if `ids` is null.
+   * @param ids
+   */
+  function removeArSyncTxs(ids: string[] | null = null) {
+    if (ids === null) setArSyncTxs([]);
+    else {
+      const newValue : arsync.ArSyncTx[] = arSyncTxs.filter(tx => !ids.includes(tx.id));
+      setArSyncTxs(newValue);
+    }
+  }
+
+  /**
    * Determines the transaction status of the posted `arSyncTxs` and updates the confirmed ones.
    */
-  async function confirmArSyncTxs() {
-    if (isSyncing) return;
+  const confirmArSyncTxs = useCallback(async () => {
+    if (isSyncing || isRefreshing) return;
 
     console.debug('Refreshing transaction status');
 
@@ -250,25 +241,41 @@ const ArweaveProvider : React.FC<{ children: React.ReactNode }> = ({ children })
       const confirmedPodcastIds = new Set<string>(confirmedTxs.map(tx => tx.subscribeUrl));
       await refresh([...confirmedPodcastIds], true, 0);
     }
-  }
+  }, [isSyncing, isRefreshing, arSyncTxs, refresh]);
 
   /**
-   * Removes elements matching `ids` from `arSyncTxs`.
-   * Clears all `arSyncTxs` if `ids` is null.
-   * @param ids
+   * Loads the state variables `wallet` and `walletAddress` for the given `newWallet`.
+   * If !newWallet, a new developer wallet is created and some AR tokens are minted.
+   * @param newWallet
    */
-  function removeArSyncTxs(ids: string[] | null = null) {
-    if (ids === null) setArSyncTxs([]);
-    else {
-      const newValue : arsync.ArSyncTx[] = arSyncTxs.filter(tx => !ids.includes(tx.id));
-      setArSyncTxs(newValue);
+  const loadNewWallet = useCallback(async (newWallet?: JWKInterface) => {
+    if (!loadingWallet.current) {
+      loadingWallet.current = true;
+
+      const userOrDevWallet = newWallet || await arweave.createNewDevWallet();
+      if (!valuesEqual(wallet, userOrDevWallet)) {
+        setWalletAddress(await arweave.getWalletAddress(userOrDevWallet));
+        setWallet(userOrDevWallet);
+      }
+
+      loadingWallet.current = false;
     }
-  }
+  }, [wallet]);
+
+  useEffect(() => {
+    loadNewWallet(wallet);
+  }, [wallet, loadNewWallet]);
+
+  useEffect(() => {
+    let id = setInterval(confirmArSyncTxs, TX_CONFIRMATION_INTERVAL);
+    return () => clearInterval(id);
+  }, [confirmArSyncTxs]);
 
   useRerenderEffect(() => {
     console.debug('arSyncTxs has been updated to:', arSyncTxs);
 
-    // TODO: warn upon leaving page if there are pending Initialized arSyncTxs
+    // TODO: warn upon leaving page if there are pending Initialized arSyncTxs, as these aren't
+    //   cached (and should not be cached since recreating them costs nothing and avoids timeouts).
 
     try {
       writeCachedArSyncTxs(arSyncTxs);
