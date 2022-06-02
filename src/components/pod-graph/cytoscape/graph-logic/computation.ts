@@ -3,42 +3,61 @@ import { v4 as uuid } from 'uuid';
 import { Podcast } from '../../../../client/interfaces';
 import {
   findSharedCategoriesAndKeywords, haveSharedElements,
+  haveSharedKeywords,
   removeDuplicateElements,
+  SharedKeywords,
 } from './utils';
 
-export interface DisjointGraphFunctionNode extends Pick<Podcast, 'subscribeUrl'> {
+export interface DisjointGraphNode extends Pick<Podcast, 'subscribeUrl'> {
   keywordsAndCategories: string[];
   visited: boolean;
 }
+
+export interface DisjointGraph {
+  nodes: DisjointGraphNode[],
+  sharedKeywordsAndCategories: SharedKeywords[]
+}
+
+
+export const countSharedKeywords = (keywords: string[], currentKeywords: SharedKeywords[] = []) => {
+  let result = [...currentKeywords];
+  keywords.forEach((keyword) => {
+    const item = result.find((el) => el.name === keyword);
+    if (!item) result = [...result, { name: keyword, count: 1 }];
+    else item.count += 1;
+  });
+  return result;
+};
+
 /**
  * @param nodes
  * @param disjointGraphs The intermediate result through recursion
  * @returns
  *   An array of graph representations grouped by shared keywords & categories
  */
-export const findAllDisjointGraphs = (nodes: DisjointGraphFunctionNode[],
-  disjointGraphs : DisjointGraphFunctionNode[][] = []) : DisjointGraphFunctionNode[][] => {
+export const findAllDisjointGraphs = (nodes: DisjointGraphNode[],
+  disjointGraphs : DisjointGraph[] = []) : DisjointGraph[] => {
   const firstUnvisitedNode = nodes.find(item => item.visited !== true);
   if (!firstUnvisitedNode) return disjointGraphs;
 
   firstUnvisitedNode.visited = true;
-  let keywordsAndCategoriesInCommon = firstUnvisitedNode.keywordsAndCategories;
+  let sharedKeywordsAndCategories = countSharedKeywords(firstUnvisitedNode.keywordsAndCategories);
 
   const graph = [firstUnvisitedNode];
   let relatedPodcast;
   do {
     // eslint-disable-next-line no-loop-func, @typescript-eslint/no-loop-func
     relatedPodcast = nodes.find(item => item.visited !== true
-        && haveSharedElements(keywordsAndCategoriesInCommon, item.keywordsAndCategories));
+        && haveSharedKeywords(sharedKeywordsAndCategories, item.keywordsAndCategories));
     if (!relatedPodcast) break;
 
     relatedPodcast.visited = true;
-    keywordsAndCategoriesInCommon = removeDuplicateElements([...keywordsAndCategoriesInCommon,
-      ...relatedPodcast.keywordsAndCategories]);
+    sharedKeywordsAndCategories = 
+      countSharedKeywords(relatedPodcast.keywordsAndCategories, sharedKeywordsAndCategories);
     graph.push(relatedPodcast);
   } while (relatedPodcast);
 
-  disjointGraphs.push(graph);
+  disjointGraphs.push({ nodes: graph, sharedKeywordsAndCategories });
 
   return findAllDisjointGraphs(nodes, disjointGraphs);
 };
@@ -49,8 +68,8 @@ export const findAllDisjointGraphs = (nodes: DisjointGraphFunctionNode[],
  * @returns The findAllDisjointGraphs result mapped onto the subscriptions metadata
  */
 const finalizeDisjointGraphsObject = (subscriptions: Podcast[],
-  disjointGraphs:DisjointGraphFunctionNode[][]) => disjointGraphs
-  .map(graph => graph
+  disjointGraphs:DisjointGraph[]) => disjointGraphs
+  .map(graph => graph.nodes
     .map(node => subscriptions
       .find(subscription => subscription.subscribeUrl === node.subscribeUrl)!));
 
@@ -68,7 +87,9 @@ export const groupSubscriptionsBySharedKeywords = (subscriptions: Podcast[]) => 
     ]),
     visited: false,
   }));
-  return finalizeDisjointGraphsObject(subscriptions, findAllDisjointGraphs(nodes));
+  const disjointGraphs = findAllDisjointGraphs(nodes);
+  const podcasts = finalizeDisjointGraphsObject(subscriptions, disjointGraphs);
+  return { podcasts, disjointGraphs };
 };
 
 export const generateNodes = (disjointGraphs: Podcast[][]) => {
@@ -105,8 +126,40 @@ export const generateNodes = (disjointGraphs: Podcast[][]) => {
   return nodes;
 };
 
-export const generateEdges = (disjointGraphs: Podcast[][]) => {
-  const eachDisjointGraphEdges = disjointGraphs.map(graph => graph
+const getKeywordScore = (keywords: SharedKeywords[],
+  keyword: string) => keywords.find((element) => element.name === keyword)!.count;
+
+/**
+ * @see https://phab.decentapps.eu/T243 
+ */
+export const computeEdgeWeight = (disjointGraphs: DisjointGraph[],
+  sourceId: string, targetId: string) => {
+  let target! : DisjointGraphNode, source! : DisjointGraphNode, graph!: DisjointGraph;
+  for (const item of disjointGraphs) {
+    const sourceIndex = item.nodes.findIndex((node) => node.subscribeUrl === sourceId);
+    const targetIndex = item.nodes.findIndex((node) => node.subscribeUrl === targetId);
+    if (sourceIndex !== -1 && targetIndex !== -1) {
+      source = item.nodes[sourceIndex];
+      target = item.nodes[targetIndex];
+      graph  = item;
+      break;
+    }
+  }
+  if (!source || !target || !graph) throw new Error('Incorrect source or target id');
+  const sourceScore = source.keywordsAndCategories.reduce(
+    (acc, keyword) =>  acc + getKeywordScore(graph.sharedKeywordsAndCategories, keyword), 0);
+
+  const targetScore = target.keywordsAndCategories.reduce(
+    (acc, keyword) =>  acc + getKeywordScore(graph.sharedKeywordsAndCategories, keyword), 0);
+
+  const totalScore = graph.sharedKeywordsAndCategories.reduce(
+    (acc, keyword) =>  acc + getKeywordScore(graph.sharedKeywordsAndCategories, keyword.name), 0);
+
+  return (sourceScore + targetScore) / totalScore;
+};
+
+export const generateEdges = (podcasts: Podcast[][], disjointGraphs: DisjointGraph[]) => {
+  const eachDisjointGraphEdges = podcasts.map(graph => graph
     .reduce((acc: EdgeDefinition[], podcast, _, arrayReference) => {
       // A match is any other podcast that has one same category or keyword
       let matches = arrayReference.filter(({ categories, keywords }) => (
@@ -123,6 +176,7 @@ export const generateEdges = (disjointGraphs: Podcast[][]) => {
           source: podcast.subscribeUrl,
           target: match.subscribeUrl,
           label: relations.join('\n'),
+          weight: computeEdgeWeight(disjointGraphs, podcast.subscribeUrl, match.subscribeUrl),
         };
         return { data: edge };
       });

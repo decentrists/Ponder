@@ -55,14 +55,12 @@ const ToggleBtn : React.FC<Props> = ({
   collapseGroups,
   expandGroups,
   toggle = false,
-}) => {
-  return (
+}) => (
     <Btn
       onClick={toggle ? expandGroups : collapseGroups}
     >
       {toggle ? <BtnIconOpen /> : <BtnIconClose /> }
     </Btn>
-  );
-};
+);
 
 export default ToggleBtn;

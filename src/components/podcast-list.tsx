@@ -34,8 +34,7 @@ const TimeRelease = styled.small`
   line-height: 1rem;
 `;
 
-const PodcastList : React.FC<Props> = ({ subscriptions, unsubscribe }) => {
-  return (
+const PodcastList : React.FC<Props> = ({ subscriptions, unsubscribe }) => (
     <ListContainer>
       { subscriptions.length ? (
         <div>
@@ -71,7 +70,6 @@ const PodcastList : React.FC<Props> = ({ subscriptions, unsubscribe }) => {
         <ListItem>There are no podcasts to display&hellip;</ListItem>
       )}
     </ListContainer>
-  );
-};
+);
 
 export default PodcastList;

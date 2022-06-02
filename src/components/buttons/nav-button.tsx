@@ -28,8 +28,7 @@ interface Props {
   to: string;
 }
 
-const NavButton : React.FC<Props> = ({ children, ...props }) => {
-  return (
+const NavButton : React.FC<Props> = ({ children, ...props }) => (
     <li>
       <NavBtn
         as={NavLink}
@@ -38,7 +37,6 @@ const NavButton : React.FC<Props> = ({ children, ...props }) => {
         {children}
       </NavBtn>
     </li>
-  );
-};
+);
 
 export default NavButton;

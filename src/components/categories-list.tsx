@@ -36,8 +36,7 @@ const CategoryItem = styled.div`
 `;
 
 // @ts-ignore
-const CategoriesList : React.FC<Props> = ({ categories }) => {
-  return (
+const CategoriesList : React.FC<Props> = ({ categories }) => (
     <ListContainer>
       <CategoryHeader>
         Popular
@@ -60,7 +59,6 @@ const CategoriesList : React.FC<Props> = ({ categories }) => {
         </CategoryItem>
       </CategoryList>
     </ListContainer>
-  );
-};
+);
 
 export default CategoriesList;

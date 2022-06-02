@@ -36,12 +36,11 @@ const MAX_BATCH_NUMBER = 100;
 const MAX_GRAPHQL_NODES = 100;
 
 /** Helper function mapping each {tag: value, ...} to [{name: tag, values: value}, ...] */
-const toTagFilter = (tagsToFilter: TagsToFilter) : TagFilter[] => {
-  return Object.entries(tagsToFilter).map(([tag, value]) => ({
+const toTagFilter = (tagsToFilter: TagsToFilter) : TagFilter[] => Object
+  .entries(tagsToFilter).map(([tag, value]) => ({
     name: toTag(tag),
     values: Array.isArray(value) ? value : [value],
   }));
-};
 
 export async function getPodcastFeed(
   subscribeUrl: Podcast['subscribeUrl']) : Promise<Podcast | PodcastFeedError> {

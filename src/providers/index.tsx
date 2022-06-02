@@ -10,8 +10,7 @@ interface Props {
   children: React.ReactNode;
 }
 
-const GlobalProviders : React.FC<Props> = ({ children }) => {
-  return (
+const GlobalProviders : React.FC<Props> = ({ children }) => (
     <ToastProvider>
       <SubscriptionsProvider>
         <ArweaveProvider>
@@ -25,7 +24,6 @@ const GlobalProviders : React.FC<Props> = ({ children }) => {
         </ArweaveProvider>
       </SubscriptionsProvider>
     </ToastProvider>
-  );
-};
+);
 
 export default GlobalProviders;

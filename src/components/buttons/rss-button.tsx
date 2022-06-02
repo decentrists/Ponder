@@ -49,8 +49,7 @@ const RssButton : React.FC<Props> = ({
   disabled = false,
   onClick,
   ...props
-}) => {
-  return (
+}) => (
     <CustomBtn
       className={className}
       type={onClick ? 'button' : 'submit'}
@@ -65,7 +64,6 @@ const RssButton : React.FC<Props> = ({
         <PlusIcon />
       )}
     </CustomBtn>
-  );
-};
+);
 
 export default RssButton;
