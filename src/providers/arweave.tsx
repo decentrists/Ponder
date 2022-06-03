@@ -273,7 +273,7 @@ const ArweaveProvider : React.FC<{ children: React.ReactNode }> = ({ children })
   }, [wallet, loadNewWallet]);
 
   useEffect(() => {
-    let id = setInterval(confirmArSyncTxs, TX_CONFIRMATION_INTERVAL);
+    const id = setInterval(confirmArSyncTxs, TX_CONFIRMATION_INTERVAL);
     return () => clearInterval(id);
   }, [confirmArSyncTxs]);
 

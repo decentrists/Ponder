@@ -7,6 +7,7 @@ module.exports = {
     '@typescript-eslint/brace-style': 'off',
     '@typescript-eslint/no-use-before-define': 'off',
     'arrow-body-style': ['error', 'as-needed'],
+    'prefer-const': ['error'],
     'object-curly-newline': ['error', {
       ImportDeclaration: {
         consistent: true,
