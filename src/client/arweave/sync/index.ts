@@ -2,9 +2,15 @@ import { v4 as uuid } from 'uuid';
 import Transaction from 'arweave/node/lib/transaction';
 import { JWKInterface } from 'arweave/node/lib/wallet';
 import { Podcast } from '../../interfaces';
-import { episodesCount, findMetadata, hasMetadata } from '../../../utils';
+import {
+  episodesCount,
+  findMetadata,
+  getFirstEpisodeDate,
+  getLastEpisodeDate,
+  hasMetadata,
+} from '../../../utils';
 import { getMetadataBatchNumber } from '../create-transaction';
-import { rightDiff } from './diff-merge-logic';
+import { mergeBatchMetadata, rightDiff } from './diff-merge-logic';
 import * as arweave from '..';
 
 export enum ArSyncTxStatus {
@@ -18,7 +24,7 @@ export enum ArSyncTxStatus {
 export interface TransactionDTO extends Transaction {}
 
 export interface ArSyncTx {
-  id: string,
+  id: string, // uuid, not to be confused with `(resultObj as Transaction).id`
   subscribeUrl: string, // TODO: pending T244, change to 'podcastId'
   title?: string,
   resultObj: Transaction | TransactionDTO | Error,
@@ -27,7 +33,6 @@ export interface ArSyncTx {
   status: ArSyncTxStatus,
   // TODO: add `timestamp`
 }
-
 
 /** To reduce the size per transaction */
 const MAX_EPISODES_PER_BATCH = 50;
@@ -52,17 +57,14 @@ export const statusToString = (status: ArSyncTxStatus) => {
   }
 };
 
-export const findErroredTxs = (txs: ArSyncTx[]) : ArSyncTx[] =>
-  txs.filter(tx => tx.status === ArSyncTxStatus.ERRORED);
-
-export const findInitializedTxs = (txs: ArSyncTx[]) : ArSyncTx[] =>
-  txs.filter(tx => tx.status === ArSyncTxStatus.INITIALIZED);
-
-export const findPostedTxs = (txs: ArSyncTx[]) : ArSyncTx[] =>
-  txs.filter(tx => tx.status === ArSyncTxStatus.POSTED);
-
-export const findConfirmedTxs = (txs: ArSyncTx[]) : ArSyncTx[] =>
-  txs.filter(tx => tx.status === ArSyncTxStatus.CONFIRMED);
+export const isErrored = (tx: ArSyncTx) => tx.status === ArSyncTxStatus.ERRORED;
+export const isNotErrored = (tx: ArSyncTx) => tx.status !== ArSyncTxStatus.ERRORED;
+export const isInitialized = (tx: ArSyncTx) => tx.status === ArSyncTxStatus.INITIALIZED;
+export const isNotInitialized = (tx: ArSyncTx) => tx.status !== ArSyncTxStatus.INITIALIZED;
+export const isPosted = (tx: ArSyncTx) => tx.status === ArSyncTxStatus.POSTED;
+export const isNotPosted = (tx: ArSyncTx) => tx.status !== ArSyncTxStatus.POSTED;
+export const isConfirmed = (tx: ArSyncTx) => tx.status === ArSyncTxStatus.CONFIRMED;
+export const isNotConfirmed = (tx: ArSyncTx) => tx.status !== ArSyncTxStatus.CONFIRMED;
 
 export async function initArSyncTxs(
   subscriptions: Podcast[], metadataToSync: Partial<Podcast>[], wallet: JWKInterface)
@@ -84,7 +86,6 @@ export async function initArSyncTxs(
         partitionedMetadataToSync.push(...batchesToSync);
       }
       catch (ex) {
-        // This would only occur due to an unforeseen error in our code
         console.error(`Failed to sync ${subscribeUrl} due to: ${ex}`);
       }
     }
@@ -123,7 +124,7 @@ export async function initArSyncTxs(
 export async function startSync(allTxs: ArSyncTx[], wallet: JWKInterface) : Promise<ArSyncTx[]> {
   const result : ArSyncTx[] = [...allTxs];
   await Promise.all(allTxs.map(async (tx, index) => {
-    if (tx.status === ArSyncTxStatus.INITIALIZED) {
+    if (isInitialized(tx)) {
       let postedTxResult : Transaction | Error;
       try {
         postedTxResult =
@@ -160,24 +161,31 @@ function partitionMetadataBatches(
   const { episodes, ...mainMetadata } = { ...podcastMetadataToSync };
   if (!hasMetadata(episodes)) return [podcastMetadataToSync];
 
-  // Episodes are sorted from new to old
-  const firstBatch = { ...mainMetadata, episodes: (episodes || []).slice(-MAX_EPISODES_PER_BATCH) };
-  const firstBatchNumber = getMetadataBatchNumber(cachedMetadata,
-    firstBatch.episodes[firstBatch.episodes.length - 1].publishedAt,
-    firstBatch.episodes[0].publishedAt);
-
-  const batches : Partial<Podcast>[] = [{ ...firstBatch, metadataBatch: firstBatchNumber }];
+  const batches : Partial<Podcast>[] = [];
   const numBatches = Math.min(MAX_BATCHES, Math.ceil(episodes.length / MAX_EPISODES_PER_BATCH));
+  let priorMetadata = cachedMetadata;
 
-  for (let count = 2; count <= numBatches; count++) {
+  for (let count = 1; count <= numBatches; count++) {
+    // Episodes are sorted from new to old
+    const batchEpisodes = count === 1 ? (episodes || []).slice(-MAX_EPISODES_PER_BATCH) :
+      episodes.slice(-(MAX_EPISODES_PER_BATCH * count), -(MAX_EPISODES_PER_BATCH * (count - 1)));
     const currentBatch = {
       ...mainMetadata,
-      episodes: (episodes || [])
-        .slice(-(MAX_EPISODES_PER_BATCH * count), -(MAX_EPISODES_PER_BATCH * (count - 1))),
+      episodes: batchEpisodes,
     };
-    const previousVsCurrentDiff =
-      rightDiff(batches[count - 2], currentBatch, ['subscribeUrl', 'title']);
-    batches.push({ ...previousVsCurrentDiff, metadataBatch: (firstBatchNumber + count - 1) });
+    const previousBatch = batches.length ? batches[batches.length - 1] : {};
+    const previousVsCurrentDiff = rightDiff(previousBatch, currentBatch, ['subscribeUrl', 'title']);
+    priorMetadata = mergeBatchMetadata([priorMetadata, previousBatch], true);
+
+    const firstEpisodeDate = getFirstEpisodeDate(currentBatch);
+    const lastEpisodeDate = getLastEpisodeDate(currentBatch);
+    const metadataBatch = getMetadataBatchNumber(priorMetadata, firstEpisodeDate, lastEpisodeDate);
+    batches.push({
+      ...previousVsCurrentDiff,
+      firstEpisodeDate,
+      lastEpisodeDate,
+      metadataBatch,
+    });
   }
 
   return batches.filter(batch => hasMetadata(batch));
@@ -188,11 +196,13 @@ export function formatNewMetadataToSync(
 
   let diffs = prevMetadataToSync;
   allTxs.forEach(tx => {
-    if (tx.status === ArSyncTxStatus.POSTED || ArSyncTxStatus.CONFIRMED) {
+    if (isPosted(tx) || isConfirmed(tx)) {
       const { subscribeUrl, metadata } = tx;
       const prevPodcastToSyncDiff = findMetadata(subscribeUrl, diffs);
       let newDiff : Partial<Podcast> = {};
-      if (hasMetadata(prevPodcastToSyncDiff)) newDiff = rightDiff(metadata, prevPodcastToSyncDiff);
+      if (hasMetadata(prevPodcastToSyncDiff)) {
+        newDiff = rightDiff(metadata, prevPodcastToSyncDiff, ['subscribeUrl', 'title']);
+      }
 
       diffs = diffs.filter(oldDiff => oldDiff.subscribeUrl !== subscribeUrl);
       if (hasMetadata(newDiff)) diffs.push(newDiff);

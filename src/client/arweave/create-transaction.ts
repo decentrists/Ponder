@@ -20,7 +20,7 @@ import Transaction from 'arweave/node/lib/transaction';
 type MandatoryTags = typeof MANDATORY_ARWEAVE_TAGS[number];
 
 async function newTransaction(
-  wallet: JWKInterface, newMetadata: Partial<Podcast>, tags : [string, string][] = [])
+  wallet: JWKInterface, newMetadata: Partial<Podcast>, tags: [string, string][] = [])
   : Promise<Transaction> {
 
   try {

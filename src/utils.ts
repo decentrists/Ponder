@@ -5,6 +5,7 @@ import {
   Episode,
   Podcast,
   PodcastDTO,
+  PodcastFeedError,
 } from './client/interfaces';
 import { initializeKeywords } from './client/metadata-filtering/generation';
 
@@ -47,6 +48,20 @@ export type EmptyTypes = null | undefined | {};
 
 export function episodesCount(metadata: Partial<Podcast>) : number {
   return isNotEmpty(metadata.episodes) ? metadata.episodes.length : 0;
+}
+
+export function getFirstEpisodeDate(metadata: Partial<Podcast>) : Date {
+  if (!episodesCount(metadata)) return new Date(0);
+
+  const result = metadata.episodes![metadata.episodes!.length - 1].publishedAt;
+  return isValidDate(result) ? result : new Date(0);
+}
+
+export function getLastEpisodeDate(metadata: Partial<Podcast>) : Date {
+  if (!episodesCount(metadata)) return new Date(0);
+
+  const result = metadata.episodes![0].publishedAt;
+  return isValidDate(result) ? result : new Date(0);
 }
 
 /**
@@ -97,6 +112,19 @@ K extends Partial<Podcast> | Partial<Episode>>(metadata: K | T | EmptyTypes) : m
 export function findMetadata(subscribeUrl: Podcast['subscribeUrl'],
   arrayOfMetadata: Partial<Podcast>[] = []) : Partial<Podcast> {
   return arrayOfMetadata.find(obj => isNotEmpty(obj) && obj.subscribeUrl === subscribeUrl) || {};
+}
+
+export function partialToPodcast(partialMetadata: Partial<Podcast>) : Podcast | PodcastFeedError {
+  const result : Podcast = {
+    ...partialMetadata,
+    subscribeUrl: partialMetadata.subscribeUrl || '',
+    title: partialMetadata.title || '',
+  };
+
+  if (!result.subscribeUrl) return { errorMessage: 'Feed URL is missing.' };
+  if (!result.title) return { errorMessage: `Feed ${result.subscribeUrl} is missing a title.` };
+
+  return result;
 }
 
 export function podcastFromDTO(podcast : PodcastDTO, sortEpisodes = true) : Podcast {

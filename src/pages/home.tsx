@@ -6,9 +6,7 @@ import { SubscriptionsContext } from '../providers/subscriptions';
 import { ArweaveContext } from '../providers/arweave';
 import PodGraph from '../components/pod-graph';
 import HeaderComponent from '../components/layout/header-component';
-import {
-  Wrapper,
-} from '../components/shared-elements';
+import { Wrapper } from '../components/shared-elements';
 import CategoriesList from '../components/categories-list';
 import PodcastList from '../components/podcast-list';
 import TransactionList from '../components/transaction-list';

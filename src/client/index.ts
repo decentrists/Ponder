@@ -1,8 +1,14 @@
 import * as arweave from './arweave';
 import * as rss from './rss';
-import { findMetadata, hasMetadata } from '../utils';
+import { findMetadata, hasMetadata, partialToPodcast } from '../utils';
 import { mergeBatchMetadata, simpleDiff, rightDiff } from './arweave/sync/diff-merge-logic';
 import { Podcast } from './interfaces';
+
+type GetPodcastResult = {
+  errorMessage?: string;
+  newPodcastMetadata?: Podcast;
+  newPodcastMetadataToSync?: Partial<Podcast>;
+};
 
 async function fetchFeeds(subscribeUrl: Podcast['subscribeUrl']) {
   const [arweaveFeed, rssFeed] = await Promise.all([
@@ -15,8 +21,8 @@ async function fetchFeeds(subscribeUrl: Podcast['subscribeUrl']) {
   };
 }
 
-export async function getPodcast(
-  subscribeUrl: Podcast['subscribeUrl'], metadataToSync: Partial<Podcast>[] = []) {
+export async function getPodcast(subscribeUrl: Podcast['subscribeUrl'],
+  metadataToSync: Partial<Podcast>[] = []) : Promise<GetPodcastResult> {
 
   const feed = await fetchFeeds(subscribeUrl);
   if ('errorMessage' in feed.arweave) {
@@ -36,41 +42,51 @@ export async function getPodcast(
   const metadataToSyncWithNewEpisodes =
     mergeBatchMetadata([rssDiffnewToArweave, currentPodcastMetadataToSync], false);
 
-  const newPodcastMetadata =
+  const newPartialPodcastMetadata : Partial<Podcast> =
     mergeBatchMetadata([feed.arweave, metadataToSyncWithNewEpisodes], true);
+  const newPodcastMetadata = partialToPodcast(newPartialPodcastMetadata);
+  if ('errorMessage' in newPodcastMetadata) return newPodcastMetadata;
+
   const newPodcastMetadataToSync =
     rightDiff(feed.arweave, metadataToSyncWithNewEpisodes, ['subscribeUrl', 'title']);
 
   return { newPodcastMetadata, newPodcastMetadataToSync };
 }
 
-export async function refreshSubscriptions(
-  subscriptions: Podcast[], metadataToSync: Partial<Podcast>[] = []) {
+export async function refreshSubscriptions(subscriptions: Podcast[],
+  metadataToSync: Partial<Podcast>[] = [], idsToRefresh: Podcast['subscribeUrl'][] | null = null) {
 
   const errorMessages : string[] = [];
   const newSubscriptions : Podcast[] = [];
   const newMetadataToSync : Partial<Podcast>[] = [];
+
+  const podcastsToRefresh = idsToRefresh ? idsToRefresh : subscriptions.map(x => x.subscribeUrl);
   const getPodcastResults = await Promise.all(
-    subscriptions.map(subscription => getPodcast(subscription.subscribeUrl, metadataToSync)),
+    podcastsToRefresh.map(subscribeUrl => getPodcast(subscribeUrl, metadataToSync)),
   );
 
-  getPodcastResults.forEach((result, index) => {
-    const { errorMessage, newPodcastMetadata, newPodcastMetadataToSync } = result;
-    const subscription = subscriptions[index];
-
-    if (hasMetadata(newPodcastMetadata)) {
-      newSubscriptions.push(newPodcastMetadata);
-      if (hasMetadata(newPodcastMetadataToSync)) newMetadataToSync.push(newPodcastMetadataToSync);
+  const replaceOldSubscription = (subscription: Podcast, errorMessage: string = '') => {
+    const oldPodcastMetadataToSync = findMetadata(subscription.subscribeUrl, metadataToSync);
+    if (errorMessage) {
+      errorMessages.push(`${subscription.title} failed to refresh due to:\n${errorMessage}`);
     }
-    else {
-      const oldPodcastMetadataToSync = findMetadata(subscription.subscribeUrl, metadataToSync);
+    newSubscriptions.push(subscription);
+    if (hasMetadata(oldPodcastMetadataToSync)) newMetadataToSync.push(oldPodcastMetadataToSync);
+  };
 
-      if (errorMessage) {
-        errorMessages.push(`${subscription.title} failed to refresh due to:\n${errorMessage}`);
+  subscriptions.forEach((subscription) => {
+    const getPodcastResultIndex = podcastsToRefresh.findIndex(x => x === subscription.subscribeUrl);
+    if (getPodcastResultIndex > -1) {
+      const { errorMessage, newPodcastMetadata, newPodcastMetadataToSync } =
+        getPodcastResults[getPodcastResultIndex];
+
+      if (hasMetadata(newPodcastMetadata)) {
+        newSubscriptions.push(newPodcastMetadata);
+        if (hasMetadata(newPodcastMetadataToSync)) newMetadataToSync.push(newPodcastMetadataToSync);
       }
-      newSubscriptions.push(subscription);
-      if (hasMetadata(oldPodcastMetadataToSync)) newMetadataToSync.push(oldPodcastMetadataToSync);
+      else replaceOldSubscription(subscription, errorMessage);
     }
+    else replaceOldSubscription(subscription);
   });
 
   return {

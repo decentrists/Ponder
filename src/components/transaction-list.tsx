@@ -4,7 +4,8 @@ import relativeTime from 'dayjs/plugin/relativeTime';
 import RemoveBtn from './buttons/remove-button';
 import {
   ArSyncTx,
-  ArSyncTxStatus,
+  isNotInitialized,
+  isNotPosted,
   statusToString,
 } from '../client/arweave/sync';
 import {
@@ -30,9 +31,7 @@ const TransactionList : React.FC<Props> = ({ subscriptions, txs, removeArSyncTxs
     return cachedPodcast.imageUrl || ''; // TODO: replace '' with default Ponder logo
   };
 
-  const completedTxIds = txs
-    .filter(tx => tx.status !== ArSyncTxStatus.INITIALIZED && tx.status !== ArSyncTxStatus.POSTED)
-    .map(tx => tx.id);
+  const completedTxIds = txs.filter(tx => isNotInitialized(tx) && isNotPosted(tx)).map(tx => tx.id);
 
   return (
     <ListContainer>

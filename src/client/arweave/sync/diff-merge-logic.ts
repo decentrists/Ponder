@@ -92,8 +92,9 @@ function mergeEpisodesMetadata(oldEpisodes: PartialEpisodeWithDate[],
  * @param episodeBatches
  * @returns
  */
-export function mergeEpisodeBatches(episodeBatches: PartialEpisodeWithDate[][]) {
-  return episodeBatches.reduce((mergedEps, batch) => mergeEpisodesMetadata(mergedEps, batch), []);
+export function mergeEpisodeBatches(episodeBatches: PartialEpisodeWithDate[][]) : Episode[] {
+  return episodeBatches.reduce((mergedEps, batch) => mergeEpisodesMetadata(mergedEps, batch), []) as
+    Episode[];
 }
 
 /**
@@ -107,10 +108,12 @@ export function mergeEpisodeBatches(episodeBatches: PartialEpisodeWithDate[][]) 
  * @returns A new object with merged podcast metadata, where newer batches take precedence
  *   (read above for exceptions) and episodes are merged by @see mergeEpisodeBatches
  */
-export function mergeBatchMetadata(metadataBatches: Partial<Podcast>[]
-  , applyMergeSpecialTags = false) : Podcast | {} {
-  if (!isNotEmpty(metadataBatches) ||
-    metadataBatches.every(batch => !hasMetadata(batch))) return {};
+export function mergeBatchMetadata(
+  metadataBatches: Partial<Podcast>[], applyMergeSpecialTags = false) : Partial<Podcast> {
+
+  if (!isNotEmpty(metadataBatches) || metadataBatches.every(batch => !hasMetadata(batch))) {
+    return {} as Partial<Podcast>;
+  }
 
   const mergedEpisodes = mergeEpisodeBatches(metadataBatches.map(batch => batch.episodes || []));
   return {

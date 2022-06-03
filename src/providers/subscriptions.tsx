@@ -16,8 +16,8 @@ interface SubscriptionContextType {
   lastRefreshTime: number,
   subscribe: (id: string) => Promise<boolean>,
   unsubscribe: (id: string) => Promise<void>,
-  refresh: (silent?: boolean, maxLastRefreshAge?: number) => Promise<[null, null] |
-  [Podcast[], Partial<Podcast>[]]>,
+  refresh: (idsToRefresh?: Podcast['subscribeUrl'][] | null, silent?: boolean,
+    maxLastRefreshAge?: number) => Promise<[null, null] | [Podcast[], Partial<Podcast>[]]>,
   metadataToSync: Partial<Podcast>[],
   setMetadataToSync: (value: Partial<Podcast>[]) => void,
 }
@@ -34,8 +34,6 @@ export const SubscriptionsContext = createContext<SubscriptionContextType>({
 });
 
 function readCachedPodcasts() {
-  // TODO: use e.g. WebSQL instead of localStorage
-  // https://stackoverflow.com/questions/6116053/javascript-library-to-bridge-indexeddb-and-websql
   const cachedSubscriptions = localStorage.getItem('subscriptions');
   const podcasts = cachedSubscriptions ? JSON.parse(cachedSubscriptions) : [];
   return podcastsFromDTO(podcasts);
@@ -91,23 +89,22 @@ const SubscriptionsProvider : React.FC<{ children: React.ReactNode }> = ({ child
   }
 
   /**
+   * @param idsToRefresh If `null`, all subscriptions are refreshed
    * @param silent If true, toasts are skipped
-   * @param maxLastRefreshAge
-   *   Only refresh if the last refresh occurred over `maxLastRefreshAge` seconds ago
+   * @param maxLastRefreshAge Only refresh if the last refresh occurred over `maxLastRefreshAge`
+   *   seconds ago. If 0, refresh regardless.
    * @returns An array with the resulting subscriptions and metadataToSync
    */
-  const refresh = async (silent = false, maxLastRefreshAge = 1) : Promise<[null, null]
-  | [Podcast[], Partial<Podcast>[]]> => {
+  const refresh = async (idsToRefresh: Podcast['subscribeUrl'][] | null = null, silent = false,
+    maxLastRefreshAge = 1) : Promise<[null, null] | [Podcast[], Partial<Podcast>[]]> => {
 
     if (isRefreshing) return [null, null];
     if (getLastRefreshAge() <= maxLastRefreshAge) return [subscriptions, metadataToSync];
 
     setIsRefreshing(true);
     try {
-      // TODO: T250 ArSync v1.2, include `ArweaveProvider.unconfirmedArSyncTxs.map(x => x.metadata)`
-      // in newSubscriptions and exclude it from newMetadataToSync
       const { errorMessages, newSubscriptions, newMetadataToSync } =
-        await refreshSubscriptions(subscriptions, metadataToSync);
+        await refreshSubscriptions(subscriptions, metadataToSync, idsToRefresh);
 
       setLastRefreshTime(unixTimestamp());
       setSubscriptions(newSubscriptions);

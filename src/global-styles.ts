@@ -18,9 +18,7 @@ export default createGlobalStyle`
     background-color: var(--color-body);
   }
 
-
-
-  /* Toasts */
+  /* ====== Toasts ====== */
   .toast {
     width: max-content;
     min-width: 400px;
@@ -44,8 +42,7 @@ export default createGlobalStyle`
     background-color: #e9c98a;
   }
 
-
-  /* ====== global bootstrap ====== */
+  /* ====== Global bootstrap ====== */
   .form-control {
     outline: 2px solid transparent;
     outline-offset: 2px;
@@ -76,23 +73,26 @@ export default createGlobalStyle`
   /* ====== Scrollbar ====== */
   ::-webkit-scrollbar {
     width: 8px;
+    scroll-behavior: smooth;
   }
 
   /* Track */
   ::-webkit-scrollbar-track {
     box-shadow: inset 0 0 5px rgb(44, 43, 43);
-    border-radius: 5px;
+    border-radius: 0.5rem;
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
   }
 
   /* Handle */
   ::-webkit-scrollbar-thumb {
-    background: #2b2c2b;
-    border-radius: 5px;
+    background-color: #2b2c2b;
+    border-radius: 0.5rem;
   }
 
   /* Handle on hover */
   ::-webkit-scrollbar-thumb:hover {
-    background: #2b2c2b;
+    background-color: #aaaaaa;
   }
 
   /* ====== Modal ====== */
@@ -233,7 +233,6 @@ export default createGlobalStyle`
     color: #ffd433;
     margin: 1px;
     text-align:center;
-
   }
 
   /* ====== cy-node-html-label Disjoint Graphs ====== */

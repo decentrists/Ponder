@@ -83,7 +83,7 @@ export interface EpisodeDTO extends Omit<Episode, 'publishedAt'> {
 
 export type ErrorStruct = {
   errorMessage: string;
-  errorObj?: Error | null;
+  // errorObj?: Error | null;
 };
 
 export interface PodcastFeedError extends ErrorStruct {}

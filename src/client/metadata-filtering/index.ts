@@ -40,7 +40,7 @@ export function sanitizeString(str : string, allowHtml = false, sanitizeOptions 
  * @throws {Error} If `throwOnError = true` and `uri` is an invalid URI
  */
 export function sanitizeUri(uri : string, throwOnError = false) : string {
-  let sanitizedUri = sanitizeString(uri, false);
+  const sanitizedUri = sanitizeString(uri, false);
 
   if (throwOnError && !sanitizedUri) {
     throw new Error(`${uri} is not a valid link.`);

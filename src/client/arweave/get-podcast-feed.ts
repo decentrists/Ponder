@@ -19,7 +19,6 @@ import {
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { QueryTransactionsArgs, TagFilter } from 'arlocal/bin/graphql/types.d';
 
-
 interface TransactionNode { id: string, tags: { name: string, value: string }[] }
 
 /** Type signature accepted by the Arweave API's '/graphql' endpoint */
@@ -43,7 +42,7 @@ const toTagFilter = (tagsToFilter: TagsToFilter) : TagFilter[] => Object
   }));
 
 export async function getPodcastFeed(
-  subscribeUrl: Podcast['subscribeUrl']) : Promise<Podcast | PodcastFeedError> {
+  subscribeUrl: Podcast['subscribeUrl']) : Promise<Partial<Podcast> | PodcastFeedError> {
 
   const errorMessages : string[] = [];
   const metadataBatches = [];
@@ -84,7 +83,7 @@ export async function getPodcastFeed(
                            `metadata from Arweave:\n${concatMessages(errorMessages, true)}` };
   }
 
-  return mergedMetadata as Podcast;
+  return mergedMetadata;
 }
 
 export async function getPodcastFeedForTxIds(ids: string[]) {
