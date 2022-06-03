@@ -1,8 +1,6 @@
 #!/bin/sh
 . "$(dirname "$0")/_/husky.sh"
 
-npm run lint
-
 # TODO: once we maintain upkeep of Cypress tests run:
 #       npm run test
 npm run jest
