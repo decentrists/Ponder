@@ -95,7 +95,7 @@ const ArweaveProvider : React.FC<{ children: React.ReactNode }> = ({ children })
   const [arSyncTxs, setArSyncTxs] = useState<ArSyncTx[]>(cachedArSyncTxs);
 
   function hasPendingTxs() {
-    return !!arSyncTxs.filter(isInitialized).length;
+    return arSyncTxs.some(isInitialized);
   }
 
   async function prepareSync() {
@@ -123,7 +123,7 @@ const ArweaveProvider : React.FC<{ children: React.ReactNode }> = ({ children })
     }
 
     const failedTxs = newTxs.filter(isErrored);
-    if (!newTxs.filter(isInitialized).length) {
+    if (!newTxs.some(isInitialized)) {
       if (!failedTxs.length) {
         return cancelSync('Subscribed podcasts are already up-to-date.', 'info');
       }
@@ -217,11 +217,10 @@ const ArweaveProvider : React.FC<{ children: React.ReactNode }> = ({ children })
 
     console.debug('Refreshing transaction status');
 
-    const postedTxs = arSyncTxs.filter(isPosted);
     const newArSyncTxs : ArSyncTx[] = [...arSyncTxs];
     const confirmedTxs : ArSyncTx[] = [];
 
-    await Promise.all(postedTxs.map(async postedTx => {
+    await Promise.all(arSyncTxs.filter(isPosted).map(async postedTx => {
       const status : TransactionStatusResponse =
         await arweave.getTxConfirmationStatus(postedTx.resultObj as arsync.TransactionDTO);
 
