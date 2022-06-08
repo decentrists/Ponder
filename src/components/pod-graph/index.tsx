@@ -6,6 +6,8 @@ import PodcastDetails from '../podcast-details';
 import ToggleBtn from '../buttons/toggle-button'; // This button can be used for another fn
 import { Podcast } from '../../client/interfaces';
 import { ExtendedCore } from './cytoscape/interfaces';
+import { useMediaQuery, useTheme } from '@mui/material';
+import { mobileLayout, desktopLayout } from './cytoscape/layout';
 
 const PodGraphContainer = styled.div`
   position: relative;
@@ -42,21 +44,26 @@ const PodGraph : React.FC<Props> = ({ subscriptions }) => {
   const selectedPodcast = subscriptions
     .find(subscription => subscription.subscribeUrl === selectedPodcastId);
 
+  const theme = useTheme();
+  const isSm = useMediaQuery(theme.breakpoints.down('sm'));
+
   if (selectedPodcastId && !selectedPodcast) {
     console.warn('Could not find a podcast with the selected ID. You should not be seeing this :)');
   }
 
   useEffect(() => {
-    const cyto = createCytoscape(el.current, getElementsFromSubscriptions(subscriptions), {
-      setSelectedPodcastId: (id) => setSelectedPodcastId(id),
-    });
+    const layout = isSm ? mobileLayout : desktopLayout;
+    const cyto = createCytoscape(el.current, layout,
+      getElementsFromSubscriptions(subscriptions), {
+        setSelectedPodcastId: (id) => setSelectedPodcastId(id),
+      });
     setCy(cyto);
     window.cy = cyto;
 
     return () => {
       cyto.destroy();
     };
-  }, [subscriptions]);
+  }, [subscriptions, isSm]);
 
   return (
     <PodGraphContainer>

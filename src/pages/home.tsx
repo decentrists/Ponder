@@ -51,7 +51,7 @@ function HomePage() {
     subscribe(query);
   }
   return (
-    <div>
+    <div className={style.container}>
       <HeaderComponent onSubmit={search} />
 
       {subscriptions && (
