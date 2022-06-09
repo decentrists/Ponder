@@ -2,7 +2,6 @@ import React, {
   createContext,
   useContext,
   useEffect,
-  useRef,
   useState,
 } from 'react';
 import { ToastContext } from './toast';
@@ -10,12 +9,12 @@ import useRerenderEffect from '../hooks/use-rerender-effect';
 import { getPodcast, refreshSubscriptions } from '../client';
 import {
   unixTimestamp,
-  podcastsFromDTO,
   hasMetadata,
   concatMessages,
 } from '../utils';
 import { Episode, EpisodesDBTable, Podcast } from '../client/interfaces';
 import IndexedDb from '../indexed-db';
+import { ArSyncTx } from '../client/arweave/sync';
 
 // TODO: Remove after IndexedDB implementation maturation
 declare global {
@@ -34,6 +33,18 @@ interface SubscriptionContextType {
     maxLastRefreshAge?: number) => Promise<[null, null] | [Podcast[], Partial<Podcast>[]]>,
   metadataToSync: Partial<Podcast>[],
   setMetadataToSync: (value: Partial<Podcast>[]) => void,
+  readCachedArSyncTxs: () => Promise<ArSyncTx[]>,
+  writeCachedArSyncTxs: (newValue: ArSyncTx[]) => void,
+  dbStatus: DBStatus,
+  setDbStatus: (value: DBStatus) => void,
+}
+
+export enum DBStatus {
+  UNINITIALIZED,
+  INITIALIZING1,
+  INITIALIZING2,
+  INITIALIZING3, // 'subscriptions' and 'metadataToSync' initialized
+  INITIALIZED, // 'subscriptions', 'metadataToSync' and 'arSyncTxs' initialized
 }
 
 export const SubscriptionsContext = createContext<SubscriptionContextType>({
@@ -45,9 +56,18 @@ export const SubscriptionsContext = createContext<SubscriptionContextType>({
   refresh: async () => [null, null],
   metadataToSync: [],
   setMetadataToSync: () => {},
+  readCachedArSyncTxs: async () => [],
+  writeCachedArSyncTxs: async () => {},
+  dbStatus: 0,
+  setDbStatus: () => {},
 });
 
-const db = new IndexedDb('Ponder');
+const DB_SUBSCRIPTIONS = 'subscriptions';
+const DB_EPISODES = 'episodes';
+const DB_METADATATOSYNC = 'metadataToSync';
+const DB_ARSYNCTXS = 'arSyncTxs';
+
+const db = new IndexedDb();
 window.idb = db;
 
 async function readCachedPodcasts() : Promise<Podcast[]> {
@@ -55,9 +75,9 @@ async function readCachedPodcasts() : Promise<Podcast[]> {
 
   const readPodcasts : Podcast[] = [];
 
-  let cachedSubscriptions : Podcast[] = await db.getAllValues('subscriptions');
+  let cachedSubscriptions : Podcast[] = await db.getAllValues(DB_SUBSCRIPTIONS);
   cachedSubscriptions ||= [];
-  let cachedEpisodes : EpisodesDBTable[] = await db.getAllValues('episodes');
+  let cachedEpisodes : EpisodesDBTable[] = await db.getAllValues(DB_EPISODES);
   cachedEpisodes ||= [];
 
   cachedSubscriptions.forEach(sub => {
@@ -68,11 +88,10 @@ async function readCachedPodcasts() : Promise<Podcast[]> {
     readPodcasts.push(podcast);
   });
 
-  console.debug('readPodcasts', readPodcasts);
   return readPodcasts;
 }
 
-async function writeCachedPodcasts(subscriptions: Podcast[]) {
+async function writeCachedPodcasts(subscriptions: Podcast[]) : Promise<string[]> {
   console.debug('writeCachedPodcasts');
 
   const errorMessages : string[] = [];
@@ -80,15 +99,15 @@ async function writeCachedPodcasts(subscriptions: Podcast[]) {
   await Promise.all(subscriptions.map(async (sub) => {
     try {
       const { episodes, ...podcast } = { ...sub };
-      const cachedSub : Podcast = await db.getBySubscribeUrl('subscriptions', sub.subscribeUrl);
+      const cachedSub : Podcast = await db.getBySubscribeUrl(DB_SUBSCRIPTIONS, sub.subscribeUrl);
 
       if (!cachedSub || cachedSub.lastMutatedAt !== podcast.lastMutatedAt) {
         const episodesTable : EpisodesDBTable = {
           subscribeUrl: podcast.subscribeUrl,
           episodes: episodes as Episode[],
         };
-        await db.putValue('subscriptions', podcast);
-        await db.putValue('episodes', episodesTable);
+        await db.putValue(DB_SUBSCRIPTIONS, podcast);
+        await db.putValue(DB_EPISODES, episodesTable);
       }
     }
     catch (ex) {
@@ -99,24 +118,43 @@ async function writeCachedPodcasts(subscriptions: Podcast[]) {
   return errorMessages;
 }
 
-async function removeCachedSubscription(subscribeUrl: Podcast['subscribeUrl']) {
+async function readCachedMetadataToSync() : Promise<Partial<Podcast>[]> {
+  console.debug('readCachedMetadataToSync');
+
+  let fetchedData : Partial<Podcast>[] = [];
   try {
-    await db.deleteSubscription('subscriptions', subscribeUrl);
-    await db.deleteSubscription('episodes', subscribeUrl);
+    fetchedData = await db.getAllValues(DB_METADATATOSYNC);
   }
-  catch (ex) {}
+  catch (_ex) {}
+
+  return fetchedData;
 }
 
-function readMetadataToSync() {
-  const cachedMetadata = localStorage.getItem('metadataToSync');
-  const podcasts = cachedMetadata ? JSON.parse(cachedMetadata) : [];
-  return podcastsFromDTO(podcasts);
+/**
+ * `metadataToSync` is updated on each subscriptions refresh, but we still cache it, because f.i. it
+ * contains any pending user posts.
+ * @param newValue
+ * @throws
+ */
+async function writeCachedMetadataToSync(newValue: Partial<Podcast>[]) {
+  console.debug('writeCachedMetadataToSync');
+
+  await db.clearAllValues(DB_METADATATOSYNC);
+  await db.putValues(DB_METADATATOSYNC, newValue);
+}
+
+async function removeCachedSubscription(subscribeUrl: Podcast['subscribeUrl']) {
+  try {
+    await db.deleteSubscription(DB_SUBSCRIPTIONS, subscribeUrl);
+    await db.deleteSubscription(DB_EPISODES, subscribeUrl);
+  }
+  catch (_ex) {}
 }
 
 // TODO: ArSync v1.5+, test me
 const SubscriptionsProvider : React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const toast = useContext(ToastContext);
-  const dbInitialized = useRef(false);
+  const [dbStatus, setDbStatus] = useState(DBStatus.UNINITIALIZED);
   const [subscriptions, setSubscriptions] = useState<Podcast[]>([]);
   const [metadataToSync, setMetadataToSync] = useState<Partial<Podcast>[]>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -204,10 +242,6 @@ const SubscriptionsProvider : React.FC<{ children: React.ReactNode }> = ({ child
     return [null, null];
   };
 
-  const handleMetadataToSync = (value: Partial<Podcast>[]) => {
-    setMetadataToSync(value);
-  };
-
   /**
    * @returns The number of seconds since the last refresh
    */
@@ -217,23 +251,35 @@ const SubscriptionsProvider : React.FC<{ children: React.ReactNode }> = ({ child
     return Math.max(0, unixTimestamp() - lastRefreshTime);
   }
 
+  const readCachedArSyncTxs = async () : Promise<ArSyncTx[]> => {
+    console.debug('readCachedArSyncTxs');
+    const fetchedData : ArSyncTx[] = await db.getAllValues(DB_ARSYNCTXS);
+    return fetchedData;
+  };
+
+  const writeCachedArSyncTxs = async (newValue: ArSyncTx[]) => {
+    console.debug('writeCachedArSyncTxs');
+    await db.clearAllValues(DB_ARSYNCTXS);
+    await db.putValues(DB_ARSYNCTXS, newValue);
+  };
+
   useEffect(() => {
     const initializeSubscriptions = async () => {
       console.debug('Initializing subscriptions');
-      const fetched = await readCachedPodcasts();
-      if (fetched) setSubscriptions(fetched);
+      const fetchedData = await readCachedPodcasts();
+      setSubscriptions(fetchedData);
     };
 
     const initializeMetadataToSync = async () => {
       console.debug('Initializing metadataToSync');
-      const fetched = await readMetadataToSync();
-      setMetadataToSync(fetched);
+      const fetchedData = await readCachedMetadataToSync();
+      setMetadataToSync(fetchedData);
     };
 
     const initializeDatabase = async () => {
-      if (dbInitialized.current) return;
+      if (dbStatus > DBStatus.UNINITIALIZED) return;
 
-      dbInitialized.current = true;
+      setDbStatus(prev => prev + 1);
       console.debug('Initializing DB', db);
 
       try {
@@ -250,7 +296,7 @@ const SubscriptionsProvider : React.FC<{ children: React.ReactNode }> = ({ child
     };
 
     initializeDatabase();
-  }, [toast]);
+  }, [dbStatus, toast]);
 
   useRerenderEffect(() => {
     const updateCachedPodcasts = async () => {
@@ -264,13 +310,18 @@ const SubscriptionsProvider : React.FC<{ children: React.ReactNode }> = ({ child
     };
 
     console.debug('subscriptions have been updated to:', subscriptions);
-    updateCachedPodcasts();
+    if (dbStatus >= DBStatus.INITIALIZED) updateCachedPodcasts();
+    else setDbStatus(prev => Math.min(prev + 1, DBStatus.INITIALIZING3));
   }, [subscriptions]);
 
   useRerenderEffect(() => {
+    const updateCachedMetadataToSync = async () => {
+      await writeCachedMetadataToSync(metadataToSync);
+    };
+
     console.debug('metadataToSync has been updated to:', metadataToSync);
-    // TODO: Migrate to IndexedDB
-    localStorage.setItem('metadataToSync', JSON.stringify(metadataToSync));
+    if (dbStatus >= DBStatus.INITIALIZED) updateCachedMetadataToSync();
+    else setDbStatus(prev => Math.min(prev + 1, DBStatus.INITIALIZING3));
   }, [metadataToSync]);
 
   return (
@@ -283,7 +334,11 @@ const SubscriptionsProvider : React.FC<{ children: React.ReactNode }> = ({ child
         unsubscribe,
         refresh,
         metadataToSync,
-        setMetadataToSync: handleMetadataToSync,
+        setMetadataToSync,
+        readCachedArSyncTxs,
+        writeCachedArSyncTxs,
+        dbStatus,
+        setDbStatus,
       }}
     >
       {children}

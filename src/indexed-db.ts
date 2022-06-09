@@ -6,6 +6,8 @@ export class IndexedDb {
 
   private db: any;
 
+  public static DB_NAME = 'Ponder';
+
   public static DB_VERSION = 1;
 
   public static DB_V1_SCHEMA : [string, IDBObjectStoreParameters][] = [
@@ -17,6 +19,14 @@ export class IndexedDb {
       'episodes',
       { autoIncrement: false, keyPath: 'subscribeUrl' },
     ],
+    [
+      'metadataToSync',
+      { autoIncrement: false, keyPath: 'subscribeUrl' },
+    ],
+    [
+      'arSyncTxs',
+      { autoIncrement: false, keyPath: 'id' },
+    ],
   ];
 
   public static DB_ERROR_GENERIC_HELP_MESSAGE = [
@@ -26,7 +36,7 @@ export class IndexedDb {
     'cached data, including your subscriptions.',
   ].join(' ');
 
-  constructor(database: string) {
+  constructor(database: string = IndexedDb.DB_NAME) {
     this.database = database;
   }
 
@@ -51,7 +61,6 @@ export class IndexedDb {
           for (const [tableName, params] of tables) {
             if (db.objectStoreNames.contains(tableName)) continue;
 
-            console.debug(`creating ${tableName}`, params);
             db.createObjectStore(tableName, params);
           }
         },
@@ -68,15 +77,6 @@ export class IndexedDb {
     const tx = this.db.transaction(tableName, 'readonly');
     const store = tx.objectStore(tableName);
     const result = await store.get(subscribeUrl);
-    return result;
-  }
-
-  public async getValue(tableName: string, id: number) {
-    await this.connectDB();
-
-    const tx = this.db.transaction(tableName, 'readonly');
-    const store = tx.objectStore(tableName);
-    const result = await store.get(id);
     return result;
   }
 
@@ -98,6 +98,26 @@ export class IndexedDb {
     return result;
   }
 
+  public async putValues(tableName: string, values: object[]) {
+    await this.connectDB();
+
+    const tx = this.db.transaction(tableName, 'readwrite');
+    const store = tx.objectStore(tableName);
+    for (const value of values) {
+      await store.put(value);
+    }
+    return true;
+  }
+
+  public async clearAllValues(tableName: string) {
+    await this.connectDB();
+
+    const tx = this.db.transaction(tableName, 'readwrite');
+    const store = tx.objectStore(tableName);
+    const result = await store.clear();
+    return result;
+  }
+
   public async deleteSubscription(tableName: string, subscribeUrl: Podcast['subscribeUrl']) {
     await this.connectDB();
 
@@ -109,17 +129,6 @@ export class IndexedDb {
     await store.delete(subscribeUrl);
     return subscribeUrl;
   }
-
-  // public async putBulkValue(tableName: string, values: object[]) {
-  //   await this.connectDB();
-
-  //   const tx = this.db.transaction(tableName, 'readwrite');
-  //   const store = tx.objectStore(tableName);
-  //   for (const value of values) {
-  //     await store.put(value);
-  //   }
-  //   return this.getAllValues(tableName);
-  // }
 }
 
 export default IndexedDb;

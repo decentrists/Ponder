@@ -5,7 +5,7 @@ import React, {
 import PropTypes from 'prop-types';
 import { ToastContext } from './toast';
 import useRerenderEffect from '../hooks/use-rerender-effect';
-import { SubscriptionsContext } from './subscriptions';
+import { DBStatus, SubscriptionsContext } from './subscriptions';
 import {
   isNotEmpty,
   valuesEqual,
@@ -47,53 +47,22 @@ export const ArweaveContext = createContext<ArweaveContextType>({
   hasPendingTxs: false,
 });
 
-// TODO: Migrate to IndexedDB
-function readCachedArSyncTxs() {
-  const cachedJson = localStorage.getItem('arSyncTxs');
-  if (!cachedJson) return [];
-
-  const arSyncTxsDto = JSON.parse(cachedJson);
-  const arSyncTxsObject : ArSyncTx[] = arSyncTxsDto.map((tx: ArSyncTx) => ({
-    ...tx,
-    resultObj: ('errorMessage' in tx.resultObj ? tx.resultObj as unknown as Error :
-      tx.resultObj as arsync.TransactionDTO),
-  } as ArSyncTx));
-
-  return arSyncTxsObject;
-}
-
-function writeCachedArSyncTxs(arSyncTxs: ArSyncTx[]) {
-  const txsToCache = arSyncTxs.filter(isNotInitialized);
-  const arSyncTxsDto : ArSyncTx[] = txsToCache.map((tx: ArSyncTx) => ({
-    ...tx,
-    metadata: {},
-  }));
-
-  localStorage.setItem('arSyncTxs', JSON.stringify(arSyncTxsDto));
-}
-
 const TX_CONFIRMATION_INTERVAL = 180000; // ms
 
 // TODO: ArSync v1.5+, test me
 const ArweaveProvider : React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { isRefreshing, refresh, metadataToSync, setMetadataToSync } =
-    useContext(SubscriptionsContext);
+  const {
+    isRefreshing, refresh,
+    metadataToSync, setMetadataToSync,
+    readCachedArSyncTxs, writeCachedArSyncTxs,
+    dbStatus, setDbStatus,
+  } = useContext(SubscriptionsContext);
   const toast = useContext(ToastContext);
   const [wallet, setWallet] = useState<JWKInterface>();
   const [walletAddress, setWalletAddress] = useState('');
   const loadingWallet = useRef(false);
   const [isSyncing, setIsSyncing] = useState(false);
-
-  let cachedArSyncTxs : ArSyncTx[] = [];
-  try {
-    cachedArSyncTxs = readCachedArSyncTxs();
-  }
-  catch (ex) {
-    console.error(`Error while reading the cached transactions: ${ex}.`);
-    toast(`Error while reading the cached transactions: ${ex}.\nCached transactions have been ` +
-          'cleared.', { autohideDelay: 0, variant: 'danger' });
-  }
-  const [arSyncTxs, setArSyncTxs] = useState<ArSyncTx[]>(cachedArSyncTxs);
+  const [arSyncTxs, setArSyncTxs] = useState<ArSyncTx[]>([]);
 
   function hasPendingTxs() {
     return arSyncTxs.some(isInitialized);
@@ -277,20 +246,58 @@ const ArweaveProvider : React.FC<{ children: React.ReactNode }> = ({ children })
     return () => clearInterval(id);
   }, [confirmArSyncTxs]);
 
+  useEffect(() => {
+    const initializeArSyncTxs = async () => {
+      try {
+        console.debug('initializeArSyncTxs');
+        let fetchedData : ArSyncTx[] = await readCachedArSyncTxs();
+        fetchedData ||= [];
+
+        const arSyncTxsObject : ArSyncTx[] = fetchedData.map((tx: ArSyncTx) => ({
+          ...tx,
+          resultObj: ('errorMessage' in tx.resultObj ? tx.resultObj as unknown as Error :
+            tx.resultObj as arsync.TransactionDTO),
+        } as ArSyncTx));
+
+        setArSyncTxs(arSyncTxsObject);
+      }
+      catch (ex) {
+        const errorMessage = `Error while reading the cached transactions: ${ex}.\n` +
+                             'Cached transactions have been cleared.';
+        console.error(errorMessage);
+        toast(errorMessage, { autohideDelay: 0, variant: 'danger' });
+      }
+      finally {
+        setDbStatus(DBStatus.INITIALIZED);
+      }
+    };
+
+    if (dbStatus === DBStatus.INITIALIZING3) initializeArSyncTxs();
+  }, [dbStatus, readCachedArSyncTxs, setDbStatus, toast]);
+
   useRerenderEffect(() => {
     console.debug('arSyncTxs has been updated to:', arSyncTxs);
+
+    const updateCachedArSyncTxs = async () => {
+      try {
+        const txsToCache = arSyncTxs.filter(isNotInitialized);
+        const arSyncTxsDto : ArSyncTx[] = txsToCache.map((tx: ArSyncTx) => ({
+          ...tx,
+          metadata: {},
+        }));
+        await writeCachedArSyncTxs(arSyncTxsDto);
+      }
+      catch (ex) {
+        const errorMessage = `Error while saving the transactions to IndexedDB: ${ex}.`;
+        console.error(errorMessage);
+        toast(errorMessage, { autohideDelay: 0, variant: 'danger' });
+      }
+    };
 
     // TODO: warn upon leaving page if there are pending Initialized arSyncTxs, as these aren't
     //   cached (and should not be cached since recreating them costs nothing and avoids timeouts).
 
-    try {
-      writeCachedArSyncTxs(arSyncTxs);
-    }
-    catch (ex) {
-      console.error(`Error while saving the transactions to LocalStorage: ${ex}.`);
-      toast(`Error while saving the transactions to LocalStorage: ${ex}.`,
-        { autohideDelay: 0, variant: 'danger' });
-    }
+    if (dbStatus === DBStatus.INITIALIZED) updateCachedArSyncTxs();
   }, [arSyncTxs]);
 
   return (
