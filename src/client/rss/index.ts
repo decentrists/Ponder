@@ -161,8 +161,8 @@ function formatPodcastFeed(feed: RssPodcastFeed, subscribeUrl: Podcast['subscrib
  * @param subscribeUrl
  * @returns {(Podcast|PodcastFeedError)}
  */
-export async function getPodcastFeed(subscribeUrl: Podcast['subscribeUrl']) :
-Promise<Podcast | PodcastFeedError> {
+export async function getPodcastFeed(subscribeUrl: Podcast['subscribeUrl'], reformattedUrl = false)
+  : Promise<Podcast | PodcastFeedError> {
 
   let errorMessage;
   let feed;
@@ -171,6 +171,12 @@ Promise<Podcast | PodcastFeedError> {
     return formatPodcastFeed(feed as RssPodcastFeed, subscribeUrl!);
   }
   catch (ex) {
+    if (!reformattedUrl) {
+      // Retry fetching feed once, adding url parameter `format=xml` (required for feedburner.com)
+      const newUrl = `${subscribeUrl}${subscribeUrl.match(/\?/) ? '&' : '?'}format=xml`;
+      return getPodcastFeed(newUrl, true);
+    }
+
     /* TODO: Update error message after implementation of user-specified CORS-Proxies */
     const getFeedErrorMessage = `Could not fetch RSS feed ${subscribeUrl}.\n` +
                                 `Is the corsProxyURL specified in src/utils.js working?\n${ex}`;
