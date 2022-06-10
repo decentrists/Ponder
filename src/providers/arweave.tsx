@@ -47,7 +47,7 @@ export const ArweaveContext = createContext<ArweaveContextType>({
   hasPendingTxs: false,
 });
 
-const TX_CONFIRMATION_INTERVAL = 180000; // ms
+const TX_CONFIRMATION_INTERVAL = 30000; // ms
 
 // TODO: ArSync v1.5+, test me
 const ArweaveProvider : React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -249,7 +249,6 @@ const ArweaveProvider : React.FC<{ children: React.ReactNode }> = ({ children })
   useEffect(() => {
     const initializeArSyncTxs = async () => {
       try {
-        console.debug('initializeArSyncTxs');
         let fetchedData : ArSyncTx[] = await readCachedArSyncTxs();
         fetchedData ||= [];
 
@@ -276,8 +275,6 @@ const ArweaveProvider : React.FC<{ children: React.ReactNode }> = ({ children })
   }, [dbStatus, readCachedArSyncTxs, setDbStatus, toast]);
 
   useRerenderEffect(() => {
-    console.debug('arSyncTxs has been updated to:', arSyncTxs);
-
     const updateCachedArSyncTxs = async () => {
       try {
         const txsToCache = arSyncTxs.filter(isNotInitialized);
@@ -297,6 +294,7 @@ const ArweaveProvider : React.FC<{ children: React.ReactNode }> = ({ children })
     // TODO: warn upon leaving page if there are pending Initialized arSyncTxs, as these aren't
     //   cached (and should not be cached since recreating them costs nothing and avoids timeouts).
 
+    console.debug('arSyncTxs has been updated to:', arSyncTxs);
     if (dbStatus === DBStatus.INITIALIZED) updateCachedArSyncTxs();
   }, [arSyncTxs]);
 

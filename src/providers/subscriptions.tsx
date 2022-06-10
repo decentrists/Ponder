@@ -71,8 +71,6 @@ const db = new IndexedDb();
 window.idb = db;
 
 async function readCachedPodcasts() : Promise<Podcast[]> {
-  console.debug('readCachedPodcasts');
-
   const readPodcasts : Podcast[] = [];
 
   let cachedSubscriptions : Podcast[] = [];
@@ -92,8 +90,6 @@ async function readCachedPodcasts() : Promise<Podcast[]> {
 }
 
 async function writeCachedPodcasts(subscriptions: Podcast[]) : Promise<string[]> {
-  console.debug('writeCachedPodcasts');
-
   const errorMessages : string[] = [];
 
   await Promise.all(subscriptions.map(async (sub) => {
@@ -119,14 +115,7 @@ async function writeCachedPodcasts(subscriptions: Podcast[]) : Promise<string[]>
 }
 
 async function readCachedMetadataToSync() : Promise<Partial<Podcast>[]> {
-  console.debug('readCachedMetadataToSync');
-
-  let fetchedData : Partial<Podcast>[] = [];
-  try {
-    fetchedData = await db.getAllValues(DB_METADATATOSYNC);
-  }
-  catch (_ex) {}
-
+  const fetchedData : Partial<Podcast>[] = await db.getAllValues(DB_METADATATOSYNC);
   return fetchedData;
 }
 
@@ -137,8 +126,6 @@ async function readCachedMetadataToSync() : Promise<Partial<Podcast>[]> {
  * @throws
  */
 async function writeCachedMetadataToSync(newValue: Partial<Podcast>[]) {
-  console.debug('writeCachedMetadataToSync');
-
   await db.clearAllValues(DB_METADATATOSYNC);
   await db.putValues(DB_METADATATOSYNC, newValue);
 }
@@ -252,32 +239,27 @@ const SubscriptionsProvider : React.FC<{ children: React.ReactNode }> = ({ child
   }
 
   const readCachedArSyncTxs = async () : Promise<ArSyncTx[]> => {
-    console.debug('readCachedArSyncTxs');
     const fetchedData : ArSyncTx[] = await db.getAllValues(DB_ARSYNCTXS);
     return fetchedData;
   };
 
   const writeCachedArSyncTxs = async (newValue: ArSyncTx[]) => {
-    console.debug('writeCachedArSyncTxs');
     await db.clearAllValues(DB_ARSYNCTXS);
     await db.putValues(DB_ARSYNCTXS, newValue);
   };
 
   useEffect(() => {
     const initializeSubscriptions = async () => {
-      console.debug('Initializing subscriptions');
       const fetchedData = await readCachedPodcasts();
       setSubscriptions(fetchedData);
     };
 
     const initializeMetadataToSync = async () => {
-      console.debug('Initializing metadataToSync');
       const fetchedData = await readCachedMetadataToSync();
       setMetadataToSync(fetchedData);
     };
 
     const initializeDatabase = async () => {
-      console.debug('Initializing DB', db);
       setDbStatus(DBStatus.INITIALIZING1);
 
       try {

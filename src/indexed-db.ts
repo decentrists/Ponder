@@ -42,7 +42,6 @@ export class IndexedDb {
 
   private async connectDB() {
     if (!this.db) {
-      console.debug('(re)connecting DB');
       try {
         this.db = await openDB(this.database, IndexedDb.DB_VERSION);
       }
@@ -80,10 +79,9 @@ export class IndexedDb {
     return result;
   }
 
-  public async getAllValues(tableName: string) {
-    await this.connectDB();
-
+  public async getAllValues(tableName: string) : Promise<any[]> {
     try {
+      await this.connectDB();
       const tx = this.db.transaction(tableName, 'readonly');
       const store = tx.objectStore(tableName);
       const result = await store.getAll();
