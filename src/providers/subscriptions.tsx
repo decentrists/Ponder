@@ -34,7 +34,7 @@ interface SubscriptionContextType {
   metadataToSync: Partial<Podcast>[],
   setMetadataToSync: (value: Partial<Podcast>[]) => void,
   readCachedArSyncTxs: () => Promise<ArSyncTx[]>,
-  writeCachedArSyncTxs: (newValue: ArSyncTx[]) => void,
+  writeCachedArSyncTxs: (newValue: ArSyncTx[]) => Promise<void>,
   dbStatus: DBStatus,
   setDbStatus: (value: DBStatus) => void,
 }
@@ -75,10 +75,10 @@ async function readCachedPodcasts() : Promise<Podcast[]> {
 
   const readPodcasts : Podcast[] = [];
 
-  let cachedSubscriptions : Podcast[] = await db.getAllValues(DB_SUBSCRIPTIONS);
-  cachedSubscriptions ||= [];
-  let cachedEpisodes : EpisodesDBTable[] = await db.getAllValues(DB_EPISODES);
-  cachedEpisodes ||= [];
+  let cachedSubscriptions : Podcast[] = [];
+  let cachedEpisodes : EpisodesDBTable[] = [];
+  [cachedSubscriptions, cachedEpisodes] =
+    await Promise.all([db.getAllValues(DB_SUBSCRIPTIONS), db.getAllValues(DB_EPISODES)]);
 
   cachedSubscriptions.forEach(sub => {
     const episodesTable : EpisodesDBTable | undefined =
@@ -277,10 +277,8 @@ const SubscriptionsProvider : React.FC<{ children: React.ReactNode }> = ({ child
     };
 
     const initializeDatabase = async () => {
-      if (dbStatus > DBStatus.UNINITIALIZED) return;
-
-      setDbStatus(prev => prev + 1);
       console.debug('Initializing DB', db);
+      setDbStatus(DBStatus.INITIALIZING1);
 
       try {
         await db.initializeDBSchema();
@@ -295,7 +293,7 @@ const SubscriptionsProvider : React.FC<{ children: React.ReactNode }> = ({ child
       }
     };
 
-    initializeDatabase();
+    if (dbStatus === DBStatus.UNINITIALIZED) initializeDatabase();
   }, [dbStatus, toast]);
 
   useRerenderEffect(() => {

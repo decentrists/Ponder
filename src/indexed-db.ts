@@ -6,11 +6,11 @@ export class IndexedDb {
 
   private db: any;
 
-  public static DB_NAME = 'Ponder';
+  public static readonly DB_NAME = 'Ponder';
 
-  public static DB_VERSION = 1;
+  public static readonly DB_VERSION = 1;
 
-  public static DB_V1_SCHEMA : [string, IDBObjectStoreParameters][] = [
+  public static readonly DB_V1_SCHEMA : [string, IDBObjectStoreParameters][] = [
     [
       'subscriptions',
       { autoIncrement: false, keyPath: 'subscribeUrl' },
@@ -29,7 +29,7 @@ export class IndexedDb {
     ],
   ];
 
-  public static DB_ERROR_GENERIC_HELP_MESSAGE = [
+  public static readonly DB_ERROR_GENERIC_HELP_MESSAGE = [
     'If a refresh does not fix this, please contact our development team. You may attempt to',
     'resolve this yourself by loading a backup of your subscriptions. A last resort would be',
     'to clear the IndexedDB field from your browser\'s developer tools, but this will clear all',
@@ -83,10 +83,15 @@ export class IndexedDb {
   public async getAllValues(tableName: string) {
     await this.connectDB();
 
-    const tx = this.db.transaction(tableName, 'readonly');
-    const store = tx.objectStore(tableName);
-    const result = await store.getAll();
-    return result;
+    try {
+      const tx = this.db.transaction(tableName, 'readonly');
+      const store = tx.objectStore(tableName);
+      const result = await store.getAll();
+      return result;
+    }
+    catch (_ex) {
+      return [];
+    }
   }
 
   public async putValue(tableName: string, value: object) {
