@@ -16,6 +16,7 @@ import {
 } from '../interfaces';
 import { JWKInterface } from 'arweave/node/lib/wallet';
 import Transaction from 'arweave/node/lib/transaction';
+import { gzip } from 'node-gzip';
 
 type MandatoryTags = typeof MANDATORY_ARWEAVE_TAGS[number];
 
@@ -24,10 +25,12 @@ async function newTransaction(
   : Promise<Transaction> {
 
   try {
-    const trx = await client.createTransaction({ data: JSON.stringify(newMetadata) }, wallet);
-    trx.addTag('Content-Type', 'application/json');
+    const gzipped = await gzip(JSON.stringify(newMetadata));
+    const trx = await client.createTransaction({ data: gzipped }, wallet);
+    trx.addTag('App-Name', process.env.REACT_APP_TAG_PREFIX as string);
+    trx.addTag('App-Version', process.env.REACT_APP_VERSION as string);
+    trx.addTag('Content-Type', 'application/gzip');
     trx.addTag('Unix-Time', `${unixTimestamp()}`);
-    trx.addTag(toTag('version'), process.env.REACT_APP_VERSION as string);
     tags.forEach(([k, v]) => {
       trx.addTag(toTag(k), `${v}`);
     });
@@ -83,7 +86,7 @@ export async function newMetadataTransaction(wallet: JWKInterface,
     ['description', newMetadata.description || cachedMetadata.description],
   ];
 
-  const getMandatoryTagsValues = (key: MandatoryTags) => 
+  const getMandatoryTagsValues = (key: MandatoryTags) =>
     mandatoryPodcastTags.find((element) => element[0] === key)![1];
 
   mandatoryPodcastTags.forEach(([name, value]) => {

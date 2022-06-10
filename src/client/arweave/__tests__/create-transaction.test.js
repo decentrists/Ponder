@@ -83,7 +83,7 @@ const originalTagPrefix = process.env.REACT_APP_TAG_PREFIX;
 beforeAll(() => {
   Object.assign(process.env, {
     REACT_APP_VERSION: 'testVersion',
-    REACT_APP_TAG_PREFIX: 'abc',
+    REACT_APP_TAG_PREFIX: 'testPonder',
   });
   jest.useFakeTimers().setSystemTime(new Date('2019-11-05'));
 });
@@ -102,9 +102,10 @@ describe('newMetadataTransaction', () => {
 
   function assertAddTagCalls(expectedTags) {
     const formattedExpectedTags = [
+      ['App-Name', 'testPonder'],
+      ['App-Version', 'testVersion'],
       ['Content-Type', 'application/json'],
       ['Unix-Time', `${MOCK_TIMESTAMP}`],
-      [toTag('version'), 'testVersion'],
     ].concat(expectedTags.map(([k, v]) => [toTag(k), v]));
 
     expect(addTag.mock.calls).toEqual(formattedExpectedTags);

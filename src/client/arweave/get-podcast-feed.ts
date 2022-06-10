@@ -16,6 +16,7 @@ import {
   PodcastTags,
   ALLOWED_ARWEAVE_TAGS,
 } from '../interfaces';
+import { ungzip } from 'node-gzip';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { QueryTransactionsArgs, TagFilter } from 'arlocal/bin/graphql/types.d';
 
@@ -141,12 +142,13 @@ async function getPodcastFeedForGqlQuery(
       });
   }
 
-  let getDataResult;
+  let unzippedData : string = '';
   try {
     // TODO: T252 Create localStorage cache { trx.id: { podcastMetadata, trx.tags } } for
     //       transactions that are selected for the result of getPodcastFeed(),
     //       so that we may skip this client.transactions.getData() call.
-    getDataResult = await client.transactions.getData(trx.id, { decode: true, string: true });
+    const getDataResult = await client.transactions.getData(trx.id, { decode: true });
+    unzippedData = (await ungzip(getDataResult)).toString();
   }
   catch (ex) {
     errorMessage = `Error fetching data for transaction id ${trx.id}: ${ex}`;
@@ -156,7 +158,7 @@ async function getPodcastFeedForGqlQuery(
 
   let metadata;
   try {
-    metadata = JSON.parse(getDataResult as string);
+    metadata = JSON.parse(unzippedData);
     metadata = podcastFromDTO(metadata, true);
   }
   catch (ex) {
@@ -171,7 +173,7 @@ async function getPodcastFeedForGqlQuery(
 }
 
 /**
- * @param tagFilter
+ * @param tagsToFilter
  * @returns An Object with the query formatted for Arweave's '/graphql' endpoint
  */
 function formatGqlQueryForTags(tagsToFilter: TagsToFilter) : GraphQLQuery {
