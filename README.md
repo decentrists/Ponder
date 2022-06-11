@@ -8,7 +8,7 @@ Welcome to the Ponder Prototype.  You can view our current Roadmap at https://de
 
 The latest version of the code can be found on the [development](https://github.com/decentrists/Ponder/tree/development) branch.
 
-We are glad to collaborate with anyone able and passionate about the future of blockchain technology.  If you wish to contribute to the codebase, please contact us on git@github.com.  Thank you! <3
+We are glad to collaborate with anyone able and passionate about the future of blockchain technology.  If you wish to contribute to the codebase, please contact us on git@decentapps.eu.  Thank you! <3
 
 ##### Contact Us
 
