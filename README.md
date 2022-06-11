@@ -10,7 +10,7 @@ The latest version of the code can be found on the [development](https://github.
 
 ##### Contact Us
 
-Please feel free to send us any questions or comments about the project or blockchain in general to hello@decentapps.eu.come to the Ponder Prototype...
+Please feel free to send us any questions or comments about the project or blockchain in general to hello@decentapps.eu.
 
 
 ![DESKTOP HOMEPAGE](https://decentapps.eu/img/ponder/ponder-desktop.png)
