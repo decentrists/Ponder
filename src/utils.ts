@@ -1,13 +1,14 @@
 // TODO: group similar utils into separate modules, such as
 // omitEmptyMetadata() --> src/client/metadata-filtering/utils
 
+import DOMPurify from 'isomorphic-dompurify';
+import he from 'he';
 import {
   Episode,
   Podcast,
   PodcastDTO,
   PodcastFeedError,
 } from './client/interfaces';
-import { initializeKeywords } from './client/metadata-filtering/generation';
 
 export function unixTimestamp(date : Date | null = null) {
   return Math.floor(date ? date.getTime() : Date.now() / 1000);
@@ -134,32 +135,72 @@ export function partialToPodcast(partialMetadata: Partial<Podcast>) : Podcast | 
   return result;
 }
 
-export function podcastFromDTO(podcast : PodcastDTO, sortEpisodes = true) : Podcast {
-  const conditionalSort = (episodes: PodcastDTO['episodes']) => (sortEpisodes
-    ? episodes.sort((a, b) => new Date(b.publishedAt).getTime()
-     - new Date(a.publishedAt).getTime()) : episodes);
-
-  const episodes : Podcast['episodes'] = conditionalSort(
-    (podcast.episodes || []),
-  ).map(episode => ({
-    ...episode,
-    publishedAt: toDate(episode.publishedAt),
-  }));
-
-  return ({
-    ...podcast,
-    keywords: initializeKeywords(podcast, podcast.keywords),
-    episodes,
-    metadataBatch: Number(podcast.metadataBatch),
-    firstEpisodeDate: toDate(podcast.firstEpisodeDate),
-    lastEpisodeDate: toDate(podcast.lastEpisodeDate),
-    lastBuildDate: toDate(podcast.lastBuildDate),
-  });
+/**
+ * @param metadata sanitized metadata
+ * @returns A keyword comprising the podcast author name, or (as a last resort) the podcast title,
+ *   or an empty string if not generable
+ */
+function getPrimaryKeyword(metadata : Partial<Podcast> | Partial<PodcastDTO>) : string {
+  const primaryKeyword = metadata.author || metadata.ownerName || metadata.title;
+  return valueToLowerCase(primaryKeyword);
 }
 
-export function podcastsFromDTO(podcasts: PodcastDTO[], sortEpisodes = true) {
-  return podcasts.filter(podcast => isNotEmpty(podcast))
-    .map(podcast => podcastFromDTO(podcast, sortEpisodes));
+/**
+ * @see https://github.com/cure53/DOMPurify/blob/main/README.md#can-i-configure-dompurify
+ */
+const SANITIZE_OPTIONS_NO_HTML = {
+  USE_PROFILES: { html: false },
+};
+const SANITIZE_OPTIONS_ALLOWED_HTML = {
+  ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'a'],
+  ALLOWED_ATTR: ['href'],
+};
+/**
+ * TODO: expand string sanitization; revise default options above.
+ * @param str
+ * @param allowHtml
+ * @param sanitizeOptions @see SANITIZE_OPTIONS_NO_HTML
+ * @returns The sanitized string if not falsy, else: an empty string
+ */
+export function sanitizeString(str : string, allowHtml = false, sanitizeOptions = {}) : string {
+  if (!str || typeof str !== 'string') return '';
+  if (str.match(/^\w+$/)) return str;
+
+  const defaultOptions = allowHtml ? SANITIZE_OPTIONS_ALLOWED_HTML : SANITIZE_OPTIONS_NO_HTML;
+  const sanitized = DOMPurify.sanitize(str, { ...defaultOptions, ...sanitizeOptions }).trim();
+  return allowHtml ? sanitized : he.decode(sanitized);
+}
+
+/**
+ * @param arr1
+ * @param arr2
+ * @returns {Array.<string>} The given arrays, concatenated, mapped to lower case & sanitized,
+ *   omitting any duplicate/empty strings and non-string elements
+ */
+export function mergeArraysToLowerCase<T extends Primitive>(arr1 : T[] = [], arr2 : T[] = []) :
+string[] {
+  const filterArray = (arr : T[]) => (arr || [])
+    .map(x => sanitizeString(valueToLowerCase(x), false))
+    .filter(x => x);
+
+  return [...new Set(filterArray(arr1).concat(filterArray(arr2)))];
+}
+
+/**
+ * @param metadata sanitized metadata
+ * @param keywords existing keywords
+ * @returns {Array.<string>} A filtered array of `keywords` with an additional primary keyword
+ */
+export function initializeKeywords(
+  metadata : Partial<Podcast> | Partial<PodcastDTO>,
+  keywords: string[] = [],
+) : string[] {
+  const primaryKeyword = getPrimaryKeyword(metadata);
+  // Sometimes iTunes has keywords ['jimmy', 'dore', ...]; merge these with `primaryKeyword`
+  const duplicateKeywords = primaryKeyword.split(' ');
+
+  return mergeArraysToLowerCase([primaryKeyword], keywords)
+    .filter(keyword => !duplicateKeywords.includes(keyword));
 }
 
 /**
