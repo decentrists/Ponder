@@ -50,20 +50,20 @@ const RssButton : React.FC<Props> = ({
   onClick,
   ...props
 }) => (
-    <CustomBtn
-      className={className}
-      type={onClick ? 'button' : 'submit'}
-      variant={removeButton ? 'danger' : 'info'}
-      onClick={onClick}
-      {...props}
-    >
-      <FaRss />
-      {removeButton ? (
-        <MinusIcon />
-      ) : (
-        <PlusIcon />
-      )}
-    </CustomBtn>
+  <CustomBtn
+    className={className}
+    type={onClick ? 'button' : 'submit'}
+    variant={removeButton ? 'danger' : 'info'}
+    onClick={onClick}
+    {...props}
+  >
+    <FaRss />
+    {removeButton ? (
+      <MinusIcon />
+    ) : (
+      <PlusIcon />
+    )}
+  </CustomBtn>
 );
 
 export default RssButton;

@@ -26,9 +26,10 @@ async function fetchFeeds(subscribeUrl: Podcast['subscribeUrl']) {
   };
 }
 
-export async function getPodcast(subscribeUrl: Podcast['subscribeUrl'],
-  metadataToSync: Partial<Podcast>[] = []) : Promise<GetPodcastResult> {
-
+export async function getPodcast(
+  subscribeUrl: Podcast['subscribeUrl'],
+  metadataToSync: Partial<Podcast>[] = [],
+) : Promise<GetPodcastResult> {
   const feed = await fetchFeeds(subscribeUrl);
   if ('errorMessage' in feed.arweave) {
     return { errorMessage: feed.arweave.errorMessage };
@@ -44,28 +45,34 @@ export async function getPodcast(subscribeUrl: Podcast['subscribeUrl'],
   // Here we do want currentPodcastMetadataToSync to override each field of the rssDiffnewToArweave,
   // since in the previous refresh, currentPodcastMetadataToSync was assigned
   // the diff from feed.arweave to metadataToSyncWithNewEpisodes.
-  const metadataToSyncWithNewEpisodes =
-    mergeBatchMetadata([rssDiffnewToArweave, currentPodcastMetadataToSync], false);
+  const metadataToSyncWithNewEpisodes = mergeBatchMetadata([rssDiffnewToArweave,
+    currentPodcastMetadataToSync], false);
 
-  const newPartialPodcastMetadata : Partial<Podcast> =
-    mergeBatchMetadata([feed.arweave, metadataToSyncWithNewEpisodes], true);
+  const newPartialPodcastMetadata : Partial<Podcast> = mergeBatchMetadata([feed.arweave,
+    metadataToSyncWithNewEpisodes], true);
   const newPodcastMetadata = partialToPodcast(newPartialPodcastMetadata);
   if ('errorMessage' in newPodcastMetadata) return newPodcastMetadata;
 
-  const newPodcastMetadataToSync =
-    rightDiff(feed.arweave, metadataToSyncWithNewEpisodes, ['subscribeUrl', 'title']);
+  const newPodcastMetadataToSync = rightDiff(
+    feed.arweave,
+    metadataToSyncWithNewEpisodes,
+
+    ['subscribeUrl', 'title'],
+  );
 
   return { newPodcastMetadata: addLastMutatedAt(newPodcastMetadata), newPodcastMetadataToSync };
 }
 
-export async function refreshSubscriptions(subscriptions: Podcast[],
-  metadataToSync: Partial<Podcast>[] = [], idsToRefresh: Podcast['subscribeUrl'][] | null = null) {
-
+export async function refreshSubscriptions(
+  subscriptions: Podcast[],
+  metadataToSync: Partial<Podcast>[] = [],
+  idsToRefresh: Podcast['subscribeUrl'][] | null = null,
+) {
   const errorMessages : string[] = [];
   const newSubscriptions : Podcast[] = [];
   const newMetadataToSync : Partial<Podcast>[] = [];
 
-  const podcastsToRefresh = idsToRefresh ? idsToRefresh : subscriptions.map(x => x.subscribeUrl);
+  const podcastsToRefresh = idsToRefresh || subscriptions.map(x => x.subscribeUrl);
   const getPodcastResults = await Promise.all(
     podcastsToRefresh.map(subscribeUrl => getPodcast(subscribeUrl, metadataToSync)),
   );
@@ -79,11 +86,11 @@ export async function refreshSubscriptions(subscriptions: Podcast[],
     if (hasMetadata(oldPodcastMetadataToSync)) newMetadataToSync.push(oldPodcastMetadataToSync);
   };
 
-  subscriptions.forEach((subscription) => {
+  subscriptions.forEach(subscription => {
     const getPodcastResultIndex = podcastsToRefresh.findIndex(x => x === subscription.subscribeUrl);
     if (getPodcastResultIndex > -1) {
-      const { errorMessage, newPodcastMetadata, newPodcastMetadataToSync } =
-        getPodcastResults[getPodcastResultIndex];
+      const { errorMessage,
+        newPodcastMetadata, newPodcastMetadataToSync } = getPodcastResults[getPodcastResultIndex];
 
       if (hasMetadata(newPodcastMetadata)) {
         // TODO: write a hasDiff() function for performance enhancement

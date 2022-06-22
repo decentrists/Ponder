@@ -35,41 +35,41 @@ const TimeRelease = styled.small`
 `;
 
 const PodcastList : React.FC<Props> = ({ subscriptions, unsubscribe }) => (
-    <ListContainer>
-      { subscriptions.length ? (
-        <div>
-          {subscriptions.map(subscription => (
-            <ListItem key={subscription.subscribeUrl}>
-              <TitleDetail>
-                <PodcastImage src={subscription.imageUrl} alt={subscription.title} />
-                <div>
-                  <TitleHeader>
-                    {subscription.title}
-                  </TitleHeader>
-                  <MetaDetail>
-                    <LatestRelease>
-                      <RiMapPinTimeLine />
-                      <TimeRelease>
-                        {dayjs(subscription.firstEpisodeDate).fromNow()}
-                      </TimeRelease>
+  <ListContainer>
+    { subscriptions.length ? (
+      <div>
+        {subscriptions.map(subscription => (
+          <ListItem key={subscription.subscribeUrl}>
+            <TitleDetail>
+              <PodcastImage src={subscription.imageUrl} alt={subscription.title} />
+              <div>
+                <TitleHeader>
+                  {subscription.title}
+                </TitleHeader>
+                <MetaDetail>
+                  <LatestRelease>
+                    <RiMapPinTimeLine />
+                    <TimeRelease>
+                      {dayjs(subscription.firstEpisodeDate).fromNow()}
+                    </TimeRelease>
 
-                    </LatestRelease>
-                  </MetaDetail>
-                </div>
-              </TitleDetail>
+                  </LatestRelease>
+                </MetaDetail>
+              </div>
+            </TitleDetail>
 
-              <CallToAction>
-                <ActionBtn>
-                  <RemoveBtn onClick={() => unsubscribe(subscription.subscribeUrl)} />
-                </ActionBtn>
-              </CallToAction>
-            </ListItem>
-          ))}
-        </div>
-      ) : (
-        <ListItem>There are no podcasts to display&hellip;</ListItem>
-      )}
-    </ListContainer>
+            <CallToAction>
+              <ActionBtn>
+                <RemoveBtn onClick={() => unsubscribe(subscription.subscribeUrl)} />
+              </ActionBtn>
+            </CallToAction>
+          </ListItem>
+        ))}
+      </div>
+    ) : (
+      <ListItem>There are no podcasts to display&hellip;</ListItem>
+    )}
+  </ListContainer>
 );
 
 export default PodcastList;

@@ -19,28 +19,28 @@ interface Props {
 const EpisodeDetails : React.FC<Props> = ({
   title, publishedAt, mediaUrl, imageUrl,
 }) => (
-    <EpisodeLink href={mediaUrl}>
-      <DetailsCard>
-        <CardBody>
-          <EpisodeImage>
-            <EpisodeImageStyle src={imageUrl} alt={title} fluid />
-          </EpisodeImage>
-          <Content>
-            <h5>{title}</h5>
-            <PodcastDetails>
-              <TimeBadge>
-                <TimeIcon />
-                1hr 30min
-              </TimeBadge>
-              <TimeBadge>
-                <CalenderIcon />
-                {dayjs(publishedAt).fromNow()}
-              </TimeBadge>
-            </PodcastDetails>
-          </Content>
-        </CardBody>
-      </DetailsCard>
-    </EpisodeLink>
+  <EpisodeLink href={mediaUrl}>
+    <DetailsCard>
+      <CardBody>
+        <EpisodeImage>
+          <EpisodeImageStyle src={imageUrl} alt={title} fluid />
+        </EpisodeImage>
+        <Content>
+          <h5>{title}</h5>
+          <PodcastDetails>
+            <TimeBadge>
+              <TimeIcon />
+              1hr 30min
+            </TimeBadge>
+            <TimeBadge>
+              <CalenderIcon />
+              {dayjs(publishedAt).fromNow()}
+            </TimeBadge>
+          </PodcastDetails>
+        </Content>
+      </CardBody>
+    </DetailsCard>
+  </EpisodeLink>
 );
 
 export default EpisodeDetails;

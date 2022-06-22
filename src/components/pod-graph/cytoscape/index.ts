@@ -14,8 +14,11 @@ type Deps = {
   setSelectedPodcastId: (id: string) => void;
 };
 
-export default function createCytoscape(container: CytoscapeOptions['container'],
-  elements: CytoscapeOptions['elements'], deps: Deps) {
+export default function createCytoscape(
+  container: CytoscapeOptions['container'],
+  elements: CytoscapeOptions['elements'],
+  deps: Deps,
+) {
   const cy = cytoscape({
     container,
     layout,

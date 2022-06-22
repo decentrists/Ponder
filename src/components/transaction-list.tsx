@@ -37,7 +37,7 @@ const TransactionList : React.FC<Props> = ({ subscriptions, txs, removeArSyncTxs
     <ListContainer>
       { txs.length ? (
         <div>
-          <ListItem key={'total-txs'}>
+          <ListItem key="total-txs">
             <TitleDetail />
             <CallToAction>
               <ActionInfo>
@@ -49,7 +49,7 @@ const TransactionList : React.FC<Props> = ({ subscriptions, txs, removeArSyncTxs
             </CallToAction>
           </ListItem>
 
-          <ListItem key={'completed-txs'}>
+          <ListItem key="completed-txs">
             <TitleDetail />
             <CallToAction>
               <ActionInfo>
@@ -64,11 +64,13 @@ const TransactionList : React.FC<Props> = ({ subscriptions, txs, removeArSyncTxs
             [...txs].reverse().map(tx => {
               const image = findImageUrl(tx.subscribeUrl);
               const numEpisodes = episodesCount(tx.metadata);
-              const TxSubheader = () => numEpisodes ? (
-                <MetaDetail>
-                  {`${numEpisodes} episodes`}
-                </MetaDetail>
-              ) : null;
+              function TxSubheader() {
+                return numEpisodes ? (
+                  <MetaDetail>
+                    {`${numEpisodes} episodes`}
+                  </MetaDetail>
+                ) : null;
+              }
 
               // TODO: add viewblock.io tx url
               return (
@@ -97,8 +99,7 @@ const TransactionList : React.FC<Props> = ({ subscriptions, txs, removeArSyncTxs
             })
           }
         </div>
-      ) : <ListItem>No active transactions.</ListItem>
-    }
+      ) : <ListItem>No active transactions.</ListItem>}
     </ListContainer>
   );
 };

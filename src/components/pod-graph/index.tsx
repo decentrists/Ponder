@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 import styled from 'styled-components';
+import { useMediaQuery, useTheme } from '@mui/material';
 import createCytoscape from './cytoscape';
 import getElementsFromSubscriptions from './get-elements-from-subscriptions';
 import PodcastDetails from '../podcast-details';
@@ -48,7 +49,7 @@ const PodGraph : React.FC<Props> = ({ subscriptions }) => {
 
   useEffect(() => {
     const cyto = createCytoscape(el.current, getElementsFromSubscriptions(subscriptions), {
-      setSelectedPodcastId: (id) => setSelectedPodcastId(id),
+      setSelectedPodcastId: id => setSelectedPodcastId(id),
     });
     setCy(cyto);
     window.cy = cyto;
@@ -61,11 +62,13 @@ const PodGraph : React.FC<Props> = ({ subscriptions }) => {
   return (
     <PodGraphContainer>
       <PodGraphInnerContainer ref={el} />
-      {selectedPodcast && <PodcastDetails
+      {selectedPodcast && (
+      <PodcastDetails
         {...selectedPodcast}
         isOpen={!!selectedPodcast}
         close={() => setSelectedPodcastId(null)}
-      />}
+      />
+      )}
       { /* @ts-ignore  */}
       <ToggleBtn />  {/* this btn has no fn yet,it can be added later */}
     </PodGraphContainer>

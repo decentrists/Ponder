@@ -101,7 +101,6 @@ export function toDate(date: string | Date | undefined) : Date {
  */
 export function hasMetadata<T extends Partial<Podcast>[] | Partial<Episode>[],
 K extends Partial<Podcast> | Partial<Episode>>(metadata: K | T | EmptyTypes) : metadata is T | K {
-
   if (!isNotEmpty(metadata)) return false;
   if (Array.isArray(metadata)) return true;
   if (metadata.title) return true;
@@ -115,8 +114,10 @@ K extends Partial<Podcast> | Partial<Episode>>(metadata: K | T | EmptyTypes) : m
   return !!Object.values(specificMetadata).flat().filter(x => x).length;
 }
 
-export function findMetadata(subscribeUrl: Podcast['subscribeUrl'],
-  arrayOfMetadata: Partial<Podcast>[] = []) : Partial<Podcast> {
+export function findMetadata(
+  subscribeUrl: Podcast['subscribeUrl'],
+  arrayOfMetadata: Partial<Podcast>[] = [],
+) : Partial<Podcast> {
   return arrayOfMetadata.find(obj => isNotEmpty(obj) && obj.subscribeUrl === subscribeUrl) || {};
 }
 
@@ -134,16 +135,16 @@ export function partialToPodcast(partialMetadata: Partial<Podcast>) : Podcast | 
 }
 
 export function podcastFromDTO(podcast : PodcastDTO, sortEpisodes = true) : Podcast {
-  const conditionalSort = (episodes: PodcastDTO['episodes']) => (sortEpisodes ?
-    episodes.sort((a, b) => new Date(b.publishedAt).getTime()
+  const conditionalSort = (episodes: PodcastDTO['episodes']) => (sortEpisodes
+    ? episodes.sort((a, b) => new Date(b.publishedAt).getTime()
      - new Date(a.publishedAt).getTime()) : episodes);
 
   const episodes : Podcast['episodes'] = conditionalSort(
-    (podcast.episodes || [])).map(episode => ({
+    (podcast.episodes || []),
+  ).map(episode => ({
     ...episode,
     publishedAt: toDate(episode.publishedAt),
-  }),
-  );
+  }));
 
   return ({
     ...podcast,
@@ -221,7 +222,8 @@ export function valuesEqual(a : object = {}, b : object = {}) : boolean {
   if (!a || !b) return false;
 
   // See https://stackoverflow.com/a/32922084/8691102
-  const ok = Object.keys, tx = typeof a, ty = typeof b;
+  const ok = Object.keys; const tx = typeof a; const
+    ty = typeof b;
   return tx === 'object' && tx === ty ? (
     ok(a).length === ok(b).length
     && ok(a).every(key => valuesEqual(a[key as keyof typeof a], b[key as keyof typeof b]))

@@ -7,7 +7,7 @@ const TAG_MAP = {
 };
 
 async function delay(ms = 5000) {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise(resolve => { setTimeout(resolve, ms); });
 }
 
 module.exports = async function seed(seeds, ms = 5000) {
