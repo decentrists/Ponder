@@ -135,6 +135,34 @@ export function partialToPodcast(partialMetadata: Partial<Podcast>) : Podcast | 
   return result;
 }
 
+export function podcastFromDTO(podcast : PodcastDTO, sortEpisodes = true) : Podcast {
+  const conditionalSort = (episodes: PodcastDTO['episodes']) => (sortEpisodes
+    ? episodes.sort((a, b) => new Date(b.publishedAt).getTime()
+     - new Date(a.publishedAt).getTime()) : episodes);
+
+  const episodes : Podcast['episodes'] = conditionalSort(
+    (podcast.episodes || []),
+  ).map(episode => ({
+    ...episode,
+    publishedAt: toDate(episode.publishedAt),
+  }));
+
+  return ({
+    ...podcast,
+    keywords: initializeKeywords(podcast, podcast.keywords),
+    episodes,
+    metadataBatch: Number(podcast.metadataBatch),
+    firstEpisodeDate: toDate(podcast.firstEpisodeDate),
+    lastEpisodeDate: toDate(podcast.lastEpisodeDate),
+    lastBuildDate: toDate(podcast.lastBuildDate),
+  });
+}
+
+export function podcastsFromDTO(podcasts: PodcastDTO[], sortEpisodes = true) {
+  return podcasts.filter(podcast => isNotEmpty(podcast))
+    .map(podcast => podcastFromDTO(podcast, sortEpisodes));
+}
+
 /**
  * @param metadata sanitized metadata
  * @returns A keyword comprising the podcast author name, or (as a last resort) the podcast title,
