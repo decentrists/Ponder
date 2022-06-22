@@ -194,7 +194,7 @@ const ArweaveProvider : React.FC<{ children: React.ReactNode }> = ({ children })
 
     await Promise.all(arSyncTxs.filter(isPosted).map(async postedTx => {
       const status : TransactionStatusResponse = await arweave
-        .getTxConfirmationStatus(postedTx.resultObj as arsync.TransactionDTO);
+        .getTxConfirmationStatus(postedTx.resultObj as arweave.TransactionDTO);
 
       // TODO: adjust for mainnet https://github.com/ArweaveTeam/arweave-js#get-a-transaction-status
       //       * change `status.confirmed` to `isNotEmpty(status.confirmed)`
@@ -257,7 +257,7 @@ const ArweaveProvider : React.FC<{ children: React.ReactNode }> = ({ children })
         const arSyncTxsObject : ArSyncTx[] = fetchedData.map((tx: ArSyncTx) => ({
           ...tx,
           resultObj: ('errorMessage' in tx.resultObj ? tx.resultObj as unknown as Error
-            : tx.resultObj as arsync.TransactionDTO),
+            : tx.resultObj as arweave.TransactionDTO),
         } as ArSyncTx));
 
         setArSyncTxs(arSyncTxsObject);

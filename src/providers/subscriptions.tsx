@@ -13,7 +13,7 @@ import {
   concatMessages,
 } from '../utils';
 import { Episode, EpisodesDBTable, Podcast } from '../client/interfaces';
-import IndexedDb from '../indexed-db';
+import { IndexedDb } from '../indexed-db';
 import { ArSyncTx } from '../client/arweave/sync';
 
 // TODO: Remove after IndexedDB implementation maturation

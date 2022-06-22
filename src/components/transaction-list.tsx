@@ -25,6 +25,14 @@ interface Props {
   removeArSyncTxs: (ids?: string[] | null) => void;
 }
 
+function TxSubheader({ numEpisodes } : { numEpisodes: number }) {
+  return numEpisodes ? (
+    <MetaDetail>
+      {`${numEpisodes} episodes`}
+    </MetaDetail>
+  ) : null;
+}
+
 const TransactionList : React.FC<Props> = ({ subscriptions, txs, removeArSyncTxs }) => {
   const findImageUrl = (subscribeUrl: string) => {
     const cachedPodcast = findMetadata(subscribeUrl, subscriptions);
@@ -64,13 +72,6 @@ const TransactionList : React.FC<Props> = ({ subscriptions, txs, removeArSyncTxs
             [...txs].reverse().map(tx => {
               const image = findImageUrl(tx.subscribeUrl);
               const numEpisodes = episodesCount(tx.metadata);
-              function TxSubheader() {
-                return numEpisodes ? (
-                  <MetaDetail>
-                    {`${numEpisodes} episodes`}
-                  </MetaDetail>
-                ) : null;
-              }
 
               // TODO: add viewblock.io tx url
               return (
@@ -81,7 +82,7 @@ const TransactionList : React.FC<Props> = ({ subscriptions, txs, removeArSyncTxs
                       <TitleHeader>
                         {tx.title}
                       </TitleHeader>
-                      <TxSubheader />
+                      <TxSubheader numEpisodes={numEpisodes} />
                     </div>
                   </TitleDetail>
 

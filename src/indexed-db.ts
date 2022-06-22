@@ -129,5 +129,3 @@ export class IndexedDb {
     return subscribeUrl;
   }
 }
-
-export default IndexedDb;

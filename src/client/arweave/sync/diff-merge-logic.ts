@@ -12,8 +12,8 @@ import {
   valuePresent,
   omitEmptyMetadata,
   Primitive,
+  mergeArraysToLowerCase,
 } from '../../../utils';
-import { mergeArraysToLowerCase } from '../../metadata-filtering';
 
 /**
  * @param oldEpisode
@@ -144,7 +144,8 @@ export function mergeBatchMetadata(
  *     NOTE: pending T251, removal of certain categories and keywords can still be accomplished
  *           by omitting the (e.g. downvoted) tx.id in preselection of GraphQL results.
  */
-const mergeSpecialTags = (acc: Partial<PodcastTags>, metadata: Partial<PodcastTags>) => {
+const mergeSpecialTags = (tags: Partial<PodcastTags>, metadata: Partial<PodcastTags>) => {
+  let acc = { ...tags };
   Object.entries(omitEmptyMetadata(metadata)).forEach(([tag, value]) => {
     switch (tag) {
       case 'episodes':
@@ -235,11 +236,12 @@ export function rightDiff<T extends Partial<Episode> | Partial<Podcast>>(
       case 'metadataBatch':
         // These should be excluded from the diff, as they are recomputed in their relevant context
         break;
-      case 'episodes':
+      case 'episodes': {
         // @ts-ignore
         const episodesDiff = episodesRightDiff(oldValue, value);
         if (hasMetadata(episodesDiff)) result = { ...result, episodes: episodesDiff };
         break;
+      }
       default:
         if (Array.isArray(value)) {
           const arrayDiff = arrayRightDiff<string>(oldValue as any, value);

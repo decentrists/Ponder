@@ -14,13 +14,13 @@ import {
   valuePresent,
   isValidString,
   isValidDate,
-} from '../../utils';
-import {
+  initializeKeywords,
   mergeArraysToLowerCase, // applies sanitizeString(array.element, allowHtml = false)
   sanitizeString,
+} from '../../utils';
+import {
   sanitizeUri,
 } from '../metadata-filtering';
-import { initializeKeywords } from '../metadata-filtering/generation';
 
 interface RssPodcastFeed extends Parser.Output<any>, Omit<Podcast, 'title' | 'lastBuildDate'> {
   categories?: string[];
