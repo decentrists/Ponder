@@ -57,7 +57,7 @@ function HeaderComponent({ onSubmit }) {
           </Form>
         </FormWrapper>
       </FormLayer>
-      <CallToActions>
+      <Box className={style["call-to-action"]}s>
         <SyncButton />
         <RefreshButton />
       </CallToActions>

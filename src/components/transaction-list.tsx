@@ -1,6 +1,8 @@
 import React from 'react';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
+import { Box } from '@mui/material';
+import { Image } from 'react-bootstrap';
 import RemoveBtn from './buttons/remove-button';
 import {
   ArSyncTx,
@@ -8,12 +10,7 @@ import {
   isNotPosted,
   statusToString,
 } from '../client/arweave/sync';
-import {
-  ListContainer, ListItem,
-  TitleDetail, TitleHeader,
-  PodcastImage, MetaDetail,
-  CallToAction, ActionInfo, ActionBtn,
-} from './shared-elements';
+import style from './SharedElements.module.scss';
 import { episodesCount, findMetadata } from '../utils';
 import { Podcast } from '../client/interfaces';
 
@@ -27,9 +24,9 @@ interface Props {
 
 function TxSubheader({ numEpisodes } : { numEpisodes: number }) {
   return numEpisodes ? (
-    <MetaDetail>
+    <Box className={style['meta-detail']}>
       {`${numEpisodes} episodes`}
-    </MetaDetail>
+    </Box>
   ) : null;
 }
 
@@ -42,32 +39,32 @@ const TransactionList : React.FC<Props> = ({ subscriptions, txs, removeArSyncTxs
   const completedTxIds = txs.filter(tx => isNotInitialized(tx) && isNotPosted(tx)).map(tx => tx.id);
 
   return (
-    <ListContainer>
+    <Box className={style['list-container']}>
       { txs.length ? (
         <div>
-          <ListItem key="total-txs">
-            <TitleDetail />
-            <CallToAction>
-              <ActionInfo>
+          <Box className={style['list-item']} key="total-txs">
+            <Box className={style['title-detail']} />
+            <Box className={style['call-to-action']}>
+              <Box className={style['action-info']}>
                 {`total: ${txs.length}`}
-              </ActionInfo>
-              <ActionBtn>
+              </Box>
+              <Box className={style['action-btn']}>
                 <RemoveBtn onClick={() => removeArSyncTxs()} />
-              </ActionBtn>
-            </CallToAction>
-          </ListItem>
+              </Box>
+            </Box>
+          </Box>
 
-          <ListItem key="completed-txs">
-            <TitleDetail />
-            <CallToAction>
-              <ActionInfo>
+          <Box className={style['list-item']} key="completed-txs">
+            <Box className={style['title-detail']} />
+            <Box className={style['call-to-action']}>
+              <Box className={style['action-info']}>
                 {`completed: ${completedTxIds.length}`}
-              </ActionInfo>
-              <ActionBtn>
+              </Box>
+              <Box className={style['action-btn']}>
                 <RemoveBtn onClick={() => removeArSyncTxs(completedTxIds)} />
-              </ActionBtn>
-            </CallToAction>
-          </ListItem>
+              </Box>
+            </Box>
+          </Box>
           {
             [...txs].reverse().map(tx => {
               const image = findImageUrl(tx.subscribeUrl);
@@ -75,33 +72,33 @@ const TransactionList : React.FC<Props> = ({ subscriptions, txs, removeArSyncTxs
 
               // TODO: add viewblock.io tx url
               return (
-                <ListItem key={tx.id}>
-                  <TitleDetail>
-                    <PodcastImage src={image} alt={tx.title} />
+                <Box className={style['list-item']} key={tx.id}>
+                  <Box className={style['title-detail']}>
+                    <Image className={style['podcast-image']} src={image} alt={tx.title} />
                     <div>
-                      <TitleHeader>
+                      <Box className={style['title-header']}>
                         {tx.title}
-                      </TitleHeader>
+                      </Box>
                       <TxSubheader numEpisodes={numEpisodes} />
                     </div>
-                  </TitleDetail>
+                  </Box>
 
-                  <CallToAction>
-                    <ActionInfo>
+                  <Box className={style['call-to-action']}>
+                    <Box className={style['action-info']}>
                       {statusToString(tx.status)}
-                    </ActionInfo>
-                    <ActionBtn>
+                    </Box>
+                    <Box className={style['action-btn']}>
                       <RemoveBtn onClick={() => removeArSyncTxs([tx.id])} />
-                    </ActionBtn>
-                  </CallToAction>
-                </ListItem>
+                    </Box>
+                  </Box>
+                </Box>
 
               );
             })
           }
         </div>
-      ) : <ListItem>No active transactions.</ListItem>}
-    </ListContainer>
+      ) : <Box className={style['list-item']}>No active transactions.</Box>}
+    </Box>
   );
 };
 
