@@ -1,5 +1,4 @@
 import React from 'react';
-// import PropTypes from 'prop-types';
 import { Container } from 'react-bootstrap';
 import { Box } from '@mui/material';
 import Footer from './footer';

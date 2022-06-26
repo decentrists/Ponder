@@ -1,5 +1,4 @@
 import React, { useState, useContext } from 'react';
-// import PropTypes from 'prop-types';
 import { InputGroup, Form, Container } from 'react-bootstrap';
 import { Box } from '@mui/material';
 import { ToastContext } from '../../providers/toast';
@@ -63,7 +62,4 @@ function HeaderComponent({ onSubmit }) {
   );
 }
 
-// HeaderComponent.propTypes = {
-//   onSubmit: PropTypes.func.isRequired,
-// };
 export default HeaderComponent;

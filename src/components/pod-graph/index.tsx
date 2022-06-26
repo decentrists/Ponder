@@ -8,25 +8,9 @@ import getElementsFromSubscriptions from './get-elements-from-subscriptions';
 import PodcastDetails from '../podcast-details';
 import ToggleBtn from '../buttons/toggle-button'; // This button can be used for another fn
 import { Podcast } from '../../client/interfaces';
+import style from './style.module.scss';
 import { ExtendedCore } from './cytoscape/interfaces';
 import { mobileLayout, desktopLayout } from './cytoscape/layout';
-
-const PodGraphContainer = styled.div`
-  position: relative;
-`;
-
-const PodGraphInnerContainer = styled.div`
-  max-height: 600px;
-  min-height: 600px;
-  margin: 3.5rem .8rem .8rem .8rem;
-  background-color: rgba(13, 13, 13, 1);
-  border: 2px solid rgba(38,38,38,1);
-  border-radius: 1rem;
-  padding: 16px;
-  @media only screen and (max-width: 960px) {
-    min-height: 400px;
-  }
-`;
 
 interface Props {
   subscriptions: Podcast[];
@@ -72,8 +56,8 @@ const PodGraph : React.FC<Props> = ({ subscriptions }) => {
   }, [subscriptions, isSm]);
 
   return (
-    <PodGraphContainer>
-      <PodGraphInnerContainer ref={el} />
+    <Box className={style['pod-graph-container']}>
+      <Box className={style['pod-graph-inner-container']} ref={el} />
       {selectedPodcast && (
         <PodcastDetails
           {...selectedPodcast}
@@ -83,7 +67,7 @@ const PodGraph : React.FC<Props> = ({ subscriptions }) => {
       )}
       { /* @ts-ignore  */}
       <ToggleBtn />  {/* this btn has no fn yet,it can be added later */}
-    </PodGraphContainer>
+    </Box>
   );
 };
 

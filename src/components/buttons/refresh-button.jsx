@@ -1,7 +1,6 @@
 import React, { useContext } from 'react';
 import { FaSync } from 'react-icons/fa';
 import { Button } from 'react-bootstrap';
-// import SpinButton from './spin-button';
 import style from './style.module.scss';
 import { SubscriptionsContext } from '../../providers/subscriptions';
 import { ArweaveContext } from '../../providers/arweave';
@@ -13,7 +12,7 @@ function RefreshButton() {
   return (
     <Button
       disabled={isRefreshing || isSyncing || hasPendingTxs}
-      className={style['spin-button'] + isRefreshing ? 'spinning' : ''}
+      className={`${style['spin-button']} ${isRefreshing ? 'spinning' : ''}`}
       onClick={() => refresh(null, false)}
       title="Refresh subscriptions from RSS & Arweave"
       alt="Refresh"

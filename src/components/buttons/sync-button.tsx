@@ -1,6 +1,6 @@
 import React, { useContext } from 'react';
-import style from 'style.module.scss';
 import { Button } from 'react-bootstrap';
+import style from './style.module.scss';
 // @ts-ignore
 import { ReactComponent as ArSyncIcon } from '../../assets/arsync-logo.svg';
 import { SubscriptionsContext } from '../../providers/subscriptions';

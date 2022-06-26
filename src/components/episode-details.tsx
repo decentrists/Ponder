@@ -4,13 +4,7 @@ import relativeTime from 'dayjs/plugin/relativeTime';
 import { Box, Link } from '@mui/material';
 import { MdMoreTime, MdOutlineCloudUpload } from 'react-icons/md';
 import { Image } from 'react-bootstrap';
-import style from './EpisodeDetailsElement.module.scss';
-// import {
-//   EpisodeLink, DetailsCard,
-//   CardBody, EpisodeImage, EpisodeImageStyle,
-//   Content, PodcastDetails,
-//   TimeBadge, TimeIcon, CalenderIcon,
-// } from './episode-details-elements';
+import style from './EpisodeDetailsElements.module.scss';
 
 dayjs.extend(relativeTime);
 

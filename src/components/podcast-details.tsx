@@ -1,23 +1,9 @@
 import React from 'react';
 import { Modal, Button, Image } from 'react-bootstrap';
-import style from 'PodcastDetails.module.scss';
 import { Box } from '@mui/material';
+import style from './PodcastDetails.module.scss';
 import { Episode } from '../client/interfaces';
 import EpisodeDetails from './episode-details';
-
-// const EpisodeList = styled.ol`
-//   list-style: none;
-//   display: flex;
-//   flex-direction: column;
-//   margin-top: 0;
-//   margin-bottom: 0;
-//   padding-left: 0;
-// `;
-
-// const PodImage = styled(Image)`
-//   border-radius: 1rem;
-//   margin-bottom: 2px;
-// `;
 
 interface Props {
   title: string,

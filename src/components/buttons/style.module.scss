@@ -54,6 +54,10 @@
   }
 }
 
+.nav-btn > svg {
+  font-size: 32px;
+}
+
 .spin-button {
   padding: 0.25rem 0.5rem;
   line-height: 1.75rem;
@@ -75,13 +79,13 @@
     opacity: 1;
     fill: #fff;
   }
-  &&:hover svg, &&.hasPendingTxs svg {
+  &:hover svg, &.hasPendingTxs svg {
     fill: #4b9b73;
   }
-  &&.spinning svg {
+  &.spinning svg {
     animation: spin 1s infinite;
   }
-  &&:disabled svg {
+  &:disabled svg {
     opacity: 0.5;
   }
 }
