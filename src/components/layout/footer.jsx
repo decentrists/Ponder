@@ -8,7 +8,7 @@ import {
   FaCog,
 } from 'react-icons/fa';
 import { Box } from '@mui/material';
-import style from './IndexElements.module.scss';
+import style from './index-elements.module.scss';
 import NavButton from '../buttons/nav-button';
 
 function LayoutFooter() {

@@ -2,7 +2,7 @@ import React from 'react';
 import { Container } from 'react-bootstrap';
 import { Box } from '@mui/material';
 import Footer from './footer';
-import style from './IndexElements.module.scss';
+import style from './index-elements.module.scss';
 
 function Layout({ children }) {
   return (

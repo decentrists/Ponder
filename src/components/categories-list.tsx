@@ -1,6 +1,6 @@
 import { Box, Typography } from '@mui/material';
 import React from 'react';
-import style from './CategoryList.module.scss';
+import style from './category-list.module.scss';
 
 interface Props {
   categories: string[];

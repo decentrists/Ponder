@@ -4,7 +4,7 @@ import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import { Image } from 'react-bootstrap';
 import { Box, Typography } from '@mui/material';
-import style from './SharedElements.module.scss';
+import style from './shared-elements.module.scss';
 import RemoveBtn from './buttons/remove-button';
 import { Podcast } from '../client/interfaces';
 

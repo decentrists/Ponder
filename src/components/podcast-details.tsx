@@ -1,7 +1,7 @@
 import React from 'react';
 import { Modal, Button, Image } from 'react-bootstrap';
 import { Box } from '@mui/material';
-import style from './PodcastDetails.module.scss';
+import style from './podcast-details.module.scss';
 import { Episode } from '../client/interfaces';
 import EpisodeDetails from './episode-details';
 

@@ -5,7 +5,7 @@ import { ToastContext } from '../../providers/toast';
 import RssButton from '../buttons/rss-button';
 import SyncButton from '../buttons/sync-button';
 import RefreshButton from '../buttons/refresh-button';
-import style from './IndexElements.module.scss';
+import style from './index-elements.module.scss';
 import { PotIcon } from '../assets/img/pot';
 
 function HeaderComponent({ onSubmit }) {

@@ -1,6 +1,6 @@
 import { Box } from '@mui/material';
 import React from 'react';
-import style from './Loading.module.scss';
+import style from './loading.module.scss';
 
 function Loading() {
   return (

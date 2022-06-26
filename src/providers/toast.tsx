@@ -2,7 +2,7 @@ import React, { createContext, useState } from 'react';
 import { Button, Toast, ToastProps } from 'react-bootstrap';
 import { v4 as uuid } from 'uuid';
 import { Box } from '@mui/material';
-import style from './Toast.module.scss';
+import style from './toast.module.scss';
 
 interface CustomHeaderProps {
   className: string;

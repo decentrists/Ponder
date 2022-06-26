@@ -10,7 +10,7 @@ import {
   isNotPosted,
   statusToString,
 } from '../client/arweave/sync';
-import style from './SharedElements.module.scss';
+import style from './shared-elements.module.scss';
 import { episodesCount, findMetadata } from '../utils';
 import { Podcast } from '../client/interfaces';
 
