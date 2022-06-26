@@ -1,15 +1,12 @@
 import React, { useState, useContext } from 'react';
 // import PropTypes from 'prop-types';
-import { InputGroup, Form } from 'react-bootstrap';
+import { InputGroup, Form, Container } from 'react-bootstrap';
+import { Box } from '@mui/material';
 import { ToastContext } from '../../providers/toast';
 import RssButton from '../buttons/rss-button';
 import SyncButton from '../buttons/sync-button';
 import RefreshButton from '../buttons/refresh-button';
-import {
-  HeaderContainer, ImageWrapper,
-  FormLayer, PodAlert, FormWrapper,
-  CallToActions,
-} from './index-elements';
+import style from './IndexElements.module.scss';
 import { PotIcon } from '../assets/img/pot';
 
 function HeaderComponent({ onSubmit }) {
@@ -34,15 +31,15 @@ function HeaderComponent({ onSubmit }) {
   }
 
   return (
-    <HeaderContainer>
-      <ImageWrapper>
+    <Container className={style['header-container']}>
+      <Box className={style['image-wrapper']}>
         <PotIcon />
-      </ImageWrapper>
-      <FormLayer>
-        <PodAlert>
+      </Box>
+      <Box className={style['form-layer']}>
+        <Box className={style['pod-alert']}>
           {/* <SiGooglepodcasts /> */}
-        </PodAlert>
-        <FormWrapper>
+        </Box>
+        <Box className={style['form-wrapper']}>
           <Form onSubmit={handleSubmit}>
             <Form.Group controlId="query">
               <InputGroup>
@@ -55,13 +52,13 @@ function HeaderComponent({ onSubmit }) {
               </InputGroup>
             </Form.Group>
           </Form>
-        </FormWrapper>
-      </FormLayer>
-      <Box className={style["call-to-action"]}s>
+        </Box>
+      </Box>
+      <Box className={style['call-to-actions']}>
         <SyncButton />
         <RefreshButton />
-      </CallToActions>
-    </HeaderContainer>
+      </Box>
+    </Container>
 
   );
 }

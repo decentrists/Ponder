@@ -1,18 +1,20 @@
 import React from 'react';
 // import PropTypes from 'prop-types';
+import { Container } from 'react-bootstrap';
+import { Box } from '@mui/material';
 import Footer from './footer';
-import { Page, CenterComponents, MainContent } from './index-elements';
+import style from './IndexElements.module.scss';
 
 function Layout({ children }) {
   return (
-    <Page>
-      <CenterComponents>
-        <MainContent>
+    <Box className={style.page}>
+      <Container className={style['center-components']}>
+        <Box className={style['main-content']}>
           {children}
-        </MainContent>
-      </CenterComponents>
+        </Box>
+      </Container>
       <Footer />
-    </Page>
+    </Box>
   );
 }
 

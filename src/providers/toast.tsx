@@ -1,48 +1,23 @@
 import React, { createContext, useState } from 'react';
-import styled from 'styled-components';
-import { Toast, ToastProps } from 'react-bootstrap';
+import { Button, Toast, ToastProps } from 'react-bootstrap';
 import { v4 as uuid } from 'uuid';
-
-const ToastList = styled.ul`
-  z-index: 10000;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  position: fixed;
-  top: 1rem;
-  right: 1rem;
-  left: 1rem;
-  list-style: none;
-  margin-top: 0;
-  margin-bottom: 0;
-  padding-left: 0;
-  line-break: auto;
-  white-space: pre-wrap;
-
-  > li:first-child {
-    padding-top: 3.5rem;
-  }
-  > li:not(:last-of-type) {
-    margin-bottom: .5rem;
-  }
-`;
-const CloseButton = styled.button`
-  float: right;
-  padding: 0.5rem;
-`;
+import { Box } from '@mui/material';
+import style from './Toast.module.scss';
 
 interface CustomHeaderProps {
   className: string;
-  closeToast: () => void
+  closeToast: () => void;
+  children: React.ReactNode;
 }
 
-const CustomHeader : React.FC<CustomHeaderProps> = ({ closeToast, className }) => (
-  <CloseButton
+const CustomHeader : React.FC<CustomHeaderProps> = ({ closeToast, className, children }) => (
+  <Button
     type="button"
-    className={`${className} btn-close fa fa-times`}
+    className={`${style['close-button']} ${className} btn-close fa fa-times`}
     onClick={closeToast}
-  />
+  >
+    {children}
+  </Button>
 );
 
 const TOAST_DELAY = 3500;
@@ -92,7 +67,7 @@ const ToastProvider : React.FC<Props> = ({ children }) => {
   return (
     <ToastContext.Provider value={dispatchToastMessage}>
       {children}
-      <ToastList>
+      <Box component="ul" className={style['toast-list']}>
         {messages.map(message => (
           <li key={message.id}>
             <Toast
@@ -113,7 +88,7 @@ const ToastProvider : React.FC<Props> = ({ children }) => {
             </Toast>
           </li>
         ))}
-      </ToastList>
+      </Box>
     </ToastContext.Provider>
   );
 };

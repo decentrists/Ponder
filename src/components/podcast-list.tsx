@@ -10,7 +10,7 @@ import relativeTime from 'dayjs/plugin/relativeTime';
 // } from './shared-elements';
 import { Image } from 'react-bootstrap';
 import style from 'PodcastList.module.scss';
-import { Box } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import RemoveBtn from './buttons/remove-button';
 import { Podcast } from '../client/interfaces';
 
@@ -50,13 +50,13 @@ const PodcastList : React.FC<Props> = ({ subscriptions, unsubscribe }) => (
                 alt={subscription.title}
               />
               <div>
-                <Box component="h5" className={style['title-header']}>
+                <Typography component="h5" className={style['title-header']}>
                   {subscription.title}
-                </Box>
+                </Typography>
                 <Box className={style['meta-detail']}>
                   <Box className={style['latest-release']}>
                     <RiMapPinTimeLine />
-                    <Box className={style['time-release']}>
+                    <Box component="small" className={style['time-release']}>
                       {dayjs(subscription.firstEpisodeDate).fromNow()}
                     </Box>
 
