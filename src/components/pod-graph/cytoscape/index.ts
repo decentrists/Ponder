@@ -1,6 +1,5 @@
 import cytoscape, { CytoscapeOptions } from 'cytoscape';
-import dagre from 'cytoscape-dagre';
-import layout from './layout';
+import dagre, { DagreLayoutOptions } from 'cytoscape-dagre';
 import styles from './styles';
 import applyPanzoom from './panzoom';
 import applyEvents from './events';
@@ -15,7 +14,7 @@ type Deps = {
 };
 
 export default function createCytoscape(container: CytoscapeOptions['container'],
-  elements: CytoscapeOptions['elements'], deps: Deps) {
+  layout: DagreLayoutOptions, elements: CytoscapeOptions['elements'], deps: Deps) {
   const cy = cytoscape({
     container,
     layout,
