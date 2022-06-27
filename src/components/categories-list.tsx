@@ -39,7 +39,7 @@ const CategoryItem = styled.div`
 const CategoriesList : React.FC<Props> = ({ categories }) => (
     <ListContainer>
       <CategoryHeader>
-        Popular
+        Populr
       </CategoryHeader>
       <CategoryList>
         <CategoryItem>
