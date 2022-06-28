@@ -1,6 +1,8 @@
+import Transaction from 'arweave/node/lib/transaction';
 import { TransactionStatusResponse } from 'arweave/node/transactions';
 import client from './client';
-import { TransactionDTO } from './sync';
+
+export interface TransactionDTO extends Transaction {}
 
 export { getPodcastFeed } from './get-podcast-feed';
 

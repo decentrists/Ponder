@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import styled from 'styled-components';
 import {
-  useMediaQuery, useTheme, useMediaQuery, useTheme,
+  useMediaQuery, useTheme,
 } from '@mui/material';
 import createCytoscape from './cytoscape';
 import getElementsFromSubscriptions from './get-elements-from-subscriptions';

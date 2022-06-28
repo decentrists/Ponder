@@ -21,13 +21,11 @@ export enum ArSyncTxStatus {
   REJECTED, // If tx confirmation fails
 }
 
-export interface TransactionDTO extends Transaction {}
-
 export interface ArSyncTx {
   id: string, // uuid, not to be confused with `(resultObj as Transaction).id`
   subscribeUrl: string, // TODO: pending T244, change to 'podcastId'
   title?: string,
-  resultObj: Transaction | TransactionDTO | Error,
+  resultObj: Transaction | arweave.TransactionDTO | Error,
   metadata: Partial<Podcast>,
   numEpisodes: number,
   status: ArSyncTxStatus,
