@@ -32,15 +32,14 @@ const CloseButton = styled.button`
   padding: 0.5rem;
 `;
 
-interface CustomHeaderProps { 
-  children: React.ReactNode,
+interface CustomHeaderProps {
   className: string;
-  closeToast: () => void 
+  closeToast: () => void
 }
 
 const CustomHeader : React.FC<CustomHeaderProps> = ({ closeToast, className }) => (
   <CloseButton
-    type='button'
+    type="button"
     className={`${className} btn-close fa fa-times`}
     onClick={closeToast}
   />
@@ -67,7 +66,7 @@ interface Message extends ToastOptions {
 
 export const ToastContext = createContext<ToastDispatchFunction>(() => {});
 
-const ToastProvider : React.FC<Props> = ({ children }) =>{
+const ToastProvider : React.FC<Props> = ({ children }) => {
   const [messages, setMessages] = useState<Message[]>([]);
 
   const dispatchToastMessage : ToastDispatchFunction = (text, options = {}) => {
@@ -101,7 +100,7 @@ const ToastProvider : React.FC<Props> = ({ children }) =>{
               // @ts-ignore
               variant={message.variant}
               onClose={() => handleClose(message.id)}
-              >
+            >
               <CustomHeader
                 className={`toast-${message.variant}`}
                 closeToast={() => handleClose(message.id)}

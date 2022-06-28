@@ -12,7 +12,6 @@ interface State {
 }
 
 class MasterErrorBoundary extends React.Component<Props, State> {
-
   state : State = {
     error: null,
     info: null,

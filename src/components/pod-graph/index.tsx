@@ -1,12 +1,14 @@
 import React, { useRef, useEffect, useState } from 'react';
 import styled from 'styled-components';
+import {
+  useMediaQuery, useTheme, useMediaQuery, useTheme,
+} from '@mui/material';
 import createCytoscape from './cytoscape';
 import getElementsFromSubscriptions from './get-elements-from-subscriptions';
 import PodcastDetails from '../podcast-details';
 import ToggleBtn from '../buttons/toggle-button'; // This button can be used for another fn
 import { Podcast } from '../../client/interfaces';
 import { ExtendedCore } from './cytoscape/interfaces';
-import { useMediaQuery, useTheme } from '@mui/material';
 import { mobileLayout, desktopLayout } from './cytoscape/layout';
 
 const PodGraphContainer = styled.div`
@@ -53,10 +55,14 @@ const PodGraph : React.FC<Props> = ({ subscriptions }) => {
 
   useEffect(() => {
     const layout = isSm ? mobileLayout : desktopLayout;
-    const cyto = createCytoscape(el.current, layout,
-      getElementsFromSubscriptions(subscriptions), {
-        setSelectedPodcastId: (id) => setSelectedPodcastId(id),
-      });
+    const cyto = createCytoscape(
+      el.current,
+      layout,
+      getElementsFromSubscriptions(subscriptions),
+      {
+        setSelectedPodcastId: id => setSelectedPodcastId(id),
+      },
+    );
     setCy(cyto);
     window.cy = cyto;
 
@@ -68,11 +74,13 @@ const PodGraph : React.FC<Props> = ({ subscriptions }) => {
   return (
     <PodGraphContainer>
       <PodGraphInnerContainer ref={el} />
-      {selectedPodcast && <PodcastDetails
+      {selectedPodcast && (
+      <PodcastDetails
         {...selectedPodcast}
         isOpen={!!selectedPodcast}
         close={() => setSelectedPodcastId(null)}
-      />}
+      />
+      )}
       { /* @ts-ignore  */}
       <ToggleBtn />  {/* this btn has no fn yet,it can be added later */}
     </PodGraphContainer>

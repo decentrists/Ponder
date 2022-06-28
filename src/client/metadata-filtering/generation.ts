@@ -17,9 +17,10 @@ function getPrimaryKeyword(metadata : Partial<Podcast> | Partial<PodcastDTO>) : 
  * @param keywords existing keywords
  * @returns {Array.<string>} A filtered array of `keywords` with an additional primary keyword
  */
-export function initializeKeywords(metadata : Partial<Podcast> | Partial<PodcastDTO>,
-  keywords: string[] = []) : string[] {
-
+export function initializeKeywords(
+  metadata : Partial<Podcast> | Partial<PodcastDTO>,
+  keywords: string[] = [],
+) : string[] {
   const primaryKeyword = getPrimaryKeyword(metadata);
   // Sometimes iTunes has keywords ['jimmy', 'dore', ...]; merge these with `primaryKeyword`
   const duplicateKeywords = primaryKeyword.split(' ');

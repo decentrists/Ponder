@@ -1,5 +1,5 @@
 module.exports = {
-  extends: ['airbnb-typescript', 'react-app'],
+  extends: ['airbnb', 'airbnb-typescript', 'react-app'],
   env: {
     browser: true,
   },
@@ -15,6 +15,21 @@ module.exports = {
         minProperties: 4,
       },
     }],
+    'arrow-parens': [2, 'as-needed'],
+    'react/jsx-props-no-spreading': 0,
+    'react/jsx-one-expression-per-line': 0,
+    'react/require-default-props': 0,
+    'react/prop-types': 0,
+    'react/function-component-definition': [0],
+    'import/prefer-default-export': 0,
+    'react/jsx-no-bind': 0,
+    'react/static-property-placement': [2, 'static public field'],
+    'consistent-return': 0,
+    'no-console': 0,
+    'no-use-before-define': 'off',
+    'no-plusplus': 'off',
+    'no-underscore-dangle': 'off',
+    'max-len': 'off',
   },
   parser: '@typescript-eslint/parser',
   parserOptions: {

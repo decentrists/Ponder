@@ -30,12 +30,12 @@ const RemoveBtn : React.FC<Props> = ({
   onClick,
   ...props
 }) => (
-    <DeleteBtn
-      onClick={onClick}
-      {...props}
-    >
-      <MinusIcon />
-    </DeleteBtn>
+  <DeleteBtn
+    onClick={onClick}
+    {...props}
+  >
+    <MinusIcon />
+  </DeleteBtn>
 );
 
 export default RemoveBtn;

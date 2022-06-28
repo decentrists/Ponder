@@ -56,7 +56,6 @@ export function sanitizeUri(uri : string, throwOnError = false) : string {
  */
 export function mergeArraysToLowerCase<T extends Primitive>(arr1 : T[] = [], arr2 : T[] = []) :
 string[] {
-
   const filterArray = (arr : T[]) => (arr || [])
     .map(x => sanitizeString(valueToLowerCase(x), false))
     .filter(x => x);

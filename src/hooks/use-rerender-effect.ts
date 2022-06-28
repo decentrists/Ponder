@@ -1,6 +1,5 @@
 import { useEffect, useRef } from 'react';
 
-
 type UseEffect = (effect: React.EffectCallback, deps?: React.DependencyList | undefined) => void;
 /**
  * Similar to React.useEffect except it doesn't run the effect
