@@ -66,6 +66,15 @@
   align-items: center;
 }
 
+.podcast-image-whalephant {
+  padding-right: 0.5rem;
+
+  svg {
+    width: 1.68rem;
+    height: 2rem;
+  }
+}
+
 .podcast-image {
   object-fit: cover;
   border-radius: 0.75rem;

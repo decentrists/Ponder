@@ -23,11 +23,11 @@ const CustomHeader : React.FC<CustomHeaderProps> = ({ closeToast, className, chi
 const TOAST_DELAY = 3500;
 
 interface Props {
-  children: React.ReactNode
+  children: React.ReactNode;
 }
 
 interface ToastOptions extends Omit<ToastProps, 'autohide' | 'delay'> {
-  autohideDelay?: number
+  autohideDelay?: number;
   variant?: string;
   header?: string;
 }
@@ -67,6 +67,7 @@ const ToastProvider : React.FC<Props> = ({ children }) => {
   return (
     <ToastContext.Provider value={dispatchToastMessage}>
       {children}
+
       <Box component="ul" className={style['toast-list']}>
         {messages.map(message => (
           <li key={message.id}>

@@ -65,26 +65,28 @@
   color: #fff;
   box-shadow: none !important;
   svg {
-    @keyframes spin {
-      from {
+    @keyframes spinning {
+      0% {
+        -webkit-transform: rotate(0deg);
         transform: rotate(0deg);
       }
-      to {
+      100% {
+        -webkit-transform: rotate(360deg);
         transform: rotate(360deg);
       }
     }
     transition: all .3s ease;
     opacity: 1;
     fill: #fff;
-  }
-  &:hover svg, &.hasPendingTxs svg {
-    fill: #4b9b73;
-  }
-  &.spinning svg {
-    animation: spin 1s infinite;
-  }
-  &:disabled svg {
-    opacity: 0.5;
+
+    &.spinning {
+      fill: #0ff;
+      animation: spinning 1s infinite;
+    }
+    &:hover, &.hasPendingTxs {
+      fill: #4b9b73;
+      animation: spinning 1s infinite;
+    }
   }
 }
 

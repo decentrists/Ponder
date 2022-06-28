@@ -11,7 +11,7 @@ const SyncButton : React.FC = () => {
   const { isSyncing, prepareSync, startSync, hasPendingTxs } = useContext(ArweaveContext);
 
   let disabled = isRefreshing || isSyncing;
-  let classes = isSyncing ? 'spinning' : '';
+  let classes = 'spinning'; // isSyncing ? 'spinning' : '';
   let onClick = prepareSync;
   let title = 'Prepare pending metadata for upload to Arweave';
 
@@ -25,11 +25,12 @@ const SyncButton : React.FC = () => {
   return (
     <Button
       disabled={disabled}
-      className={style['spin-button'] + classes}
+      className={`${style['spin-button']} ${classes}`}
       onClick={onClick}
       title={title}
     >
       <ArSyncIcon
+        className="spinning"
         width="1.5rem"
         height="1.5rem"
       />
