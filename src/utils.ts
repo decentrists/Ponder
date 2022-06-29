@@ -291,8 +291,9 @@ export function valuesEqual(a : object = {}, b : object = {}) : boolean {
   if (!a || !b) return false;
 
   // See https://stackoverflow.com/a/32922084/8691102
-  const ok = Object.keys; const tx = typeof a; const
-    ty = typeof b;
+  const ok = Object.keys;
+  const tx = typeof a;
+  const ty = typeof b;
   return tx === 'object' && tx === ty ? (
     ok(a).length === ok(b).length
     && ok(a).every(key => valuesEqual(a[key as keyof typeof a], b[key as keyof typeof b]))

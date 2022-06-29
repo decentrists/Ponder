@@ -7,14 +7,15 @@ import {
   FaHistory,
   FaCog,
 } from 'react-icons/fa';
+import { Box } from '@mui/material';
+import style from './index-elements.module.scss';
 import NavButton from '../buttons/nav-button';
-import { Footer, NavList } from './index-elements';
 
 function LayoutFooter() {
   return (
-    <Footer>
+    <Box component="footer" className={style.footer}>
       <Container as="nav">
-        <NavList>
+        <Box component="ul" className={style['nav-list']}>
           <NavButton to="/">
             <FaHome />
           </NavButton>
@@ -30,9 +31,9 @@ function LayoutFooter() {
           <NavButton to="/settings">
             <FaCog />
           </NavButton>
-        </NavList>
+        </Box>
       </Container>
-    </Footer>
+    </Box>
   );
 }
 

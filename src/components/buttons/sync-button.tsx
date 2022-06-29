@@ -1,7 +1,8 @@
 import React, { useContext } from 'react';
+import { Button } from 'react-bootstrap';
+import style from './style.module.scss';
 // @ts-ignore
 import { ReactComponent as ArSyncIcon } from '../../assets/arsync-logo.svg';
-import SpinButton from './spin-button';
 import { SubscriptionsContext } from '../../providers/subscriptions';
 import { ArweaveContext } from '../../providers/arweave';
 
@@ -22,18 +23,17 @@ const SyncButton : React.FC = () => {
   }
 
   return (
-    <SpinButton
+    <Button
       disabled={disabled}
-      className={classes}
+      className={style['spin-button'] + classes}
       onClick={onClick}
       title={title}
-      alt={title}
     >
       <ArSyncIcon
         width="1.5rem"
         height="1.5rem"
       />
-    </SpinButton>
+    </Button>
   );
 };
 

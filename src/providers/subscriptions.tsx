@@ -135,7 +135,9 @@ async function removeCachedSubscription(subscribeUrl: Podcast['subscribeUrl']) {
     await db.deleteSubscription(DB_SUBSCRIPTIONS, subscribeUrl);
     await db.deleteSubscription(DB_EPISODES, subscribeUrl);
   }
-  catch (_ex) { console.error(_ex); }
+  catch (ex) {
+    console.error(ex);
+  }
 }
 
 // TODO: ArSync v1.5+, test me

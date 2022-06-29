@@ -1,13 +1,10 @@
 import React from 'react';
-import styled from 'styled-components';
 import { RiMapPinTimeLine } from 'react-icons/ri';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
-import {
-  ListContainer, ListItem, TitleDetail,
-  TitleHeader, PodcastImage,
-  MetaDetail, ActionBtn, CallToAction,
-} from './shared-elements';
+import { Image } from 'react-bootstrap';
+import { Box, Button, Typography } from '@mui/material';
+import style from './shared-elements.module.scss';
 import RemoveBtn from './buttons/remove-button';
 import { Podcast } from '../client/interfaces';
 
@@ -18,58 +15,46 @@ interface Props {
   unsubscribe: (id: string) => void;
 }
 
-const LatestRelease = styled.div`
-  margin-right: 2rem;
-  display: flex;
-  align-items: center;
-  color: rgba(104, 104, 104, 1);
-  font-size: 12px;
-`;
-
-const TimeRelease = styled.small`
-  font-size: 9px;
-  margin-top: 1px;
-  text-transform: capitalize;
-  color: rgba(104, 104, 104, 1);
-  line-height: 1rem;
-`;
-
 const PodcastList : React.FC<Props> = ({ subscriptions, unsubscribe }) => (
-  <ListContainer>
+  <Box className={style['list-container']}>
     { subscriptions.length ? (
       <div>
         {subscriptions.map(subscription => (
-          <ListItem key={subscription.subscribeUrl}>
-            <TitleDetail>
-              <PodcastImage src={subscription.imageUrl} alt={subscription.title} />
+          <Box className={style['list-item']} key={subscription.subscribeUrl}>
+            <Box className={style['title-detail']}>
+              <Image
+                className={style['podcast-image']}
+                src={subscription.imageUrl}
+                alt={subscription.title}
+              />
               <div>
-                <TitleHeader>
+                <Typography component="h5" className={style['title-header']}>
                   {subscription.title}
-                </TitleHeader>
-                <MetaDetail>
-                  <LatestRelease>
+                </Typography>
+                <Box className={style['meta-detail']}>
+                  <Box className={style['latest-release']}>
                     <RiMapPinTimeLine />
-                    <TimeRelease>
+                    <Box component="small" className={style['time-release']}>
                       {dayjs(subscription.firstEpisodeDate).fromNow()}
-                    </TimeRelease>
+                    </Box>
 
-                  </LatestRelease>
-                </MetaDetail>
+                  </Box>
+                </Box>
               </div>
-            </TitleDetail>
+            </Box>
 
-            <CallToAction>
-              <ActionBtn>
+            <Box className={style['call-to-action']}>
+              <Button className={style['action-btn']}>
                 <RemoveBtn onClick={() => unsubscribe(subscription.subscribeUrl)} />
-              </ActionBtn>
-            </CallToAction>
-          </ListItem>
+              </Button>
+            </Box>
+          </Box>
         ))}
       </div>
     ) : (
-      <ListItem>There are no podcasts to display&hellip;</ListItem>
+      <Box className={style['list-item']}>There are no podcasts to display&hellip;</Box>
     )}
-  </ListContainer>
+  </Box>
 );
 
 export default PodcastList;

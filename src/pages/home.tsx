@@ -6,7 +6,6 @@ import { SubscriptionsContext } from '../providers/subscriptions';
 import { ArweaveContext } from '../providers/arweave';
 import PodGraph from '../components/pod-graph';
 import HeaderComponent from '../components/layout/header-component';
-import { Wrapper } from '../components/shared-elements';
 import CategoriesList from '../components/categories-list';
 import PodcastList from '../components/podcast-list';
 import TransactionList from '../components/transaction-list';
@@ -57,7 +56,7 @@ function HomePage() {
         <PodGraph subscriptions={subscriptions} />
       )}
 
-      <Wrapper>
+      <Box className={style.wrapper}>
         <Box className={style.leftPane}>
           <CategoriesList categories={[]} />
         </Box>
@@ -81,7 +80,7 @@ function HomePage() {
             />
           </TabPanel>
         </Box>
-      </Wrapper>
+      </Box>
     </div>
   );
 }

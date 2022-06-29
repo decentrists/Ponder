@@ -23,3 +23,13 @@
   text-transform: inherit;
   color: #fff;
 }
+
+.wrapper {
+  margin-top:  32px;
+  min-width: 100%;
+  display: flex;
+  padding: 0 16px;
+  @media only screen and (max-width: 960px) {
+    flex-direction: column;
+  }
+}

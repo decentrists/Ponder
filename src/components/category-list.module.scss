@@ -1,0 +1,39 @@
+.list-container {
+  overflow-y: auto;
+  padding: 0.75rem;
+  background-color: rgba(13, 13, 13, 1);
+  border: 2px solid rgba(38, 38, 38, 1);
+  border-radius: 1rem;
+  max-width: 830px;
+  height: auto;
+  max-height: 27rem;
+}
+
+.category-header {
+  color: white;
+  font-weight: 700;
+  margin-bottom: 0.75rem;
+}
+
+.category-list {
+  display: flex;
+  row-gap: 0.625rem;
+  column-gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.75rem;
+}
+
+.category-item {
+  cursor: default;
+  border-radius: 0.75rem;
+  border-width: 1px;
+  border-color: rgba(72, 72, 72, 1);
+  background-color: rgba(16, 16, 16, 1);
+  padding-top: 0.625rem;
+  padding-bottom: 0.625rem;
+  padding-left: 0.875rem;
+  padding-right: 0.875rem;
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(206, 206, 206, 1);
+}

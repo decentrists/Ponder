@@ -1,16 +1,10 @@
+import { Box } from '@mui/material';
 import React from 'react';
-import styled from 'styled-components';
-
-const LoadingText = styled.p`
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-`;
+import style from './loading.module.scss';
 
 function Loading() {
   return (
-    <LoadingText>Loading&hellip;</LoadingText>
+    <Box className={style['loading-text']}>Loading&hellip;</Box>
   );
 }
 

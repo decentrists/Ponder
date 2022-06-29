@@ -1,12 +1,10 @@
 import React from 'react';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
-import {
-  EpisodeLink, DetailsCard,
-  CardBody, EpisodeImage, EpisodeImageStyle,
-  Content, PodcastDetails,
-  TimeBadge, TimeIcon, CalenderIcon,
-} from './episode-details-elements';
+import { Box, Link } from '@mui/material';
+import { MdMoreTime, MdOutlineCloudUpload } from 'react-icons/md';
+import { Image } from 'react-bootstrap';
+import style from './episode-details-elements.module.scss';
 
 dayjs.extend(relativeTime);
 
@@ -19,28 +17,28 @@ interface Props {
 const EpisodeDetails : React.FC<Props> = ({
   title, publishedAt, mediaUrl, imageUrl,
 }) => (
-  <EpisodeLink href={mediaUrl}>
-    <DetailsCard>
-      <CardBody>
-        <EpisodeImage>
-          <EpisodeImageStyle src={imageUrl} alt={title} fluid />
-        </EpisodeImage>
-        <Content>
+  <Link className={style['episode-link']} href={mediaUrl}>
+    <Box className={style['details-card']}>
+      <Box className={style['card-body']}>
+        <Box className={style['episode-image']}>
+          <Image className={style['episode-image-style']} src={imageUrl} alt={title} fluid />
+        </Box>
+        <Box className={style.content}>
           <h5>{title}</h5>
-          <PodcastDetails>
-            <TimeBadge>
-              <TimeIcon />
+          <Box className={style['podcast-details']}>
+            <Box component="small" className={style['time-badge']}>
+              <MdMoreTime className={style['time-icon']} />
               1hr 30min
-            </TimeBadge>
-            <TimeBadge>
-              <CalenderIcon />
+            </Box>
+            <Box component="small" className={style['time-badge']}>
+              <MdOutlineCloudUpload className={style['calendar-icon']} />
               {dayjs(publishedAt).fromNow()}
-            </TimeBadge>
-          </PodcastDetails>
-        </Content>
-      </CardBody>
-    </DetailsCard>
-  </EpisodeLink>
+            </Box>
+          </Box>
+        </Box>
+      </Box>
+    </Box>
+  </Link>
 );
 
 export default EpisodeDetails;

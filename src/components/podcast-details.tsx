@@ -1,22 +1,9 @@
 import React from 'react';
-import styled from 'styled-components';
 import { Modal, Button, Image } from 'react-bootstrap';
+import { Box } from '@mui/material';
+import style from './podcast-details.module.scss';
 import { Episode } from '../client/interfaces';
 import EpisodeDetails from './episode-details';
-
-const EpisodeList = styled.ol`
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  margin-top: 0;
-  margin-bottom: 0;
-  padding-left: 0;
-`;
-
-const PodImage = styled(Image)`
-  border-radius: 1rem;
-  margin-bottom: 2px;
-`;
 
 interface Props {
   title: string,
@@ -44,9 +31,9 @@ const PodcastDetails : React.FC<Props> = ({
       <p>{description}</p>
       )}
       {imageUrl && (
-      <PodImage src={imageUrl} alt={imageTitle} fluid />
+      <Image className={style['pod-image']} src={imageUrl} alt={imageTitle} fluid />
       )}
-      <EpisodeList>
+      <Box component="ol" className={style['episode-list']}>
         {episodes.slice()
           .sort((a, b) => b.publishedAt.getTime() - a.publishedAt.getTime())
         // TODO: specify explicit props instead of ...episode
@@ -54,7 +41,7 @@ const PodcastDetails : React.FC<Props> = ({
           .map(episode => (
             <EpisodeDetails key={episode.title} {...episode} />
           ))}
-      </EpisodeList>
+      </Box>
     </Modal.Body>
     <Modal.Footer>
       <Button type="button" variant="warning" onClick={close}>Close</Button>
