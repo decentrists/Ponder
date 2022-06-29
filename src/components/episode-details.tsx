@@ -25,7 +25,7 @@ const EpisodeDetails : React.FC<Props> = ({
         </Box>
         <Box className={style.content}>
           <h5>{title}</h5>
-          <Box style={style['podcast-details']}>
+          <Box className={style['podcast-details']}>
             <Box component="small" className={style['time-badge']}>
               <MdMoreTime className={style['time-icon']} />
               1hr 30min

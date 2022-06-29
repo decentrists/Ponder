@@ -3,7 +3,7 @@ import { RiMapPinTimeLine } from 'react-icons/ri';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import { Image } from 'react-bootstrap';
-import { Box, Typography } from '@mui/material';
+import { Box, Button, Typography } from '@mui/material';
 import style from './shared-elements.module.scss';
 import RemoveBtn from './buttons/remove-button';
 import { Podcast } from '../client/interfaces';
@@ -44,9 +44,9 @@ const PodcastList : React.FC<Props> = ({ subscriptions, unsubscribe }) => (
             </Box>
 
             <Box className={style['call-to-action']}>
-              <Box className={style['action-btn']}>
+              <Button className={style['action-btn']}>
                 <RemoveBtn onClick={() => unsubscribe(subscription.subscribeUrl)} />
-              </Box>
+              </Button>
             </Box>
           </Box>
         ))}

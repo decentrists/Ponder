@@ -16,7 +16,7 @@ const RemoveBtn : React.FC<Props> = ({
     onClick={onClick}
     {...props}
   >
-    <CgTrash className={style['minus-icon']} />
+    <CgTrash />
   </Button>
 );
 
