@@ -13,7 +13,7 @@ import {
   concatMessages,
 } from '../utils';
 import { Episode, EpisodesDBTable, Podcast } from '../client/interfaces';
-import IndexedDb from '../indexed-db';
+import { IndexedDb } from '../indexed-db';
 import { ArSyncTx } from '../client/arweave/sync';
 
 // TODO: Remove after IndexedDB implementation maturation
@@ -75,12 +75,12 @@ async function readCachedPodcasts() : Promise<Podcast[]> {
 
   let cachedSubscriptions : Podcast[] = [];
   let cachedEpisodes : EpisodesDBTable[] = [];
-  [cachedSubscriptions, cachedEpisodes] =
-    await Promise.all([db.getAllValues(DB_SUBSCRIPTIONS), db.getAllValues(DB_EPISODES)]);
+  [cachedSubscriptions, cachedEpisodes] = await Promise.all([db.getAllValues(DB_SUBSCRIPTIONS),
+    db.getAllValues(DB_EPISODES)]);
 
   cachedSubscriptions.forEach(sub => {
-    const episodesTable : EpisodesDBTable | undefined =
-      cachedEpisodes.find(table => table.subscribeUrl === sub.subscribeUrl);
+    const episodesTable : EpisodesDBTable | undefined = cachedEpisodes
+      .find(table => table.subscribeUrl === sub.subscribeUrl);
     const episodes = episodesTable ? episodesTable.episodes : [];
     const podcast : Podcast = { ...sub, episodes };
     readPodcasts.push(podcast);
@@ -92,7 +92,7 @@ async function readCachedPodcasts() : Promise<Podcast[]> {
 async function writeCachedPodcasts(subscriptions: Podcast[]) : Promise<string[]> {
   const errorMessages : string[] = [];
 
-  await Promise.all(subscriptions.map(async (sub) => {
+  await Promise.all(subscriptions.map(async sub => {
     try {
       const { episodes, ...podcast } = { ...sub };
       const cachedSub : Podcast = await db.getBySubscribeUrl(DB_SUBSCRIPTIONS, sub.subscribeUrl);
@@ -135,7 +135,7 @@ async function removeCachedSubscription(subscribeUrl: Podcast['subscribeUrl']) {
     await db.deleteSubscription(DB_SUBSCRIPTIONS, subscribeUrl);
     await db.deleteSubscription(DB_EPISODES, subscribeUrl);
   }
-  catch (_ex) {}
+  catch (_ex) { console.error(_ex); }
 }
 
 // TODO: ArSync v1.5+, test me
@@ -154,8 +154,9 @@ const SubscriptionsProvider : React.FC<{ children: React.ReactNode }> = ({ child
       return true;
     }
 
-    const { errorMessage, newPodcastMetadata, newPodcastMetadataToSync } =
-      await getPodcast(subscribeUrl, metadataToSync);
+    const { errorMessage,
+      newPodcastMetadata,
+      newPodcastMetadataToSync } = await getPodcast(subscribeUrl, metadataToSync);
 
     if (hasMetadata(newPodcastMetadata)) {
       toast(`Successfully subscribed to ${newPodcastMetadata.title}.`, { variant: 'success' });
@@ -190,16 +191,21 @@ const SubscriptionsProvider : React.FC<{ children: React.ReactNode }> = ({ child
    *   seconds ago. If 0, refresh regardless.
    * @returns An array with the resulting subscriptions and metadataToSync
    */
-  const refresh = async (idsToRefresh: Podcast['subscribeUrl'][] | null = null, silent = false,
-    maxLastRefreshAge = 1) : Promise<[null, null] | [Podcast[], Partial<Podcast>[]]> => {
-
+  const refresh = async (
+    idsToRefresh: Podcast['subscribeUrl'][] | null = null,
+    silent = false,
+    maxLastRefreshAge = 1,
+  ) : Promise<[null, null] | [Podcast[], Partial<Podcast>[]]> => {
     if (isRefreshing) return [null, null];
     if (getLastRefreshAge() <= maxLastRefreshAge) return [subscriptions, metadataToSync];
 
     setIsRefreshing(true);
     try {
-      const { errorMessages, newSubscriptions, newMetadataToSync } =
-        await refreshSubscriptions(subscriptions, metadataToSync, idsToRefresh);
+      const { errorMessages, newSubscriptions, newMetadataToSync } = await refreshSubscriptions(
+        subscriptions,
+        metadataToSync,
+        idsToRefresh,
+      );
 
       setLastRefreshTime(unixTimestamp());
       setSubscriptions(newSubscriptions);
@@ -208,8 +214,10 @@ const SubscriptionsProvider : React.FC<{ children: React.ReactNode }> = ({ child
 
       if (!silent) {
         if (errorMessages.length) {
-          toast(`Refresh completed with some errors:\n${concatMessages(errorMessages)}`,
-            { autohideDelay: 10000, variant: 'warning' });
+          toast(
+            `Refresh completed with some errors:\n${concatMessages(errorMessages)}`,
+            { autohideDelay: 10000, variant: 'warning' },
+          );
         }
         else toast('Refresh successful.', { variant: 'success' });
       }
@@ -219,8 +227,10 @@ const SubscriptionsProvider : React.FC<{ children: React.ReactNode }> = ({ child
     catch (ex) {
       console.error(ex);
       if (!silent) {
-        toast(`Failed to refresh subscriptions, please try again; ${ex}`,
-          { autohideDelay: 10000, variant: 'danger' });
+        toast(
+          `Failed to refresh subscriptions, please try again; ${ex}`,
+          { autohideDelay: 10000, variant: 'danger' },
+        );
       }
     }
     finally {
@@ -268,8 +278,8 @@ const SubscriptionsProvider : React.FC<{ children: React.ReactNode }> = ({ child
         await initializeMetadataToSync();
       }
       catch (ex) {
-        const errorMessage = 'An error occurred while fetching the cached subscriptions from ' +
-          `IndexedDB:\n${(ex as Error).message}\n${IndexedDb.DB_ERROR_GENERIC_HELP_MESSAGE}`;
+        const errorMessage = 'An error occurred while fetching the cached subscriptions from '
+          + `IndexedDB:\n${(ex as Error).message}\n${IndexedDb.DB_ERROR_GENERIC_HELP_MESSAGE}`;
         console.error(errorMessage);
         toast(errorMessage, { autohideDelay: 0, variant: 'danger' });
       }
@@ -282,8 +292,8 @@ const SubscriptionsProvider : React.FC<{ children: React.ReactNode }> = ({ child
     const updateCachedPodcasts = async () => {
       const errorMessages = await writeCachedPodcasts(subscriptions);
       if (errorMessages.length) {
-        const errorMessage = 'Some subscriptions failed to be cached into IndexedDB:\n' +
-          `${IndexedDb.DB_ERROR_GENERIC_HELP_MESSAGE}\n${concatMessages(errorMessages)}`;
+        const errorMessage = 'Some subscriptions failed to be cached into IndexedDB:\n'
+          + `${IndexedDb.DB_ERROR_GENERIC_HELP_MESSAGE}\n${concatMessages(errorMessages)}`;
         console.error(errorMessage);
         toast(errorMessage, { autohideDelay: 0, variant: 'danger' });
       }

@@ -1,7 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
-import { Episode } from '../client/interfaces';
 import { Modal, Button, Image } from 'react-bootstrap';
+import { Episode } from '../client/interfaces';
 import EpisodeDetails from './episode-details';
 
 const EpisodeList = styled.ol`
@@ -37,29 +37,29 @@ const PodcastDetails : React.FC<Props> = ({
   isOpen = false,
   episodes = [],
 }) => (
-    <Modal show={isOpen} onHide={close} animation centered scrollable backdrop="static">
-      <Modal.Header>{title}</Modal.Header>
-      <Modal.Body>
-        {description && (
-          <p>{description}</p>
-        )}
-        {imageUrl && (
-          <PodImage src={imageUrl} alt={imageTitle} fluid />
-        )}
-        <EpisodeList>
-          {episodes.slice()
-            .sort((a, b) => b.publishedAt.getTime() - a.publishedAt.getTime())
-            // TODO: specify explicit props instead of ...episode
-            //       use `imageUrl` instead of `episode.imageUrl` if the latter is invalid
-            .map(episode => (
-              <EpisodeDetails key={episode.title} {...episode} />
-            ))}
-        </EpisodeList>
-      </Modal.Body>
-      <Modal.Footer>
-        <Button type="button" variant="warning" onClick={close}>Close</Button>
-      </Modal.Footer>
-    </Modal>
+  <Modal show={isOpen} onHide={close} animation centered scrollable backdrop="static">
+    <Modal.Header>{title}</Modal.Header>
+    <Modal.Body>
+      {description && (
+      <p>{description}</p>
+      )}
+      {imageUrl && (
+      <PodImage src={imageUrl} alt={imageTitle} fluid />
+      )}
+      <EpisodeList>
+        {episodes.slice()
+          .sort((a, b) => b.publishedAt.getTime() - a.publishedAt.getTime())
+        // TODO: specify explicit props instead of ...episode
+        //       use `imageUrl` instead of `episode.imageUrl` if the latter is invalid
+          .map(episode => (
+            <EpisodeDetails key={episode.title} {...episode} />
+          ))}
+      </EpisodeList>
+    </Modal.Body>
+    <Modal.Footer>
+      <Button type="button" variant="warning" onClick={close}>Close</Button>
+    </Modal.Footer>
+  </Modal>
 );
 
 export default PodcastDetails;

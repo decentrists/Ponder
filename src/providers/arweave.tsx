@@ -3,6 +3,8 @@ import React, {
   useRef, useEffect, useCallback,
 } from 'react';
 import PropTypes from 'prop-types';
+import { JWKInterface } from 'arweave/node/lib/wallet';
+import { TransactionStatusResponse } from 'arweave/node/transactions';
 import { ToastContext } from './toast';
 import useRerenderEffect from '../hooks/use-rerender-effect';
 import { DBStatus, SubscriptionsContext } from './subscriptions';
@@ -11,17 +13,15 @@ import {
   valuesEqual,
   concatMessages,
 } from '../utils';
-import { JWKInterface } from 'arweave/node/lib/wallet';
 import * as arweave from '../client/arweave';
 import * as arsync from '../client/arweave/sync';
-import { TransactionStatusResponse } from 'arweave/node/transactions';
 
 // Convenience aliases
 interface ArSyncTx extends arsync.ArSyncTx {}
-const isErrored = arsync.isErrored;
-const isInitialized = arsync.isInitialized;
-const isNotInitialized = arsync.isNotInitialized;
-const isPosted = arsync.isPosted;
+const { isErrored } = arsync;
+const { isInitialized } = arsync;
+const { isNotInitialized } = arsync;
+const { isPosted } = arsync;
 
 interface ArweaveContextType {
   isSyncing: boolean,
@@ -115,8 +115,10 @@ const ArweaveProvider : React.FC<{ children: React.ReactNode }> = ({ children })
       toast(firstMessage, { variant });
     }
     if (hasPendingTxs()) {
-      toast('Pending transactions have been cleared, but their data is still cached.',
-        { variant: 'warning' });
+      toast(
+        'Pending transactions have been cleared, but their data is still cached.',
+        { variant: 'warning' },
+      );
       setArSyncTxs(arSyncTxs.filter(isNotInitialized));
     }
   }
@@ -141,19 +143,19 @@ const ArweaveProvider : React.FC<{ children: React.ReactNode }> = ({ children })
     const syncResultTxs = allTxs.filter(tx => txsToSyncIds.includes(tx.id));
     const postedTxs = syncResultTxs.filter(isPosted);
     const erroredTxs = syncResultTxs.filter(isErrored);
-    const pluralize = (array: any[]) => array.length > 1 ? 's' : '';
+    const pluralize = (array: any[]) => (array.length > 1 ? 's' : '');
     try {
       if (isNotEmpty(postedTxs)) {
-        const message = concatMessages(postedTxs.map(elem =>
-          `${elem.title} (${elem.numEpisodes} new episodes)`));
-        toast(`${postedTxs.length} Transaction${pluralize(postedTxs)} successfully posted to ` +
-          `Arweave with metadata for:\n${message}`, { autohideDelay: 10000, variant: 'success' });
+        const message = concatMessages(postedTxs
+          .map(elem => `${elem.title} (${elem.numEpisodes} new episodes)`));
+        toast(`${postedTxs.length} Transaction${pluralize(postedTxs)} successfully posted to `
+          + `Arweave with metadata for:\n${message}`, { autohideDelay: 10000, variant: 'success' });
       }
       if (isNotEmpty(erroredTxs)) {
-        const message =
-          concatMessages(erroredTxs.map(elem => `${elem.title}, reason:\n${elem.resultObj}\n`));
-        toast(`${erroredTxs.length} Transaction${pluralize(erroredTxs)} failed to post to ` +
-          `Arweave with metadata for:\n${message}`, { autohideDelay: 0, variant: 'danger' });
+        const message = concatMessages(erroredTxs
+          .map(elem => `${elem.title}, reason:\n${elem.resultObj}\n`));
+        toast(`${erroredTxs.length} Transaction${pluralize(erroredTxs)} failed to post to `
+          + `Arweave with metadata for:\n${message}`, { autohideDelay: 0, variant: 'danger' });
       }
       setMetadataToSync(arsync.formatNewMetadataToSync(allTxs, metadataToSync));
     }
@@ -191,8 +193,8 @@ const ArweaveProvider : React.FC<{ children: React.ReactNode }> = ({ children })
     const confirmedTxs : ArSyncTx[] = [];
 
     await Promise.all(arSyncTxs.filter(isPosted).map(async postedTx => {
-      const status : TransactionStatusResponse =
-        await arweave.getTxConfirmationStatus(postedTx.resultObj as arsync.TransactionDTO);
+      const status : TransactionStatusResponse = await arweave
+        .getTxConfirmationStatus(postedTx.resultObj as arweave.TransactionDTO);
 
       // TODO: adjust for mainnet https://github.com/ArweaveTeam/arweave-js#get-a-transaction-status
       //       * change `status.confirmed` to `isNotEmpty(status.confirmed)`
@@ -254,15 +256,15 @@ const ArweaveProvider : React.FC<{ children: React.ReactNode }> = ({ children })
 
         const arSyncTxsObject : ArSyncTx[] = fetchedData.map((tx: ArSyncTx) => ({
           ...tx,
-          resultObj: ('errorMessage' in tx.resultObj ? tx.resultObj as unknown as Error :
-            tx.resultObj as arsync.TransactionDTO),
+          resultObj: ('errorMessage' in tx.resultObj ? tx.resultObj as unknown as Error
+            : tx.resultObj as arweave.TransactionDTO),
         } as ArSyncTx));
 
         setArSyncTxs(arSyncTxsObject);
       }
       catch (ex) {
-        const errorMessage = `Error while reading the cached transactions: ${ex}.\n` +
-                             'Cached transactions have been cleared.';
+        const errorMessage = `Error while reading the cached transactions: ${ex}.\n`
+                             + 'Cached transactions have been cleared.';
         console.error(errorMessage);
         toast(errorMessage, { autohideDelay: 0, variant: 'danger' });
       }

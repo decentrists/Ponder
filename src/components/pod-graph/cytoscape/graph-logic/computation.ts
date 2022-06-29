@@ -18,11 +18,10 @@ export interface DisjointGraph {
   sharedKeywordsAndCategories: SharedKeywords[]
 }
 
-
 export const countSharedKeywords = (keywords: string[], currentKeywords: SharedKeywords[] = []) => {
   let result = [...currentKeywords];
-  keywords.forEach((keyword) => {
-    const item = result.find((el) => el.name === keyword);
+  keywords.forEach(keyword => {
+    const item = result.find(el => el.name === keyword);
     if (!item) result = [...result, { name: keyword, count: 1 }];
     else item.count += 1;
   });
@@ -35,8 +34,10 @@ export const countSharedKeywords = (keywords: string[], currentKeywords: SharedK
  * @returns
  *   An array of graph representations grouped by shared keywords & categories
  */
-export const findAllDisjointGraphs = (nodes: DisjointGraphNode[],
-  disjointGraphs : DisjointGraph[] = []) : DisjointGraph[] => {
+export const findAllDisjointGraphs = (
+  nodes: DisjointGraphNode[],
+  disjointGraphs : DisjointGraph[] = [],
+) : DisjointGraph[] => {
   const firstUnvisitedNode = nodes.find(item => item.visited !== true);
   if (!firstUnvisitedNode) return disjointGraphs;
 
@@ -52,8 +53,10 @@ export const findAllDisjointGraphs = (nodes: DisjointGraphNode[],
     if (!relatedPodcast) break;
 
     relatedPodcast.visited = true;
-    sharedKeywordsAndCategories = 
-      countSharedKeywords(relatedPodcast.keywordsAndCategories, sharedKeywordsAndCategories);
+    sharedKeywordsAndCategories = countSharedKeywords(
+      relatedPodcast.keywordsAndCategories,
+      sharedKeywordsAndCategories,
+    );
     graph.push(relatedPodcast);
   } while (relatedPodcast);
 
@@ -67,8 +70,10 @@ export const findAllDisjointGraphs = (nodes: DisjointGraphNode[],
  * @param disjointGraphs
  * @returns The findAllDisjointGraphs result mapped onto the subscriptions metadata
  */
-const finalizeDisjointGraphsObject = (subscriptions: Podcast[],
-  disjointGraphs:DisjointGraph[]) => disjointGraphs
+const finalizeDisjointGraphsObject = (
+  subscriptions: Podcast[],
+  disjointGraphs: DisjointGraph[],
+) => disjointGraphs
   .map(graph => graph.nodes
     .map(node => subscriptions
       .find(subscription => subscription.subscribeUrl === node.subscribeUrl)!));
@@ -126,34 +131,44 @@ export const generateNodes = (disjointGraphs: Podcast[][]) => {
   return nodes;
 };
 
-const getKeywordScore = (keywords: SharedKeywords[],
-  keyword: string) => keywords.find((element) => element.name === keyword)!.count;
+const getKeywordScore = (
+  keywords: SharedKeywords[],
+  keyword: string,
+) => keywords.find(element => element.name === keyword)!.count;
 
 /**
- * @see https://phab.decentapps.eu/T243 
+ * @see https://phab.decentapps.eu/T243
  */
-export const computeEdgeWeight = (disjointGraphs: DisjointGraph[],
-  sourceId: string, targetId: string) => {
-  let target! : DisjointGraphNode, source! : DisjointGraphNode, graph!: DisjointGraph;
+export const computeEdgeWeight = (
+  disjointGraphs: DisjointGraph[],
+  sourceId: string,
+  targetId: string,
+) => {
+  let target! : DisjointGraphNode;
+  let source! : DisjointGraphNode;
+  let graph! : DisjointGraph;
   for (const item of disjointGraphs) {
-    const sourceIndex = item.nodes.findIndex((node) => node.subscribeUrl === sourceId);
-    const targetIndex = item.nodes.findIndex((node) => node.subscribeUrl === targetId);
+    const sourceIndex = item.nodes.findIndex(node => node.subscribeUrl === sourceId);
+    const targetIndex = item.nodes.findIndex(node => node.subscribeUrl === targetId);
     if (sourceIndex !== -1 && targetIndex !== -1) {
       source = item.nodes[sourceIndex];
       target = item.nodes[targetIndex];
-      graph  = item;
+      graph = item;
       break;
     }
   }
   if (!source || !target || !graph) throw new Error('Incorrect source or target id');
-  const sourceScore = source.keywordsAndCategories.reduce(
-    (acc, keyword) =>  acc + getKeywordScore(graph.sharedKeywordsAndCategories, keyword), 0);
+  const sourceScore = source.keywordsAndCategories
+    .reduce((acc, keyword) => acc + getKeywordScore(graph.sharedKeywordsAndCategories, keyword), 0);
 
-  const targetScore = target.keywordsAndCategories.reduce(
-    (acc, keyword) =>  acc + getKeywordScore(graph.sharedKeywordsAndCategories, keyword), 0);
+  const targetScore = target.keywordsAndCategories
+    .reduce((acc, keyword) => acc + getKeywordScore(graph.sharedKeywordsAndCategories, keyword), 0);
 
-  const totalScore = graph.sharedKeywordsAndCategories.reduce(
-    (acc, keyword) =>  acc + getKeywordScore(graph.sharedKeywordsAndCategories, keyword.name), 0);
+  const totalScore = graph.sharedKeywordsAndCategories
+    .reduce((acc, keyword) => acc + getKeywordScore(
+      graph.sharedKeywordsAndCategories,
+      keyword.name,
+    ), 0);
 
   return (sourceScore + targetScore) / totalScore;
 };
@@ -183,10 +198,10 @@ export const generateEdges = (podcasts: Podcast[][], disjointGraphs: DisjointGra
 
       return [...acc, ...result];
     }, [])
-  // remove duplicate edges since the graph is undirected.
+    // remove duplicate edges since the graph is undirected.
     .reduce((acc: EdgeDefinition[], edge) => (
-      acc.some(item => item.data.target === edge.data.source &&
-         item.data.source === edge.data.target)
+      acc.some(item => item.data.target === edge.data.source
+         && item.data.source === edge.data.target)
         ? acc
         : acc.concat(edge)
     ), []));

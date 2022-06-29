@@ -1,6 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
-import { ListContainer } from '../components/shared-elements';
+import { ListContainer } from './shared-elements';
 
 interface Props {
   categories: string[];
@@ -37,28 +37,28 @@ const CategoryItem = styled.div`
 
 // @ts-ignore
 const CategoriesList : React.FC<Props> = ({ categories }) => (
-    <ListContainer>
-      <CategoryHeader>
-        Popular
-      </CategoryHeader>
-      <CategoryList>
-        <CategoryItem>
-          Comedy
-        </CategoryItem>
-        <CategoryItem>
-          Political
-        </CategoryItem>
-        <CategoryItem>
-          Tech
-        </CategoryItem>
-        <CategoryItem>
-          Sports
-        </CategoryItem>
-        <CategoryItem>
-          Comedy
-        </CategoryItem>
-      </CategoryList>
-    </ListContainer>
+  <ListContainer>
+    <CategoryHeader>
+      Popular
+    </CategoryHeader>
+    <CategoryList>
+      <CategoryItem>
+        Comedy
+      </CategoryItem>
+      <CategoryItem>
+        Political
+      </CategoryItem>
+      <CategoryItem>
+        Tech
+      </CategoryItem>
+      <CategoryItem>
+        Sports
+      </CategoryItem>
+      <CategoryItem>
+        Comedy
+      </CategoryItem>
+    </CategoryList>
+  </ListContainer>
 );
 
 export default CategoriesList;

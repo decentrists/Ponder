@@ -21,13 +21,11 @@ export enum ArSyncTxStatus {
   REJECTED, // If tx confirmation fails
 }
 
-export interface TransactionDTO extends Transaction {}
-
 export interface ArSyncTx {
   id: string, // uuid, not to be confused with `(resultObj as Transaction).id`
   subscribeUrl: string, // TODO: pending T244, change to 'podcastId'
   title?: string,
-  resultObj: Transaction | TransactionDTO | Error,
+  resultObj: Transaction | arweave.TransactionDTO | Error,
   metadata: Partial<Podcast>,
   numEpisodes: number,
   status: ArSyncTxStatus,
@@ -67,9 +65,11 @@ export const isConfirmed = (tx: ArSyncTx) => tx.status === ArSyncTxStatus.CONFIR
 export const isNotConfirmed = (tx: ArSyncTx) => tx.status !== ArSyncTxStatus.CONFIRMED;
 
 export async function initArSyncTxs(
-  subscriptions: Podcast[], metadataToSync: Partial<Podcast>[], wallet: JWKInterface)
+  subscriptions: Podcast[],
+  metadataToSync: Partial<Podcast>[],
+  wallet: JWKInterface,
+)
   : Promise<ArSyncTx[]> {
-
   const result : ArSyncTx[] = [];
   const partitionedMetadataToSync : Partial<Podcast>[] = [];
 
@@ -127,8 +127,7 @@ export async function startSync(allTxs: ArSyncTx[], wallet: JWKInterface) : Prom
     if (isInitialized(tx)) {
       let postedTxResult : Transaction | Error;
       try {
-        postedTxResult =
-          await arweave.signAndPostTransaction(tx.resultObj as Transaction, wallet);
+        postedTxResult = await arweave.signAndPostTransaction(tx.resultObj as Transaction, wallet);
       }
       catch (ex) {
         postedTxResult = ex as Error;
@@ -156,8 +155,9 @@ export async function startSync(allTxs: ArSyncTx[], wallet: JWKInterface) : Prom
  *   `podcastMetadataToSync`.
  */
 function partitionMetadataBatches(
-  cachedMetadata: Partial<Podcast>, podcastMetadataToSync: Partial<Podcast>) : Partial<Podcast>[] {
-
+  cachedMetadata: Partial<Podcast>,
+  podcastMetadataToSync: Partial<Podcast>,
+) : Partial<Podcast>[] {
   const { episodes, ...mainMetadata } = { ...podcastMetadataToSync };
   if (!hasMetadata(episodes)) return [podcastMetadataToSync];
 
@@ -167,8 +167,8 @@ function partitionMetadataBatches(
 
   for (let count = 1; count <= numBatches; count++) {
     // Episodes are sorted from new to old
-    const batchEpisodes = count === 1 ? (episodes || []).slice(-MAX_EPISODES_PER_BATCH) :
-      episodes.slice(-(MAX_EPISODES_PER_BATCH * count), -(MAX_EPISODES_PER_BATCH * (count - 1)));
+    const batchEpisodes = count === 1 ? (episodes || []).slice(-MAX_EPISODES_PER_BATCH)
+      : episodes.slice(-(MAX_EPISODES_PER_BATCH * count), -(MAX_EPISODES_PER_BATCH * (count - 1)));
     const currentBatch = {
       ...mainMetadata,
       episodes: batchEpisodes,
@@ -192,8 +192,9 @@ function partitionMetadataBatches(
 }
 
 export function formatNewMetadataToSync(
-  allTxs: ArSyncTx[], prevMetadataToSync: Partial<Podcast>[] = []) : Partial<Podcast>[] {
-
+  allTxs: ArSyncTx[],
+  prevMetadataToSync: Partial<Podcast>[] = [],
+) : Partial<Podcast>[] {
   let diffs = prevMetadataToSync;
   allTxs.forEach(tx => {
     if (isPosted(tx) || isConfirmed(tx)) {

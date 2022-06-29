@@ -6,10 +6,10 @@ export default function styles() {
       // Nodes
       selector: 'node',
       style: {
-        'shape': 'roundrectangle',
+        shape: 'roundrectangle',
         'background-color': '#020202',
-        'width': '160px',
-        'height': '160px',
+        width: '160px',
+        height: '160px',
         'padding-top': '16px',
         'padding-left': '16px',
         'padding-bottom': '16px',
@@ -37,9 +37,9 @@ export default function styles() {
       selector: 'edge',
       style: {
         'line-color': '#aaa',
-        'color': '#fff',
+        color: '#fff',
         'source-arrow-color': '#79797a',
-        'label': 'data(label)',
+        label: 'data(label)',
         'curve-style': 'straight',
         'font-weight': 200,
         'font-size': '20px',
@@ -59,7 +59,7 @@ export default function styles() {
         'text-border-opacity': 0.6,
         'text-background-opacity': 0.6,
         'text-background-padding': '6px',
-        'width': 3,
+        width: 3,
       },
     },
     {

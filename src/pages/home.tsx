@@ -18,8 +18,21 @@ interface TabPanelProps {
   value: number;
 }
 
-function HomePage() {
+function TabPanel(props: TabPanelProps) {
+  const { children, value, index, ...other } = props;
 
+  return (
+    <div
+      role="tabpanel"
+      hidden={value !== index}
+      {...other}
+    >
+      <Box sx={{ p: 3 }}>{children}</Box>
+    </div>
+  );
+}
+
+function HomePage() {
   const { subscriptions, subscribe, unsubscribe } = useContext(SubscriptionsContext);
   const { arSyncTxs, isSyncing, removeArSyncTxs } = useContext(ArweaveContext);
 
@@ -32,20 +45,6 @@ function HomePage() {
   useEffect(() => {
     if (isSyncing) setTab(1);
   }, [isSyncing]);
-
-  const TabPanel = (props: TabPanelProps) => {
-    const { children, value, index, ...other } = props;
-
-    return (
-      <div
-        role='tabpanel'
-        hidden={value !== index}
-        {...other}
-      >
-        {<Box sx={{ p: 3 }}>{children}</Box>}
-      </div>
-    );
-  };
 
   async function search({ query } : { query: string }) {
     subscribe(query);
@@ -64,9 +63,9 @@ function HomePage() {
         </Box>
         <Box className={style.rightPane}>
           <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-            <Tabs onChange={handleChange} value={tab} aria-label='Info tabs'>
-              <Tab className={style.tabHeader} label='Subscriptions' />
-              <Tab className={style.tabHeader} label='Transactions' />
+            <Tabs onChange={handleChange} value={tab} aria-label="Info tabs">
+              <Tab className={style.tabHeader} label="Subscriptions" />
+              <Tab className={style.tabHeader} label="Transactions" />
             </Tabs>
           </Box>
 

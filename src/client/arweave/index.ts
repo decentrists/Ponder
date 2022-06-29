@@ -1,6 +1,8 @@
-import client from './client';
+import Transaction from 'arweave/node/lib/transaction';
 import { TransactionStatusResponse } from 'arweave/node/transactions';
-import { TransactionDTO } from './sync';
+import client from './client';
+
+export interface TransactionDTO extends Transaction {}
 
 export { getPodcastFeed } from './get-podcast-feed';
 
@@ -9,8 +11,8 @@ export { createNewDevWallet, getWalletAddress } from './wallet';
 export { newMetadataTransaction, signAndPostTransaction } from './create-transaction';
 
 export async function getTxConfirmationStatus(
-  tx: TransactionDTO) : Promise<TransactionStatusResponse> {
-
+  tx: TransactionDTO,
+) : Promise<TransactionStatusResponse> {
   let result : TransactionStatusResponse;
   try {
     result = await client.transactions.getStatus(tx.id);

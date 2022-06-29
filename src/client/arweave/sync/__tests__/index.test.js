@@ -1,4 +1,5 @@
 import { initArSyncTxs, startSync, ArSyncTxStatus } from '..';
+// eslint-disable-next-line import/named
 import { addTag } from '../../client';
 import { newMetadataTransaction, signAndPostTransaction } from '../../create-transaction';
 

@@ -1,3 +1,5 @@
+import { JWKInterface } from 'arweave/node/lib/wallet';
+import Transaction from 'arweave/node/lib/transaction';
 import client from './client';
 import { toTag } from './utils';
 import {
@@ -14,15 +16,15 @@ import {
   MANDATORY_ARWEAVE_TAGS,
   OPTIONAL_ARWEAVE_STRING_TAGS,
 } from '../interfaces';
-import { JWKInterface } from 'arweave/node/lib/wallet';
-import Transaction from 'arweave/node/lib/transaction';
 
 type MandatoryTags = typeof MANDATORY_ARWEAVE_TAGS[number];
 
 async function newTransaction(
-  wallet: JWKInterface, newMetadata: Partial<Podcast>, tags: [string, string][] = [])
+  wallet: JWKInterface,
+  newMetadata: Partial<Podcast>,
+  tags: [string, string][] = [],
+)
   : Promise<Transaction> {
-
   try {
     const trx = await client.createTransaction({ data: JSON.stringify(newMetadata) }, wallet);
     trx.addTag('Content-Type', 'application/json');
@@ -61,8 +63,8 @@ export async function signAndPostTransaction(trx: Transaction, wallet: JWKInterf
   }
 
   if (isNotEmpty(postResponse.data.error)) {
-    throw new Error(`${postResponse.data.error.code}. Posting transaction failed: ` +
-      `${postResponse.data.error.msg}`);
+    throw new Error(`${postResponse.data.error.code}. Posting transaction failed: `
+      + `${postResponse.data.error.msg}`);
   }
   return trx;
 }
@@ -74,23 +76,25 @@ export async function signAndPostTransaction(trx: Transaction, wallet: JWKInterf
  * @returns a new Arweave Transaction object
  * @throws if `newMetadata` is incomplete or if newTransaction() throws
  */
-export async function newMetadataTransaction(wallet: JWKInterface,
-  newMetadata: Partial<Podcast>, cachedMetadata : Partial<Podcast> = {}) : Promise<Transaction> {
-
+export async function newMetadataTransaction(
+  wallet: JWKInterface,
+  newMetadata: Partial<Podcast>,
+  cachedMetadata : Partial<Podcast> = {},
+) : Promise<Transaction> {
   const mandatoryPodcastTags : [MandatoryTags, string | undefined][] = [
     ['subscribeUrl', newMetadata.subscribeUrl || cachedMetadata.subscribeUrl],
     ['title', newMetadata.title || cachedMetadata.title],
     ['description', newMetadata.description || cachedMetadata.description],
   ];
 
-  const getMandatoryTagsValues = (key: MandatoryTags) => 
-    mandatoryPodcastTags.find((element) => element[0] === key)![1];
+  const getMandatoryTagsValues = (key: MandatoryTags) => mandatoryPodcastTags
+    .find(element => element[0] === key)![1];
 
   mandatoryPodcastTags.forEach(([name, value]) => {
     if (!value) {
-      throw new Error('Could not upload metadata for ' +
-        `${getMandatoryTagsValues('title') || getMandatoryTagsValues('subscribeUrl')}: ` +
-        `${name} is missing`);
+      throw new Error('Could not upload metadata for '
+        + `${getMandatoryTagsValues('title') || getMandatoryTagsValues('subscribeUrl')}: `
+        + `${name} is missing`);
     }
   });
 
@@ -105,8 +109,11 @@ export async function newMetadataTransaction(wallet: JWKInterface,
   (newMetadata.keywords || []).forEach(key => podcastTags.push(['keyword', key]));
   (newMetadata.episodesKeywords || []).forEach(key => podcastTags.push(['episodesKeyword', key]));
 
-  const episodeBatchTags =
-    episodeTags(newMetadata.episodes, cachedMetadata, newMetadata.metadataBatch);
+  const episodeBatchTags = episodeTags(
+    newMetadata.episodes,
+    cachedMetadata,
+    newMetadata.metadataBatch,
+  );
 
   return newTransaction(wallet, newMetadata, podcastTags.concat(episodeBatchTags));
 }
@@ -117,14 +124,17 @@ export async function newMetadataTransaction(wallet: JWKInterface,
  * @param metadataBatchNumber Iff null then metadataBatch is computed by @see getMetadataBatchNumber
  * @returns The metadata transaction tags for the given list of newEpisodes
  */
-function episodeTags(newEpisodes : Episode[] = [], cachedMetadata : Partial<Podcast> = {},
-  metadataBatchNumber : number | null = null) : [string, string][] {
+function episodeTags(
+  newEpisodes : Episode[] = [],
+  cachedMetadata : Partial<Podcast> = {},
+  metadataBatchNumber : number | null = null,
+) : [string, string][] {
   if (!newEpisodes.length) { return []; }
 
   const firstEpisodeDate = newEpisodes[newEpisodes.length - 1].publishedAt;
   const lastEpisodeDate = newEpisodes[0].publishedAt;
-  const metadataBatch = (isValidInteger(metadataBatchNumber) ? metadataBatchNumber :
-    getMetadataBatchNumber(cachedMetadata, firstEpisodeDate, lastEpisodeDate));
+  const metadataBatch = (isValidInteger(metadataBatchNumber) ? metadataBatchNumber
+    : getMetadataBatchNumber(cachedMetadata, firstEpisodeDate, lastEpisodeDate));
 
   return [
     ['firstEpisodeDate', toISOString(firstEpisodeDate)],
@@ -140,11 +150,14 @@ function episodeTags(newEpisodes : Episode[] = [], cachedMetadata : Partial<Podc
  * @returns
  *   An integer denoting the batch number for the [firstNewEpisodeDate, lastNewEpisodeDate] interval
  */
-export function getMetadataBatchNumber(cachedMetadata : Partial<Podcast>,
-  firstNewEpisodeDate: Date, lastNewEpisodeDate: Date) : number {
+export function getMetadataBatchNumber(
+  cachedMetadata : Partial<Podcast>,
+  firstNewEpisodeDate: Date,
+  lastNewEpisodeDate: Date,
+) : number {
   if (!isValidDate(firstNewEpisodeDate) || !isValidDate(lastNewEpisodeDate)) {
-    throw new Error(`Could not upload metadata for ${cachedMetadata.title}: ` +
-                    'Invalid date found for one of its episodes.');
+    throw new Error(`Could not upload metadata for ${cachedMetadata.title}: `
+                    + 'Invalid date found for one of its episodes.');
   }
   const cachedBatchNumber = cachedMetadata.metadataBatch;
 
@@ -158,8 +171,8 @@ export function getMetadataBatchNumber(cachedMetadata : Partial<Podcast>,
   //   return cachedMetadata.firstBatch.count - 1;
   // }
 
-  if (cachedMetadata.lastEpisodeDate &&
-    cachedMetadata.lastEpisodeDate > lastNewEpisodeDate) {
+  if (cachedMetadata.lastEpisodeDate
+    && cachedMetadata.lastEpisodeDate > lastNewEpisodeDate) {
     // return queryMiddleMetadataBatchNumber(cachedMetadata,firstNewEpisodeDate,lastNewEpisodeDate);
     throw new Error('Supplementing existing metadata is not implemented yet.');
   }

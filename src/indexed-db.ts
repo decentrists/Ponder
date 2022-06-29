@@ -45,7 +45,7 @@ export class IndexedDb {
       try {
         this.db = await openDB(this.database, IndexedDb.DB_VERSION);
       }
-      catch (ex) {}
+      catch (ex) { console.error(ex); }
     }
   }
 
@@ -58,9 +58,7 @@ export class IndexedDb {
       this.db = await openDB(this.database, IndexedDb.DB_VERSION, {
         upgrade(db: IDBPDatabase) {
           for (const [tableName, params] of tables) {
-            if (db.objectStoreNames.contains(tableName)) continue;
-
-            db.createObjectStore(tableName, params);
+            if (!db.objectStoreNames.contains(tableName)) db.createObjectStore(tableName, params);
           }
         },
       });
@@ -106,9 +104,7 @@ export class IndexedDb {
 
     const tx = this.db.transaction(tableName, 'readwrite');
     const store = tx.objectStore(tableName);
-    for (const value of values) {
-      await store.put(value);
-    }
+    await Promise.all(values.map(value => store.put(value)));
     return true;
   }
 
@@ -133,5 +129,3 @@ export class IndexedDb {
     return subscribeUrl;
   }
 }
-
-export default IndexedDb;

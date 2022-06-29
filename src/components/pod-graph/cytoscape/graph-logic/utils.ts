@@ -1,7 +1,6 @@
 import { Primitive } from '../../../../utils';
 import { Podcast } from '../../../../client/interfaces';
 
-
 export interface SharedKeywords {
   name: string;
   count: number;
@@ -14,11 +13,13 @@ export const findSharedCategoriesAndKeywords = (podcast1: Podcast, podcast2: Pod
   return removeDuplicateElements(arr);
 };
 
-export const haveSharedElements = <T extends Primitive>(arr1: T[] = [], arr2: T[] = []) =>
-  arr1.some(item => arr2.includes(item));
+export const haveSharedElements = <T extends Primitive>(arr1: T[] = [],
+  arr2: T[] = []) => arr1.some(item => arr2.includes(item));
 
-export const haveSharedKeywords = (currentKeywords: SharedKeywords[], keywords: string[]) => 
-  keywords.some((keyword) => currentKeywords.some((item) => item.name === keyword));
+export const haveSharedKeywords = (
+  currentKeywords: SharedKeywords[],
+  keywords: string[],
+) => keywords.some(keyword => currentKeywords.some(item => item.name === keyword));
 
 /**
  * @param array

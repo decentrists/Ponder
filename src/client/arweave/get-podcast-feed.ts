@@ -1,4 +1,6 @@
 /* eslint-disable no-await-in-loop */
+// eslint-disable-next-line import/no-extraneous-dependencies
+import { QueryTransactionsArgs, TagFilter } from 'arlocal/bin/graphql/types.d';
 import client from './client';
 import {
   isNotEmpty,
@@ -17,7 +19,6 @@ import {
   ALLOWED_ARWEAVE_TAGS,
 } from '../interfaces';
 // eslint-disable-next-line import/no-extraneous-dependencies
-import { QueryTransactionsArgs, TagFilter } from 'arlocal/bin/graphql/types.d';
 
 interface TransactionNode { id: string, tags: { name: string, value: string }[] }
 
@@ -42,8 +43,8 @@ const toTagFilter = (tagsToFilter: TagsToFilter) : TagFilter[] => Object
   }));
 
 export async function getPodcastFeed(
-  subscribeUrl: Podcast['subscribeUrl']) : Promise<Partial<Podcast> | PodcastFeedError> {
-
+  subscribeUrl: Podcast['subscribeUrl'],
+) : Promise<Partial<Podcast> | PodcastFeedError> {
   const errorMessages : string[] = [];
   const metadataBatches = [];
   const tagBatches : PodcastTags[] = [];
@@ -75,12 +76,12 @@ export async function getPodcastFeed(
   }
   while (batch < MAX_BATCHES);
 
-  const mergedMetadata : Partial<Podcast> =
-    { ...mergeBatchMetadata(metadataBatches), ...mergeBatchTags(tagBatches) };
+  const mergedMetadata : Partial<Podcast> = { ...mergeBatchMetadata(metadataBatches),
+    ...mergeBatchTags(tagBatches) };
   if (!hasMetadata(mergedMetadata) && errorMessages.length) {
     // Only return an errorMessage if no metadata was found, since GraphQL likely was unreachable.
-    return { errorMessage: `Encountered the following errors when fetching ${subscribeUrl} ` +
-                           `metadata from Arweave:\n${concatMessages(errorMessages, true)}` };
+    return { errorMessage: `Encountered the following errors when fetching ${subscribeUrl} `
+                           + `metadata from Arweave:\n${concatMessages(errorMessages, true)}` };
   }
 
   return mergedMetadata;
@@ -98,8 +99,8 @@ type GetPodcastFeedForGqlQueryReturnType = {
 };
 
 async function getPodcastFeedForGqlQuery(
-  gqlQuery: GraphQLQuery) : Promise<GetPodcastFeedForGqlQueryReturnType> {
-
+  gqlQuery: GraphQLQuery,
+) : Promise<GetPodcastFeedForGqlQueryReturnType> {
   let edges;
   let errorMessage;
   try {
@@ -127,7 +128,8 @@ async function getPodcastFeedForGqlQuery(
         ...tag,
         name: fromTag(tag.name),
         value: (['firstEpisodeDate', 'lastEpisodeDate', 'lastBuildDate'].includes(
-          fromTag(tag.name)) ? toDate(tag.value) : tag.value),
+          fromTag(tag.name),
+        ) ? toDate(tag.value) : tag.value),
       }))
       .reduce((acc, tag) => ({
         ...acc,

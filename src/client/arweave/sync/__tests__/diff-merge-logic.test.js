@@ -1,10 +1,10 @@
+import cloneDeep from 'lodash.clonedeep';
 import {
   mergeEpisodeBatches,
   mergeBatchMetadata,
   mergeBatchTags,
   rightDiff,
 } from '../diff-merge-logic';
-import cloneDeep from 'lodash.clonedeep';
 
 const originalTagPrefix = process.env.REACT_APP_TAG_PREFIX;
 const testTag = 'testPonder';
@@ -378,8 +378,8 @@ describe('mergeBatchTags', () => {
       });
     });
 
-    it('returns the min firstEpisodeDate, max lastEpisodeDate, max metadataBatch, ' +
-       'regardless of batch order', () => {
+    it('returns the min firstEpisodeDate, max lastEpisodeDate, max metadataBatch, '
+       + 'regardless of batch order', () => {
       expect(mergeBatchTags(tagBatches.slice(0, 2).reverse())).toStrictEqual({
         metadataBatch: 1,
         title: 'old title',
@@ -552,8 +552,8 @@ describe('rightDiff', () => {
       keywords: [''],
     };
 
-    it('returns the right diff where primary key subscribeUrl persists for the podcast diff, ' +
-       'publishedAt persists for each episode diff and the episodes diff is sorted', () => {
+    it('returns the right diff where primary key subscribeUrl persists for the podcast diff, '
+       + 'publishedAt persists for each episode diff and the episodes diff is sorted', () => {
       expect(rightDiff(oldMetadata, newMetadata)).toStrictEqual({
         imageUrl: 'https://imgurl/img.png?ver=1',
         episodes: [
