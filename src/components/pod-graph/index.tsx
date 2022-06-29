@@ -75,11 +75,11 @@ const PodGraph : React.FC<Props> = ({ subscriptions }) => {
     <PodGraphContainer>
       <PodGraphInnerContainer ref={el} />
       {selectedPodcast && (
-      <PodcastDetails
-        {...selectedPodcast}
-        isOpen={!!selectedPodcast}
-        close={() => setSelectedPodcastId(null)}
-      />
+        <PodcastDetails
+          {...selectedPodcast}
+          isOpen={!!selectedPodcast}
+          close={() => setSelectedPodcastId(null)}
+        />
       )}
       { /* @ts-ignore  */}
       <ToggleBtn />  {/* this btn has no fn yet,it can be added later */}

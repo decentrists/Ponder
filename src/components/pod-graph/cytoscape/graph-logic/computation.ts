@@ -72,7 +72,7 @@ export const findAllDisjointGraphs = (
  */
 const finalizeDisjointGraphsObject = (
   subscriptions: Podcast[],
-  disjointGraphs:DisjointGraph[],
+  disjointGraphs: DisjointGraph[],
 ) => disjointGraphs
   .map(graph => graph.nodes
     .map(node => subscriptions
@@ -144,8 +144,9 @@ export const computeEdgeWeight = (
   sourceId: string,
   targetId: string,
 ) => {
-  let target! : DisjointGraphNode; let source! : DisjointGraphNode; let
-    graph!: DisjointGraph;
+  let target! : DisjointGraphNode;
+  let source! : DisjointGraphNode;
+  let graph! : DisjointGraph;
   for (const item of disjointGraphs) {
     const sourceIndex = item.nodes.findIndex(node => node.subscribeUrl === sourceId);
     const targetIndex = item.nodes.findIndex(node => node.subscribeUrl === targetId);
@@ -197,7 +198,7 @@ export const generateEdges = (podcasts: Podcast[][], disjointGraphs: DisjointGra
 
       return [...acc, ...result];
     }, [])
-  // remove duplicate edges since the graph is undirected.
+    // remove duplicate edges since the graph is undirected.
     .reduce((acc: EdgeDefinition[], edge) => (
       acc.some(item => item.data.target === edge.data.source
          && item.data.source === edge.data.target)

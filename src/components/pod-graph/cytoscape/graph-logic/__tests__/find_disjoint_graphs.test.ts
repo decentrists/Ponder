@@ -109,7 +109,7 @@ describe('findAllDisjointGraphs works correctly for', () => {
     for (let i = 0; i < SampleSize; i++) {
       const subscriptions = Array.from(Array(NumOfPodcasts)).map(() => createFakePodcast());
       const { disjointGraphs, podcasts } = groupSubscriptionsBySharedKeywords(subscriptions);
-      const edges = generateEdges(podcasts, disjointGraphs);
+      generateEdges(podcasts, disjointGraphs);
     }
     const averageTime = (Date.now() - start) / SampleSize;
     expect(averageTime).toBeLessThan(MaxTime);
