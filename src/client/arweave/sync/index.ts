@@ -33,8 +33,8 @@ export interface ArSyncTx {
 }
 
 /** To reduce the size per transaction */
-const MAX_EPISODES_PER_BATCH = 50;
-/** Fail-safe through which we sync max 1000 episodes per podcast */
+const MAX_EPISODES_PER_BATCH = 100;
+/** Fail-safe through which we sync max 2000 episodes per podcast */
 const MAX_BATCHES = 20;
 
 /** Helper function in order to retain numeric ArSyncTxStatus enums */

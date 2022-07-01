@@ -3,7 +3,7 @@ const PLURAL_TAG_MAP = {
   keyword: 'keywords',
   episodesKeyword: 'episodesKeywords',
 };
-const TAG_EXCLUDES = ['Content-Type', 'Unix-Time'];
+const TAG_EXCLUDE_PREFIX = ['Content-Type', 'Unix-Time', 'App-Name', 'App-Version'];
 
 // TODO: Move this check up the CI/CD pipeline
 // function sanityCheckedTag() {
@@ -16,7 +16,7 @@ const TAG_EXCLUDES = ['Content-Type', 'Unix-Time'];
 // }
 
 export function toTag(name: string) {
-  return TAG_EXCLUDES.includes(name) ? name : `${process.env.REACT_APP_TAG_PREFIX}-${name}`;
+  return TAG_EXCLUDE_PREFIX.includes(name) ? name : `${process.env.REACT_APP_TAG_PREFIX}-${name}`;
 }
 
 export function fromTag(tagName: string) {

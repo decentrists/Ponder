@@ -1,6 +1,7 @@
 /* eslint-disable no-await-in-loop */
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { QueryTransactionsArgs, TagFilter } from 'arlocal/bin/graphql/types.d';
+import { strFromU8, decompressSync } from 'fflate';
 import client from './client';
 import {
   isNotEmpty,
@@ -18,7 +19,6 @@ import {
   PodcastTags,
   ALLOWED_ARWEAVE_TAGS,
 } from '../interfaces';
-// eslint-disable-next-line import/no-extraneous-dependencies
 
 interface TransactionNode { id: string, tags: { name: string, value: string }[] }
 
@@ -143,12 +143,12 @@ async function getPodcastFeedForGqlQuery(
       });
   }
 
-  let getDataResult;
+  let getDataResult = new Uint8Array([]);
   try {
     // TODO: T252 Create localStorage cache { trx.id: { podcastMetadata, trx.tags } } for
     //       transactions that are selected for the result of getPodcastFeed(),
     //       so that we may skip this client.transactions.getData() call.
-    getDataResult = await client.transactions.getData(trx.id, { decode: true, string: true });
+    getDataResult = await client.transactions.getData(trx.id, { decode: true }) as Uint8Array;
   }
   catch (ex) {
     errorMessage = `Error fetching data for transaction id ${trx.id}: ${ex}`;
@@ -158,8 +158,15 @@ async function getPodcastFeedForGqlQuery(
 
   let metadata;
   try {
-    metadata = JSON.parse(getDataResult as string);
-    metadata = podcastFromDTO(metadata, true);
+    if (!getDataResult.length) {
+      errorMessage = `No metadata found in transaction id ${trx.id}`;
+      console.warn(errorMessage);
+    }
+    else {
+      metadata = strFromU8(decompressSync(getDataResult));
+      metadata = JSON.parse(metadata);
+      metadata = podcastFromDTO(metadata, true);
+    }
   }
   catch (ex) {
     // TODO: T251 blacklist trx.id
@@ -173,7 +180,7 @@ async function getPodcastFeedForGqlQuery(
 }
 
 /**
- * @param tagFilter
+ * @param tagsToFilter
  * @returns An Object with the query formatted for Arweave's '/graphql' endpoint
  */
 function formatGqlQueryForTags(tagsToFilter: TagsToFilter) : GraphQLQuery {

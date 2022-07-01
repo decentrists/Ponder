@@ -1,9 +1,16 @@
+import { strToU8, compressSync } from 'fflate';
 import { newMetadataTransaction } from '../create-transaction';
+import { toTag } from '../utils';
 // eslint-disable-next-line import/named
 import { addTag, createTransaction } from '../client';
-import { toTag } from '../utils';
 
 const MOCK_TIMESTAMP = 1234001234;
+const MOCK_U8_METADATA = new Uint8Array([2, 3]);
+
+jest.mock('fflate', () => ({
+  strToU8: jest.fn(),
+  compressSync: jest.fn().mockImplementation(() => MOCK_U8_METADATA),
+}));
 jest.mock('../../../utils', () => ({
   ...jest.requireActual('../../../utils'),
   unixTimestamp: jest.fn().mockImplementation(() => MOCK_TIMESTAMP),
@@ -83,7 +90,7 @@ const originalTagPrefix = process.env.REACT_APP_TAG_PREFIX;
 beforeAll(() => {
   Object.assign(process.env, {
     REACT_APP_VERSION: 'testVersion',
-    REACT_APP_TAG_PREFIX: 'abc',
+    REACT_APP_TAG_PREFIX: 'testPonder',
   });
   jest.useFakeTimers().setSystemTime(new Date('2019-11-05'));
 });
@@ -102,9 +109,10 @@ describe('newMetadataTransaction', () => {
 
   function assertAddTagCalls(expectedTags) {
     const formattedExpectedTags = [
-      ['Content-Type', 'application/json'],
+      ['App-Name', 'testPonder'],
+      ['App-Version', 'testVersion'],
+      ['Content-Type', 'application/gzip'],
       ['Unix-Time', `${MOCK_TIMESTAMP}`],
-      [toTag('version'), 'testVersion'],
     ].concat(expectedTags.map(([k, v]) => [toTag(k), v]));
 
     expect(addTag.mock.calls).toEqual(formattedExpectedTags);
@@ -126,10 +134,14 @@ describe('newMetadataTransaction', () => {
         ['lastEpisodeDate', ep4date],
         ['metadataBatch', '0'],
       ];
+
       const result = await newMetadataTransaction(stubbedWallet, expectedMetadata, {});
       expect(result).toEqual(mockResult);
-      expect(createTransaction)
-        .toHaveBeenCalledWith({ data: JSON.stringify(expectedMetadata) }, stubbedWallet);
+
+      expect(strToU8).toHaveBeenCalledWith(JSON.stringify(expectedMetadata));
+      expect(compressSync).toHaveBeenCalled();
+      expect(createTransaction).toHaveBeenCalledWith({ data: MOCK_U8_METADATA }, stubbedWallet);
+
       assertAddTagCalls(expectedTags);
     });
   });
@@ -161,8 +173,11 @@ describe('newMetadataTransaction', () => {
         cachedMetadata(currentBatchFields),
       );
       expect(result).toEqual(mockResult);
-      expect(createTransaction)
-        .toHaveBeenCalledWith({ data: JSON.stringify(expectedMetadata) }, stubbedWallet);
+
+      expect(strToU8).toHaveBeenCalledWith(JSON.stringify(expectedMetadata));
+      expect(compressSync).toHaveBeenCalled();
+      expect(createTransaction).toHaveBeenCalledWith({ data: MOCK_U8_METADATA }, stubbedWallet);
+
       assertAddTagCalls(expectedTags);
     });
   });
@@ -198,13 +213,15 @@ describe('newMetadataTransaction', () => {
         cachedMetadata(currentBatchFields),
       );
       expect(result).toEqual(mockResult);
-      expect(createTransaction)
-        .toHaveBeenCalledWith({ data: JSON.stringify(expectedMetadata) }, stubbedWallet);
+
+      expect(strToU8).toHaveBeenCalledWith(JSON.stringify(expectedMetadata));
+      expect(compressSync).toHaveBeenCalled();
+      expect(createTransaction).toHaveBeenCalledWith({ data: MOCK_U8_METADATA }, stubbedWallet);
+
       assertAddTagCalls(expectedTags);
     });
   });
 
-  // TODO: Add more tests
   describe('Error handling', () => {
     const assertThrow = async (erroneousMetadata, errorRegex) => {
       await expect(newMetadataTransaction(stubbedWallet, erroneousMetadata, {}))
