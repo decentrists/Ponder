@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { Button } from 'react-bootstrap';
 import style from './style.module.scss';
 // @ts-ignore
@@ -9,11 +9,21 @@ import { ArweaveContext } from '../../providers/arweave';
 const SyncButton : React.FC = () => {
   const { isRefreshing } = useContext(SubscriptionsContext);
   const { isSyncing, prepareSync, startSync, hasPendingTxs } = useContext(ArweaveContext);
+  const [spinning, setSpinning] = useState(false);
 
   let disabled = isRefreshing || isSyncing;
-  let classes = 'spinning'; // isSyncing ? 'spinning' : '';
+  let classes = spinning ? 'spinning' : '';
   let onClick = prepareSync;
   let title = 'Prepare pending metadata for upload to Arweave';
+
+  useEffect(() => {
+    if (isSyncing) {
+      setSpinning(true);
+      setTimeout(() => {
+        setSpinning(false);
+      }, 2000);
+    }
+  }, [isSyncing]);
 
   if (hasPendingTxs) {
     disabled = isRefreshing;
@@ -25,12 +35,11 @@ const SyncButton : React.FC = () => {
   return (
     <Button
       disabled={disabled}
-      className={`${style['spin-button']} ${classes}`}
+      className={`${style['spin-button']} ${style[classes]}`}
       onClick={onClick}
       title={title}
     >
       <ArSyncIcon
-        className="spinning"
         width="1.5rem"
         height="1.5rem"
       />
