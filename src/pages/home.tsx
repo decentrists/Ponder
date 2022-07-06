@@ -15,18 +15,20 @@ interface TabPanelProps {
   children?: React.ReactNode;
   index: number;
   value: number;
+  className?: string;
 }
 
 function TabPanel(props: TabPanelProps) {
-  const { children, value, index, ...other } = props;
+  const { children, value, index, className, ...other } = props;
 
   return (
     <div
       role="tabpanel"
       hidden={value !== index}
+      className={className}
       {...other}
     >
-      <Box sx={{ p: 3 }}>{children}</Box>
+      <Box>{children}</Box>
     </div>
   );
 }
@@ -68,11 +70,11 @@ function HomePage() {
             </Tabs>
           </Box>
 
-          <TabPanel value={tab} index={0}>
+          <TabPanel className={style['tab-panel']} value={tab} index={0}>
             <PodcastList subscriptions={subscriptions} unsubscribe={unsubscribe} />
           </TabPanel>
 
-          <TabPanel value={tab} index={1}>
+          <TabPanel className={style['tab-panel']} value={tab} index={1}>
             <TransactionList
               subscriptions={subscriptions}
               txs={arSyncTxs}

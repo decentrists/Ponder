@@ -123,4 +123,7 @@
   max-width: 72rem;
   padding-top: 1rem;
   padding-bottom: 1rem;
+  @media screen and (max-width: 600px) {
+    max-width: 100vw;
+  }
 }
