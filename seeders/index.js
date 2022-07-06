@@ -1,4 +1,5 @@
 require('dotenv').config();
+const fflate = require('fflate');
 const Arweave = require('arweave');
 
 const TAG_MAP = {
@@ -30,7 +31,7 @@ module.exports = async function seed(seeds, ms = 5000) {
   await Promise.all(seeds.podcasts
     .map(({ contents, tags }) => client.createTransaction({
       data:
-       JSON.stringify(contents),
+       fflate.compressSync(fflate.strToU8(JSON.stringify(contents))),
     }, wallet)
       .then(trx => {
         trx.addTag('Content-Type', 'application/json');

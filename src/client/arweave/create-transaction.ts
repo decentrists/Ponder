@@ -1,5 +1,6 @@
 import { JWKInterface } from 'arweave/node/lib/wallet';
 import Transaction from 'arweave/node/lib/transaction';
+import { strToU8, compressSync } from 'fflate';
 import client from './client';
 import { toTag } from './utils';
 import {
@@ -26,10 +27,14 @@ async function newTransaction(
 )
   : Promise<Transaction> {
   try {
-    const trx = await client.createTransaction({ data: JSON.stringify(newMetadata) }, wallet);
-    trx.addTag('Content-Type', 'application/json');
+    const u8data = strToU8(JSON.stringify(newMetadata));
+    const gzippedData = compressSync(u8data, { level: 6, mem: 4 });
+    const trx = await client.createTransaction({ data: gzippedData }, wallet);
+
+    trx.addTag('App-Name', process.env.REACT_APP_TAG_PREFIX as string);
+    trx.addTag('App-Version', process.env.REACT_APP_VERSION as string);
+    trx.addTag('Content-Type', 'application/gzip');
     trx.addTag('Unix-Time', `${unixTimestamp()}`);
-    trx.addTag(toTag('version'), process.env.REACT_APP_VERSION as string);
     tags.forEach(([k, v]) => {
       trx.addTag(toTag(k), `${v}`);
     });

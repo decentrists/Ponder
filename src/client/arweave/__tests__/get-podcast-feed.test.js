@@ -1,3 +1,4 @@
+import { strToU8, compressSync } from 'fflate';
 import { getPodcastFeed } from '../get-podcast-feed';
 // eslint-disable-next-line import/named
 import { transactions, api } from '../client';
@@ -28,9 +29,10 @@ function gqlResponse(metadataBatch, firstEpisodeDate, lastEpisodeDate) {
             node: {
               id: 'mockId',
               tags: [
-                { name: 'Content-Type', value: 'application/json' },
+                { name: 'App-Name', value: 'Ponder' },
+                { name: 'App-Version', value: 'bestVersion' },
+                { name: 'Content-Type', value: 'application/gzip' },
                 { name: 'Unix-Time', value: '1620172800' },
-                { name: 'version', value: 'bestVersion' },
                 { name: 'subscribeUrl', value: FEED_URL },
                 { name: 'title', value: 'That Podcast' },
                 { name: 'description', value: 'The best of That Podcast' },
@@ -92,10 +94,12 @@ function mergedBatchesResult(metadataBatch, firstEpisodeDate, lastEpisodeDate) {
   };
 }
 
-function getDataJson(firstEpisodeIndex, numEpisodes) {
-  return JSON.stringify({
+function getDataResult(firstEpisodeIndex, numEpisodes) {
+  const metadataJson = JSON.stringify({
     episodes: episodes.slice(firstEpisodeIndex, firstEpisodeIndex + numEpisodes),
   });
+  const metadataGzip = compressSync(strToU8(metadataJson, { level: 6, mem: 4 }));
+  return metadataGzip;
 }
 
 const originalTagPrefix = process.env.REACT_APP_TAG_PREFIX;
@@ -112,7 +116,7 @@ describe('Successful fetch', () => {
     it('returns the expected merged metadata and tags', async () => {
       api.post.mockResolvedValueOnce(gqlResponse(0, ep1date, ep4date));
       api.post.mockResolvedValueOnce(emptyGqlResponse());
-      transactions.getData.mockResolvedValueOnce(getDataJson(0, 4));
+      transactions.getData.mockResolvedValueOnce(getDataResult(0, 4));
       expect(transactions.getData).not.toHaveBeenCalled();
 
       await expect(getPodcastFeed(FEED_URL)).resolves
@@ -120,17 +124,17 @@ describe('Successful fetch', () => {
 
       expect(api.post).toHaveBeenCalledTimes(2);
       expect(transactions.getData).toHaveBeenCalledTimes(1);
-      expect(transactions.getData).toHaveBeenCalledWith('mockId', { decode: true, string: true });
+      expect(transactions.getData).toHaveBeenCalledWith('mockId', { decode: true });
     });
   });
 
   describe('With 2 metadata batches', () => {
     it('returns the expected merged metadata and tags', async () => {
       api.post.mockResolvedValueOnce(gqlResponse(0, ep1date, ep2date));
-      transactions.getData.mockResolvedValueOnce(getDataJson(2, 2));
+      transactions.getData.mockResolvedValueOnce(getDataResult(2, 2));
 
       api.post.mockResolvedValueOnce(gqlResponse(1, ep3date, ep4date));
-      transactions.getData.mockResolvedValueOnce(getDataJson(0, 2));
+      transactions.getData.mockResolvedValueOnce(getDataResult(0, 2));
 
       api.post.mockResolvedValueOnce(emptyGqlResponse());
 
@@ -139,7 +143,7 @@ describe('Successful fetch', () => {
 
       expect(api.post).toHaveBeenCalledTimes(3);
       expect(transactions.getData).toHaveBeenCalledTimes(2);
-      expect(transactions.getData).toHaveBeenCalledWith('mockId', { decode: true, string: true });
+      expect(transactions.getData).toHaveBeenCalledWith('mockId', { decode: true });
     });
   });
 
@@ -147,15 +151,15 @@ describe('Successful fetch', () => {
     it('returns the expected merged metadata and tags', async () => {
       // oldest episode
       api.post.mockResolvedValueOnce(gqlResponse(0, ep1date, ep1date));
-      transactions.getData.mockResolvedValueOnce(getDataJson(3, 1));
+      transactions.getData.mockResolvedValueOnce(getDataResult(3, 1));
 
       // oldest 2 episodes (including 1 duplicate)
       api.post.mockResolvedValueOnce(gqlResponse(1, ep1date, ep2date));
-      transactions.getData.mockResolvedValueOnce(getDataJson(2, 2));
+      transactions.getData.mockResolvedValueOnce(getDataResult(2, 2));
 
       // newest 2 episodes
       api.post.mockResolvedValueOnce(gqlResponse(2, ep3date, ep4date));
-      transactions.getData.mockResolvedValueOnce(getDataJson(0, 2));
+      transactions.getData.mockResolvedValueOnce(getDataResult(0, 2));
 
       api.post.mockResolvedValueOnce(emptyGqlResponse());
 
@@ -164,7 +168,7 @@ describe('Successful fetch', () => {
 
       expect(api.post).toHaveBeenCalledTimes(4);
       expect(transactions.getData).toHaveBeenCalledTimes(3);
-      expect(transactions.getData).toHaveBeenCalledWith('mockId', { decode: true, string: true });
+      expect(transactions.getData).toHaveBeenCalledWith('mockId', { decode: true });
     });
   });
 });
@@ -175,13 +179,13 @@ describe('Error handling', () => {
       const mockError = new Error('getData Error');
 
       api.post.mockResolvedValueOnce(gqlResponse(0, ep1date, ep2date));
-      transactions.getData.mockResolvedValueOnce(getDataJson(2, 2));
+      transactions.getData.mockResolvedValueOnce(getDataResult(2, 2));
 
       api.post.mockResolvedValueOnce(gqlResponse(1, ep1date, ep2date));
       transactions.getData.mockRejectedValueOnce(mockError);
 
       api.post.mockResolvedValueOnce(gqlResponse(2, ep3date, ep4date));
-      transactions.getData.mockResolvedValueOnce(getDataJson(0, 2));
+      transactions.getData.mockResolvedValueOnce(getDataResult(0, 2));
 
       api.post.mockResolvedValueOnce(emptyGqlResponse());
 
@@ -190,7 +194,7 @@ describe('Error handling', () => {
 
       expect(api.post).toHaveBeenCalledTimes(4);
       expect(transactions.getData).toHaveBeenCalledTimes(3);
-      expect(transactions.getData).toHaveBeenCalledWith('mockId', { decode: true, string: true });
+      expect(transactions.getData).toHaveBeenCalledWith('mockId', { decode: true });
     });
   });
 
@@ -198,7 +202,7 @@ describe('Error handling', () => {
     const mockError = new Error('GraphQL Error');
 
     api.post.mockRejectedValue(mockError);
-    transactions.getData.mockResolvedValue(getDataJson(0, 4));
+    transactions.getData.mockResolvedValue(getDataResult(0, 4));
 
     await expect(getPodcastFeed(FEED_URL)).resolves
       .toMatchObject({ errorMessage: expect.stringMatching(/GraphQL/) });
