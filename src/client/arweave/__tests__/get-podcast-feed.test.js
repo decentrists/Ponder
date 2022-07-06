@@ -31,7 +31,7 @@ function gqlResponse(metadataBatch, firstEpisodeDate, lastEpisodeDate) {
               tags: [
                 { name: 'App-Name', value: 'Ponder' },
                 { name: 'App-Version', value: 'bestVersion' },
-                { name: 'Content-Type', value: 'application/json' },
+                { name: 'Content-Type', value: 'application/gzip' },
                 { name: 'Unix-Time', value: '1620172800' },
                 { name: 'subscribeUrl', value: FEED_URL },
                 { name: 'title', value: 'That Podcast' },

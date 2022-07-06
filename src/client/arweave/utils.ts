@@ -3,7 +3,7 @@ const PLURAL_TAG_MAP = {
   keyword: 'keywords',
   episodesKeyword: 'episodesKeywords',
 };
-const TAG_EXCLUDE_PREFIX = ['Content-Type', 'Unix-Time', 'App-Name', 'App-Version'];
+const TAG_EXCLUDE_PREFIX = ['App-Name', 'App-Version', 'Content-Type', 'Unix-Time'];
 
 // TODO: Move this check up the CI/CD pipeline
 // function sanityCheckedTag() {
