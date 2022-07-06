@@ -1,7 +1,6 @@
 import React, { useContext } from 'react';
 import { Button } from 'react-bootstrap';
 import style from './style.module.scss';
-// @ts-ignore
 import { ReactComponent as ArSyncIcon } from '../../assets/arsync-logo.svg';
 import { SubscriptionsContext } from '../../providers/subscriptions';
 import { ArweaveContext } from '../../providers/arweave';
@@ -11,13 +10,11 @@ const SyncButton : React.FC = () => {
   const { isSyncing, prepareSync, startSync, hasPendingTxs } = useContext(ArweaveContext);
 
   let disabled = isRefreshing || isSyncing;
-  let classes = isSyncing ? 'spinning' : '';
   let onClick = prepareSync;
   let title = 'Prepare pending metadata for upload to Arweave';
 
   if (hasPendingTxs) {
     disabled = isRefreshing;
-    classes += ' hasPendingTxs';
     onClick = startSync;
     title = 'Post the pending transactions to Arweave';
   }
@@ -25,7 +22,8 @@ const SyncButton : React.FC = () => {
   return (
     <Button
       disabled={disabled}
-      className={style['spin-button'] + classes}
+      className={`${style['spin-button']} ${hasPendingTxs ? style['sync-initialized'] : ''} ${
+        isSyncing ? style.spinning : ''}`}
       onClick={onClick}
       title={title}
     >

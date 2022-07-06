@@ -13,6 +13,7 @@ import {
 import style from './shared-elements.module.scss';
 import { episodesCount, findMetadata } from '../utils';
 import { Podcast } from '../client/interfaces';
+import { ReactComponent as WhalephantIcon } from '../assets/ponder-logo.svg';
 
 dayjs.extend(relativeTime);
 
@@ -30,10 +31,18 @@ function TxSubheader({ numEpisodes } : { numEpisodes: number }) {
   ) : null;
 }
 
+function PodcastImage({ podcastImageUrl } : { podcastImageUrl: string }) {
+  return podcastImageUrl ? <Image className={style['podcast-image']} src={podcastImageUrl} /> : (
+    <Box className={style['podcast-image-whalephant']}>
+      <WhalephantIcon />
+    </Box>
+  );
+}
+
 const TransactionList : React.FC<Props> = ({ subscriptions, txs, removeArSyncTxs }) => {
   const findImageUrl = (subscribeUrl: string) => {
     const cachedPodcast = findMetadata(subscribeUrl, subscriptions);
-    return cachedPodcast.imageUrl || ''; // TODO: replace '' with default Ponder logo
+    return cachedPodcast.imageUrl || '';
   };
 
   const completedTxIds = txs.filter(tx => isNotInitialized(tx) && isNotPosted(tx)).map(tx => tx.id);
@@ -67,14 +76,15 @@ const TransactionList : React.FC<Props> = ({ subscriptions, txs, removeArSyncTxs
           </Box>
           {
             [...txs].reverse().map(tx => {
-              const image = findImageUrl(tx.subscribeUrl);
+              const podcastImageUrl = findImageUrl(tx.subscribeUrl);
               const numEpisodes = episodesCount(tx.metadata);
 
               // TODO: add viewblock.io tx url
               return (
                 <Box className={style['list-item']} key={tx.id}>
                   <Box className={style['title-detail']}>
-                    <Image className={style['podcast-image']} src={image} alt={tx.title} />
+                    <PodcastImage podcastImageUrl={podcastImageUrl} />
+
                     <div>
                       <Box className={style['title-header']}>
                         {tx.title}

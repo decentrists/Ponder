@@ -77,7 +77,7 @@
     opacity: 1;
     fill: #fff;
   }
-  &:hover svg, &.hasPendingTxs svg {
+  &:hover svg, &.sync-initialized svg {
     fill: #4b9b73;
   }
   &.spinning svg {

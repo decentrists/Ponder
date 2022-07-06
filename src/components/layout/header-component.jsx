@@ -6,7 +6,7 @@ import RssButton from '../buttons/rss-button';
 import SyncButton from '../buttons/sync-button';
 import RefreshButton from '../buttons/refresh-button';
 import style from './index-elements.module.scss';
-import { PotIcon } from '../assets/img/pot';
+import { ReactComponent as WhalephantIcon } from '../../assets/ponder-logo.svg';
 
 function HeaderComponent({ onSubmit }) {
   const toast = useContext(ToastContext);
@@ -31,8 +31,8 @@ function HeaderComponent({ onSubmit }) {
 
   return (
     <Container className={style['header-container']}>
-      <Box className={style['image-wrapper']}>
-        <PotIcon />
+      <Box className={style['whalephant-wrapper']}>
+        <WhalephantIcon />
       </Box>
       <Box className={style['form-layer']}>
         <Box className={style['pod-alert']}>
