@@ -114,6 +114,10 @@ export default createGlobalStyle`
     top: 1rem;
     color: #666;
     z-index: 9999;
+    display: inherit;
+    @media only screen and (max-width: 960px) {
+      display: none;
+    }
   }
   .cy-panzoom-panner {
     background: #030303;

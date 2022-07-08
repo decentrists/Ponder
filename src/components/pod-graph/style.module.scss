@@ -3,14 +3,13 @@
 }
 
 .pod-graph-inner-container {
-  max-height: 600px;
-  min-height: 600px;
+  max-height: 55vh;
+  min-height: 55vh;
   margin: 3.5rem .8rem .8rem .8rem;
   background-color: rgba(13, 13, 13, 1);
   border: 2px solid rgba(38,38,38,1);
   border-radius: 1rem;
   padding: 16px;
   @media only screen and (max-width: 960px) {
-    min-height: 400px;
   }
 }
