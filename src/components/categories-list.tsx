@@ -8,7 +8,7 @@ interface Props {
 
 // @ts-ignore
 const CategoriesList : React.FC<Props> = ({ categories }) => (
-  <Box className={style['list-container']}>
+  <Box className={style['category-list-container']}>
     <Typography variant="h5" className={style['category-header']}>
       Popular
     </Typography>

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React from 'react';
 import { RiMapPinTimeLine } from 'react-icons/ri';
 import dayjs from 'dayjs';
@@ -27,8 +28,12 @@ const PodcastList : React.FC<Props> = ({ subscriptions, unsubscribe }) => (
                 src={subscription.imageUrl}
                 alt={subscription.title}
               />
-              <div>
-                <Typography component="h5" className={style['title-header']}>
+              <Box className={style[['item-title']]}>
+                <Typography
+                  title={subscription.title}
+                  component="h5"
+                  className={style['title-header']}
+                >
                   {subscription.title}
                 </Typography>
                 <Box className={style['meta-detail']}>
@@ -40,7 +45,7 @@ const PodcastList : React.FC<Props> = ({ subscriptions, unsubscribe }) => (
 
                   </Box>
                 </Box>
-              </div>
+              </Box>
             </Box>
 
             <Box className={style['call-to-action']}>
