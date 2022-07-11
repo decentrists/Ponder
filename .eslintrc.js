@@ -6,6 +6,7 @@ module.exports = {
   rules: {
     '@typescript-eslint/brace-style': 'off',
     '@typescript-eslint/no-use-before-define': 'off',
+    'function-paren-newline': ['error', 'consistent'],
     'arrow-body-style': ['error', 'as-needed'],
     'prefer-const': ['error'],
     'object-curly-newline': ['error', {
@@ -61,6 +62,7 @@ module.exports = {
         './tests/**/*',
         '**/__mocks__/**/*.js',
         'jest.setup.js',
+        'jest.helpers.js',
       ],
       extends: ['react-app/jest'],
       env: {

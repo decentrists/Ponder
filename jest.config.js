@@ -3,5 +3,8 @@ require('dotenv').config();
 
 module.exports = {
   testPathIgnorePatterns: ['cypress'],
-  setupFilesAfterEnv: [path.resolve('jest.setup.js')],
+  setupFilesAfterEnv: [
+    path.resolve('jest.helpers.js'),
+    path.resolve('jest.setup.js'),
+  ],
 };

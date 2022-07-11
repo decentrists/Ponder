@@ -1,7 +1,13 @@
 import { v4 as uuid } from 'uuid';
 import Transaction from 'arweave/node/lib/transaction';
 import { JWKInterface } from 'arweave/node/lib/wallet';
-import { Podcast } from '../../interfaces';
+// eslint-disable-next-line import/no-extraneous-dependencies
+import { DispatchResult } from 'arconnect';
+import {
+  ArSyncTx,
+  ArSyncTxStatus,
+  Podcast,
+} from '../../interfaces';
 import {
   episodesCount,
   findMetadata,
@@ -11,63 +17,24 @@ import {
 } from '../../../utils';
 import { getMetadataBatchNumber } from '../create-transaction';
 import { mergeBatchMetadata, rightDiff } from './diff-merge-logic';
-import * as arweave from '..';
-
-export enum ArSyncTxStatus {
-  ERRORED,
-  INITIALIZED,
-  POSTED,
-  CONFIRMED,
-  REJECTED, // If tx confirmation fails
-}
-
-export interface ArSyncTx {
-  id: string, // uuid, not to be confused with `(resultObj as Transaction).id`
-  subscribeUrl: string, // TODO: pending T244, change to 'podcastId'
-  title?: string,
-  resultObj: Transaction | arweave.TransactionDTO | Error,
-  metadata: Partial<Podcast>,
-  numEpisodes: number,
-  status: ArSyncTxStatus,
-  // TODO: add `timestamp`
-}
+import { WalletDeferredToArConnect } from '../wallet';
+import {
+  isConfirmed,
+  isInitialized,
+  isPosted,
+  usingArConnect,
+} from '../utils';
+import { newMetadataTransaction, dispatchTransaction, signAndPostTransaction } from '..';
 
 /** To reduce the size per transaction */
 const MAX_EPISODES_PER_BATCH = 100;
 /** Fail-safe through which we sync max 2000 episodes per podcast */
-const MAX_BATCHES = 20;
-
-/** Helper function in order to retain numeric ArSyncTxStatus enums */
-export const statusToString = (status: ArSyncTxStatus) => {
-  switch (status) {
-    case ArSyncTxStatus.ERRORED:
-      return 'Error';
-    case ArSyncTxStatus.INITIALIZED:
-      return 'Initialized';
-    case ArSyncTxStatus.POSTED:
-      return 'Posted';
-    case ArSyncTxStatus.CONFIRMED:
-      return 'Confirmed';
-    case ArSyncTxStatus.REJECTED:
-      return 'Rejected';
-    default:
-      return 'Unknown';
-  }
-};
-
-export const isErrored = (tx: ArSyncTx) => tx.status === ArSyncTxStatus.ERRORED;
-export const isNotErrored = (tx: ArSyncTx) => tx.status !== ArSyncTxStatus.ERRORED;
-export const isInitialized = (tx: ArSyncTx) => tx.status === ArSyncTxStatus.INITIALIZED;
-export const isNotInitialized = (tx: ArSyncTx) => tx.status !== ArSyncTxStatus.INITIALIZED;
-export const isPosted = (tx: ArSyncTx) => tx.status === ArSyncTxStatus.POSTED;
-export const isNotPosted = (tx: ArSyncTx) => tx.status !== ArSyncTxStatus.POSTED;
-export const isConfirmed = (tx: ArSyncTx) => tx.status === ArSyncTxStatus.CONFIRMED;
-export const isNotConfirmed = (tx: ArSyncTx) => tx.status !== ArSyncTxStatus.CONFIRMED;
+const MAX_BATCHES = 1;
 
 export async function initArSyncTxs(
   subscriptions: Podcast[],
   metadataToSync: Partial<Podcast>[],
-  wallet: JWKInterface,
+  wallet: JWKInterface | WalletDeferredToArConnect,
 )
   : Promise<ArSyncTx[]> {
   const result : ArSyncTx[] = [];
@@ -99,7 +66,7 @@ export async function initArSyncTxs(
       try {
         subscribeUrl = podcastToSync.subscribeUrl!;
         cachedMetadata = findMetadata(subscribeUrl, subscriptions);
-        newTxResult = await arweave.newMetadataTransaction(wallet, podcastToSync, cachedMetadata);
+        newTxResult = await newMetadataTransaction(wallet, podcastToSync, cachedMetadata);
       }
       catch (ex) {
         newTxResult = ex as Error;
@@ -121,19 +88,28 @@ export async function initArSyncTxs(
   return result;
 }
 
-export async function startSync(allTxs: ArSyncTx[], wallet: JWKInterface) : Promise<ArSyncTx[]> {
+export async function startSync(
+  allTxs: ArSyncTx[],
+  wallet: JWKInterface | WalletDeferredToArConnect,
+)
+  : Promise<ArSyncTx[]> {
   const result : ArSyncTx[] = [...allTxs];
   await Promise.all(allTxs.map(async (tx, index) => {
     if (isInitialized(tx)) {
-      let postedTxResult : Transaction | Error;
+      let postedTxResult : Transaction | Error = tx.resultObj as Transaction;
+      let dispatchResult : DispatchResult | undefined;
       try {
-        postedTxResult = await arweave.signAndPostTransaction(tx.resultObj as Transaction, wallet);
+        if (usingArConnect()) {
+          dispatchResult = await dispatchTransaction(tx.resultObj as Transaction);
+        }
+        else await signAndPostTransaction(tx.resultObj as Transaction, wallet);
       }
       catch (ex) {
         postedTxResult = ex as Error;
       }
       const arSyncTx : ArSyncTx = {
         ...tx,
+        dispatchResult,
         resultObj: postedTxResult,
         status: postedTxResult instanceof Error ? ArSyncTxStatus.ERRORED : ArSyncTxStatus.POSTED,
       };

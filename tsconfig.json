@@ -9,7 +9,8 @@
     "types": [
       "cypress",
       "jest",
-      "node"
+      "node",
+      "arconnect"
     ],
     "allowJs": true,
     "skipLibCheck": true,

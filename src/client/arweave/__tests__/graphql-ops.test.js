@@ -1,5 +1,5 @@
 import { strToU8, compressSync } from 'fflate';
-import { getPodcastFeed } from '../get-podcast-feed';
+import { getPodcastFeed } from '../graphql-ops';
 // eslint-disable-next-line import/named
 import { transactions, api } from '../client';
 import { toTag } from '../utils';

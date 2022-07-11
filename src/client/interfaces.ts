@@ -1,3 +1,7 @@
+// eslint-disable-next-line import/no-extraneous-dependencies
+import { DispatchResult } from 'arconnect';
+import Transaction from 'arweave/node/lib/transaction';
+
 export const MANDATORY_ARWEAVE_TAGS = [
   'subscribeUrl',
   'title',
@@ -111,6 +115,36 @@ export type Episode = {
   imageTitle?: string;
   explicit?: string;
 };
+
+export interface TransactionDTO extends Transaction {}
+
+export interface DispatchResultDTO extends DispatchResult {
+  bundledIn?: string;
+}
+
+export type BundledTxIdMapping = {
+  [key: string]: string;
+};
+
+export enum ArSyncTxStatus {
+  ERRORED,
+  INITIALIZED,
+  POSTED,
+  CONFIRMED,
+  REJECTED, // If tx confirmation fails
+}
+
+export interface ArSyncTx {
+  id: string, // uuid, not to be confused with `(resultObj as Transaction).id`
+  subscribeUrl: string, // TODO: pending T244, change to 'podcastId'
+  title?: string,
+  dispatchResult?: DispatchResult | DispatchResultDTO,
+  resultObj: Transaction | TransactionDTO | Error,
+  metadata: Partial<Podcast>,
+  numEpisodes: number,
+  status: ArSyncTxStatus,
+  // TODO: add `timestamp`
+}
 
 export interface DisjointGraphFunctionNode extends Pick<Podcast, 'subscribeUrl'> {
   keywordsAndCategories: string[];

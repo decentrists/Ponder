@@ -1,10 +1,16 @@
-import { initArSyncTxs, startSync, ArSyncTxStatus } from '..';
+import { initArSyncTxs, startSync } from '..';
+import { ArSyncTxStatus } from '../../../interfaces';
 // eslint-disable-next-line import/named
 import { addTag } from '../../client';
-import { newMetadataTransaction, signAndPostTransaction } from '../../create-transaction';
+import {
+  dispatchTransaction,
+  newMetadataTransaction,
+  signAndPostTransaction,
+} from '../../create-transaction';
 
 jest.mock('../../create-transaction', () => ({
   ...jest.requireActual('../../create-transaction'),
+  dispatchTransaction: jest.fn(),
   newMetadataTransaction: jest.fn(),
   signAndPostTransaction: jest.fn(),
 }));
@@ -65,9 +71,11 @@ const wallet = {};
 const mockTransaction = { addTag };
 const mockTransaction2 = { addTag, id: 'transaction 2' };
 const mockTransaction3 = { addTag, id: 'transaction 3' };
+const mockDispatchResult = { id: 'dispatch_trx_id', type: 'BUNDLED' };
 const mockError = new Error('mock error');
 const mockError2 = new Error('mock error 2');
 const NON_EMPTY_STRING = expect.stringMatching(/.+/);
+
 /**
  * NOTE: newMetadataTransaction() is mocked here, as it's tested in create-transaction.test.js.
  */
@@ -281,31 +289,58 @@ describe('startSync', () => {
         status: ArSyncTxStatus.INITIALIZED,
       },
     ];
+    const expected = (modifiers = { useArConnect: false }) => [
+      {
+        dispatchResult: undefined,
+        id: '1',
+        subscribeUrl: 'https://example.com/podcast1',
+        title: 'cachedTitle',
+        resultObj: mockError,
+        metadata: mockMetadata1,
+        numEpisodes: 0,
+        status: ArSyncTxStatus.ERRORED,
+      },
+      {
+        dispatchResult: modifiers.useArConnect ? mockDispatchResult : undefined,
+        id: '2',
+        subscribeUrl: 'https://example.com/podcast2',
+        title: 'podcast2 cachedTitle',
+        resultObj: mockTransaction,
+        metadata: mockMetadata2,
+        numEpisodes: 0,
+        status: ArSyncTxStatus.POSTED,
+      },
+    ];
 
-    it('returns 1 posted tx and 1 errored tx', async () => {
-      signAndPostTransaction.mockRejectedValueOnce(mockError);
-      signAndPostTransaction.mockResolvedValueOnce(mockTransaction);
-      const result = await startSync(arSyncTxs, wallet);
-      expect(result).toStrictEqual([
-        {
-          id: '1',
-          subscribeUrl: 'https://example.com/podcast1',
-          title: 'cachedTitle',
-          resultObj: mockError,
-          metadata: mockMetadata1,
-          numEpisodes: 0,
-          status: ArSyncTxStatus.ERRORED,
-        },
-        {
-          id: '2',
-          subscribeUrl: 'https://example.com/podcast2',
-          title: 'podcast2 cachedTitle',
-          resultObj: mockTransaction,
-          metadata: mockMetadata2,
-          numEpisodes: 0,
-          status: ArSyncTxStatus.POSTED,
-        },
-      ]);
+    describe('With ArConnect disabled', () => {
+      it('returns 1 posted tx and 1 errored tx', async () => {
+        signAndPostTransaction.mockRejectedValueOnce(mockError);
+        signAndPostTransaction.mockResolvedValueOnce(mockTransaction);
+
+        const result = await startSync(arSyncTxs, wallet);
+        expect(result).toStrictEqual(expected());
+
+        expect(dispatchTransaction).not.toHaveBeenCalled();
+        expect(signAndPostTransaction).toHaveBeenCalled();
+      });
+    });
+
+    describe('With ArConnect enabled', () => {
+      beforeAll(() => { global.enableArConnect(); });
+
+      afterAll(() => { global.disableArConnect(); });
+
+      it('returns the same result as when ArConnect is disabled, but populates the '
+         + 'ArSyncTx.dispatchResult prop for the successful tx', async () => {
+        dispatchTransaction.mockRejectedValueOnce(mockError);
+        dispatchTransaction.mockResolvedValueOnce(mockDispatchResult);
+
+        const result = await startSync(arSyncTxs, wallet);
+        expect(result).toStrictEqual(expected({ useArConnect: true }));
+
+        expect(signAndPostTransaction).not.toHaveBeenCalled();
+        expect(dispatchTransaction).toHaveBeenCalled();
+      });
     });
   });
 
