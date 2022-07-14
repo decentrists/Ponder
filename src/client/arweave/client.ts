@@ -28,3 +28,10 @@ const client = Arweave.init(usingArLocal() ? ARLOCAL_CONFIG : MAINNET_CONFIG);
 window.arApi = client;
 
 export default client;
+
+export function formatArweaveUrl(path = '') : string {
+  const cfg : ApiConfig = client.getConfig().api;
+  const protocol = cfg.protocol || 'https';
+  const host = cfg.host || 'arweave.net';
+  return `${protocol}://${host}/${path}`;
+}

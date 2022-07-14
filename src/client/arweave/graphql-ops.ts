@@ -7,8 +7,10 @@ import {
   TransactionEdge,
 } from 'arlocal/bin/graphql/types.d';
 import { strFromU8, decompressSync } from 'fflate';
-import { Bundle, DataItem } from 'arbundles';
+// TODO: arbundles is currently unused, but we might need it in the future.
+// import { Bundle, DataItem } from 'arbundles';
 import client from './client';
+import { fetchArweaveUrlData } from '../axios';
 import {
   isNotEmpty,
   hasMetadata,
@@ -142,12 +144,12 @@ async function getGqlResponse(gqlQuery: GraphQLQuery)
   return [edges, errorMessage];
 }
 
-function unbundleData(rawBundle: Uint8Array, bundledTxId: string) : Uint8Array {
-  const bundle = new Bundle(Buffer.from(rawBundle));
-  const dataItems : DataItem[] = bundle.items;
-  const dataItem = dataItems.find(item => item.id === bundledTxId);
-  return (dataItem ? dataItem.rawData : []) as Uint8Array;
-}
+// function unbundleData(rawBundle: Uint8Array, bundledTxId: string) : Uint8Array {
+//   const bundle = new Bundle(Buffer.from(rawBundle));
+//   const dataItems : DataItem[] = bundle.items;
+//   const dataItem = dataItems.find(item => item.id === bundledTxId);
+//   return (dataItem ? dataItem.rawData : []) as Uint8Array;
+// }
 
 type GetPodcastFeedForGqlQueryReturnType = {
   errorMessage?: string;
@@ -195,12 +197,12 @@ async function getPodcastFeedForGqlQuery(gqlQuery: GraphQLQuery)
     // TODO: T252 Create IndexedDB cache { tx.id: { podcastMetadata, tx.tags } } for
     //       transactions that are selected for the result of getPodcastFeed(),
     //       so that we may skip this client.transactions.getData() call.
-    const parentTxId = getParentTxId(tx);
-    // TODO: Find a way to avoid having to fetch the entire bundled transaction, as this wastes a
-    //       lot of data.
-    getDataResult = await client.transactions.getData(parentTxId, { decode: true }) as Uint8Array;
-
-    if (isBundledTx(tx)) getDataResult = unbundleData(getDataResult, tx.id);
+    if (isBundledTx(tx)) {
+      getDataResult = await fetchArweaveUrlData(tx.id);
+    }
+    else {
+      getDataResult = await client.transactions.getData(tx.id, { decode: true }) as Uint8Array;
+    }
   }
   catch (ex) {
     errorMessage = `Error fetching data for transaction id ${tx.id}: ${ex}`;
@@ -218,6 +220,7 @@ async function getPodcastFeedForGqlQuery(gqlQuery: GraphQLQuery)
       metadata = strFromU8(decompressSync(getDataResult));
       metadata = JSON.parse(metadata);
       metadata = podcastFromDTO(metadata, true);
+      console.debug('metadata', metadata);
     }
   }
   catch (ex) {
@@ -272,8 +275,7 @@ function gqlQueryForTags(tagsToFilter: TagsToFilter, queryFields: QueryField[] =
  * @param queryFields The fields of the node structure to query, besides `id`
  * @returns An Object with the query formatted for Arweave's '/graphql' endpoint
  */
-function gqlQueryForIds(ids: string[], queryFields: QueryField[])
-  : GraphQLQuery {
+function gqlQueryForIds(ids: string[], queryFields: QueryField[]) : GraphQLQuery {
   return {
     query: `
       query GetPodcast($ids: [ID!]!) {

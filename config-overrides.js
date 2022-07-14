@@ -9,6 +9,7 @@ module.exports = function override(config) {
     stream: require.resolve('stream-browserify'),
     crypto: require.resolve('crypto-browserify'),
     assert: require.resolve('assert'),
+    constants: require.resolve('constants-browserify'),
     // buffer: require.resolve('buffer/'),
   };
   // eslint-disable-next-line no-param-reassign
