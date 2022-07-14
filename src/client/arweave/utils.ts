@@ -62,6 +62,8 @@ export const isBundled = (tx: ArSyncTx) => isNotEmpty(tx.dispatchResult)
   && tx.dispatchResult.type === 'BUNDLED';
 
 /**
+ * TODO: Some ArSyncTx-related functions can be refactored to return only the modified ArSyncTxs
+ *       and call this function in the caller of those.
  * @param oldArSyncTxs
  * @param updatedArSyncTxs Assumed to be a subset of `oldArSyncTxs`
  * @returns The `oldArSyncTxs` where each of the `updatedArSyncTxs` is updated in-place.

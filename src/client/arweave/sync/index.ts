@@ -26,6 +26,7 @@ import {
 } from '../utils';
 import { newMetadataTransaction, dispatchTransaction, signAndPostTransaction } from '..';
 
+// TODO: These constants will be removed once we split batches per compressed batch size
 /** To reduce the size per transaction */
 const MAX_EPISODES_PER_BATCH = 100;
 /** Fail-safe through which we sync max 2000 episodes per podcast */

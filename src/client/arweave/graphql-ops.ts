@@ -91,6 +91,7 @@ export async function getPodcastFeed(
   return mergedMetadata;
 }
 
+// TODO: to be used in ArSync v1.5 transaction caching
 export async function getPodcastFeedForTxIds(ids: string[]) {
   // TODO: expand getPodcastFeedForGqlQuery to fetchData multiple nodes
   return getPodcastFeedForGqlQuery(gqlQueryForIds(ids, [QueryField.TAGS]));

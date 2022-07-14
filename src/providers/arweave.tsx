@@ -236,7 +236,7 @@ const ArweaveProvider : React.FC<{ children: React.ReactNode }> = ({ children })
       const status : TransactionStatusResponse = await arweave.getTxConfirmationStatus(postedTx);
 
       if (status.status === 200 && status.confirmed) {
-        if (!usingArLocal() && status.confirmed.number_of_confirmations >= 1) {
+        if (usingArLocal() || status.confirmed.number_of_confirmations >= 1) {
           confirmedArSyncTxs.push({ ...postedTx, status: ArSyncTxStatus.CONFIRMED });
         }
       }
@@ -330,7 +330,6 @@ const ArweaveProvider : React.FC<{ children: React.ReactNode }> = ({ children })
 
     window.addEventListener('arweaveWalletLoaded', () => {
       console.debug('ArConnect loaded => initializing config and permissions');
-
       connectArConnect();
     });
   }, [wallet, loadNewWallet, connectArConnect]);
