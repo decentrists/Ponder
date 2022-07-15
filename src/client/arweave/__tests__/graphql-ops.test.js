@@ -5,8 +5,6 @@ import { getPodcastFeed } from '../graphql-ops';
 import { transactions, api } from '../client';
 import { toTag } from '../utils';
 
-// const module = require('../graphql-ops');
-
 jest.mock('../client');
 
 const FEED_URL = 'https://server.dummy/rss';
