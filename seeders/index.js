@@ -13,6 +13,7 @@ async function delay(ms = 5000) {
 
 module.exports = async function seed(seeds, ms = 5000) {
   await delay(ms);
+
   const client = Arweave.init({
     host: 'localhost',
     port: 1984,

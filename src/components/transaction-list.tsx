@@ -5,14 +5,13 @@ import { Box } from '@mui/material';
 import { Image } from 'react-bootstrap';
 import RemoveBtn from './buttons/remove-button';
 import {
-  ArSyncTx,
   isNotInitialized,
   isNotPosted,
   statusToString,
-} from '../client/arweave/sync';
+} from '../client/arweave/utils';
 import style from './shared-elements.module.scss';
 import { episodesCount, findMetadata } from '../utils';
-import { Podcast } from '../client/interfaces';
+import { ArSyncTx, Podcast } from '../client/interfaces';
 import { ReactComponent as WhalephantIcon } from '../assets/ponder-logo.svg';
 
 dayjs.extend(relativeTime);
@@ -20,7 +19,7 @@ dayjs.extend(relativeTime);
 interface Props {
   subscriptions: Podcast[];
   txs: ArSyncTx[];
-  removeArSyncTxs: (ids?: string[] | null) => void;
+  removeArSyncTxs: (ids: string[] | null) => void;
 }
 
 function TxSubheader({ numEpisodes } : { numEpisodes: number }) {
@@ -58,7 +57,7 @@ const TransactionList : React.FC<Props> = ({ subscriptions, txs, removeArSyncTxs
                 {`total: ${txs.length}`}
               </Box>
               <Box className={style['action-btn']}>
-                <RemoveBtn onClick={() => removeArSyncTxs()} />
+                <RemoveBtn onClick={() => removeArSyncTxs(null)} />
               </Box>
             </Box>
           </Box>

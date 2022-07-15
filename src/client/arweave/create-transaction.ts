@@ -1,8 +1,10 @@
 import { JWKInterface } from 'arweave/node/lib/wallet';
 import Transaction from 'arweave/node/lib/transaction';
 import { strToU8, compressSync } from 'fflate';
+// eslint-disable-next-line import/no-extraneous-dependencies
+import { DispatchResult } from 'arconnect';
 import client from './client';
-import { toTag } from './utils';
+import { toTag, usingArConnect } from './utils';
 import {
   unixTimestamp,
   toISOString,
@@ -17,11 +19,19 @@ import {
   MANDATORY_ARWEAVE_TAGS,
   OPTIONAL_ARWEAVE_STRING_TAGS,
 } from '../interfaces';
+import { WalletDeferredToArConnect } from './wallet';
 
 type MandatoryTags = typeof MANDATORY_ARWEAVE_TAGS[number];
 
+/** TODO: validate tags. A tag object is valid iff:
+  there are <= 128 tags
+  each key is <= 1024 bytes
+  each value is <= 3072 bytes
+  only contains a key and value
+  both the key and value are non-empty strings
+ */
 async function newTransaction(
-  wallet: JWKInterface,
+  wallet: JWKInterface | WalletDeferredToArConnect,
   newMetadata: Partial<Podcast>,
   tags: [string, string][] = [],
 )
@@ -29,7 +39,9 @@ async function newTransaction(
   try {
     const u8data = strToU8(JSON.stringify(newMetadata));
     const gzippedData = compressSync(u8data, { level: 6, mem: 4 });
-    const trx = await client.createTransaction({ data: gzippedData }, wallet);
+
+    const trx = usingArConnect() ? await client.createTransaction({ data: gzippedData })
+      : await client.createTransaction({ data: gzippedData }, wallet as JWKInterface);
 
     trx.addTag('App-Name', process.env.REACT_APP_TAG_PREFIX as string);
     trx.addTag('App-Version', process.env.REACT_APP_VERSION as string);
@@ -52,11 +64,19 @@ async function newTransaction(
  * @returns `trx` if signed and posted successfully
  * @throws if signing or posting fails
  */
-export async function signAndPostTransaction(trx: Transaction, wallet: JWKInterface)
+export async function signAndPostTransaction(
+  trx: Transaction,
+  wallet: JWKInterface | WalletDeferredToArConnect,
+)
   : Promise<Transaction> {
   let postResponse;
+
   try {
-    await client.transactions.sign(trx, wallet); // has no return value
+    if (usingArConnect()) {
+      // Unused as of yet, as dispatch() is preferred, but included for future compatibility.
+      await client.transactions.sign(trx);
+    }
+    else await client.transactions.sign(trx, wallet as JWKInterface);
     postResponse = await client.transactions.post(trx);
   }
   catch (ex) {
@@ -75,6 +95,27 @@ export async function signAndPostTransaction(trx: Transaction, wallet: JWKInterf
 }
 
 /**
+ * Dispatches (signs and sends) the Transaction to the network, preferably by bundling it.
+ * Intended to dispatch a Transaction < 100KB at reduced costs using ArConnect.
+ * @see https://github.com/th8ta/ArConnect#dispatchtransaction-promisedispatchresult
+ * @param trx The Arweave Transaction to be dispatched
+ * @returns The DispatchResult iff dispatch() does not throw
+ * @throws if dispatch() throws
+ */
+export async function dispatchTransaction(trx: Transaction) : Promise<DispatchResult> {
+  let response : DispatchResult;
+  try {
+    response = await window.arweaveWallet.dispatch(trx);
+  }
+  catch (ex) {
+    console.error(`Dispatching transaction failed: ${ex}. Transaction:`, trx);
+    throw new Error(`Dispatching transaction failed: ${ex}`);
+  }
+
+  return response;
+}
+
+/**
  * @param wallet
  * @param newMetadata Assumed to already be a diff vs `cachedMetadata`
  * @param cachedMetadata
@@ -82,7 +123,7 @@ export async function signAndPostTransaction(trx: Transaction, wallet: JWKInterf
  * @throws if `newMetadata` is incomplete or if newTransaction() throws
  */
 export async function newMetadataTransaction(
-  wallet: JWKInterface,
+  wallet: JWKInterface | WalletDeferredToArConnect,
   newMetadata: Partial<Podcast>,
   cachedMetadata : Partial<Podcast> = {},
 ) : Promise<Transaction> {

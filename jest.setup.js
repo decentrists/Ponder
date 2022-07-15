@@ -11,6 +11,15 @@ global.console = {
   // error: jest.fn(),
 };
 
+beforeAll(() => {
+  global.originalArConnectState = process.env.REACT_APP_USE_ARCONNECT;
+  global.disableArConnect();
+});
+
+afterAll(() => {
+  global.resetArConnect();
+});
+
 afterEach(() => {
   jest.clearAllMocks();
 });

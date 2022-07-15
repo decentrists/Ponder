@@ -12,16 +12,13 @@ import {
   hasMetadata,
   concatMessages,
 } from '../utils';
-import { Episode, EpisodesDBTable, Podcast } from '../client/interfaces';
+import {
+  ArSyncTx,
+  Episode,
+  EpisodesDBTable,
+  Podcast,
+} from '../client/interfaces';
 import { IndexedDb } from '../indexed-db';
-import { ArSyncTx } from '../client/arweave/sync';
-
-// TODO: Remove after IndexedDB implementation maturation
-declare global {
-  interface Window {
-    idb : IndexedDb;
-  }
-}
 
 interface SubscriptionContextType {
   subscriptions: Podcast[],
@@ -68,7 +65,6 @@ const DB_METADATATOSYNC = 'metadataToSync';
 const DB_ARSYNCTXS = 'arSyncTxs';
 
 const db = new IndexedDb();
-window.idb = db;
 
 async function readCachedPodcasts() : Promise<Podcast[]> {
   const readPodcasts : Podcast[] = [];

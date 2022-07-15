@@ -118,68 +118,98 @@ describe('newMetadataTransaction', () => {
     expect(addTag.mock.calls).toEqual(formattedExpectedTags);
   }
 
-  describe('When there is no cached metadata yet for the podcast to be posted to Arweave', () => {
-    it('creates a transaction with the expected metadata and tags', async () => {
-      const expectedMetadata = newMetadata();
-      const expectedTags = [
-        ['subscribeUrl', 'https://example.com/foo'],
-        ['title', 'newTitle'],
-        ['description', 'newDescription'],
-        ['language', 'en-us'],
-        ['category', 'podcat1'],
-        ['category', 'podcat2'],
-        ['keyword', 'podkey1'],
-        ['keyword', 'podkey2'],
-        ['firstEpisodeDate', ep1date],
-        ['lastEpisodeDate', ep4date],
-        ['metadataBatch', '0'],
-      ];
-
-      const result = await newMetadataTransaction(stubbedWallet, expectedMetadata, {});
-      expect(result).toEqual(mockResult);
-
-      expect(strToU8).toHaveBeenCalledWith(JSON.stringify(expectedMetadata));
-      expect(compressSync).toHaveBeenCalled();
-      expect(createTransaction).toHaveBeenCalledWith({ data: MOCK_U8_METADATA }, stubbedWallet);
-
-      assertAddTagCalls(expectedTags);
+  const withAndWithoutArConnect = assertTest => {
+    describe('With ArConnect disabled', () => {
+      assertTest();
     });
+
+    describe('With ArConnect enabled', () => {
+      beforeAll(() => { global.enableArConnect(); });
+
+      afterAll(() => { global.disableArConnect(); });
+
+      assertTest({ useArConnect: true });
+    });
+  };
+
+  describe('When there is no cached metadata yet for the podcast to be posted to Arweave', () => {
+    const assertTest = (modifiers = { useArConnect: false }) => {
+      it('creates a transaction with the expected metadata and tags', async () => {
+        const expectedMetadata = newMetadata();
+        const expectedTags = [
+          ['subscribeUrl', 'https://example.com/foo'],
+          ['title', 'newTitle'],
+          ['description', 'newDescription'],
+          ['language', 'en-us'],
+          ['category', 'podcat1'],
+          ['category', 'podcat2'],
+          ['keyword', 'podkey1'],
+          ['keyword', 'podkey2'],
+          ['firstEpisodeDate', ep1date],
+          ['lastEpisodeDate', ep4date],
+          ['metadataBatch', '0'],
+        ];
+
+        const result = await newMetadataTransaction(stubbedWallet, expectedMetadata, {});
+        expect(result).toEqual(mockResult);
+
+        expect(strToU8).toHaveBeenCalledWith(JSON.stringify(expectedMetadata));
+        expect(compressSync).toHaveBeenCalled();
+
+        const params = modifiers.useArConnect
+          ? [{ data: MOCK_U8_METADATA }]
+          : [{ data: MOCK_U8_METADATA }, stubbedWallet];
+        expect(createTransaction).toHaveBeenCalledWith(...params);
+
+        assertAddTagCalls(expectedTags);
+      });
+    };
+
+    withAndWithoutArConnect(assertTest);
   });
 
   describe('When 1 cached batch of older metadata exists', () => {
-    it('creates a transaction with the expected metadata and tags', async () => {
-      const currentBatchFields = {
-        firstEpisodeDate: ep1date,
-        lastEpisodeDate: ep2date,
-        metadataBatch: 0,
-      };
-      const expectedMetadata = newMetadata({ episodes: allEpisodes.slice(0, 2) });
-      const expectedTags = [
-        ['subscribeUrl', 'https://example.com/foo'],
-        ['title', 'newTitle'],
-        ['description', 'newDescription'],
-        ['language', 'en-us'],
-        ['category', 'podcat1'],
-        ['category', 'podcat2'],
-        ['keyword', 'podkey1'],
-        ['keyword', 'podkey2'],
-        ['firstEpisodeDate', ep3date],
-        ['lastEpisodeDate', ep4date],
-        ['metadataBatch', '1'],
-      ];
-      const result = await newMetadataTransaction(
-        stubbedWallet,
-        expectedMetadata,
-        cachedMetadata(currentBatchFields),
-      );
-      expect(result).toEqual(mockResult);
+    const assertTest = (modifiers = { useArConnect: false }) => {
+      it('creates a transaction with the expected metadata and tags', async () => {
+        const currentBatchFields = {
+          firstEpisodeDate: ep1date,
+          lastEpisodeDate: ep2date,
+          metadataBatch: 0,
+        };
+        const expectedMetadata = newMetadata({ episodes: allEpisodes.slice(0, 2) });
+        const expectedTags = [
+          ['subscribeUrl', 'https://example.com/foo'],
+          ['title', 'newTitle'],
+          ['description', 'newDescription'],
+          ['language', 'en-us'],
+          ['category', 'podcat1'],
+          ['category', 'podcat2'],
+          ['keyword', 'podkey1'],
+          ['keyword', 'podkey2'],
+          ['firstEpisodeDate', ep3date],
+          ['lastEpisodeDate', ep4date],
+          ['metadataBatch', '1'],
+        ];
+        const result = await newMetadataTransaction(
+          stubbedWallet,
+          expectedMetadata,
+          cachedMetadata(currentBatchFields),
+        );
+        expect(result).toEqual(mockResult);
 
-      expect(strToU8).toHaveBeenCalledWith(JSON.stringify(expectedMetadata));
-      expect(compressSync).toHaveBeenCalled();
-      expect(createTransaction).toHaveBeenCalledWith({ data: MOCK_U8_METADATA }, stubbedWallet);
+        expect(strToU8).toHaveBeenCalledWith(JSON.stringify(expectedMetadata));
+        expect(compressSync).toHaveBeenCalled();
 
-      assertAddTagCalls(expectedTags);
-    });
+        const params = modifiers.useArConnect
+          ? [{ data: MOCK_U8_METADATA }]
+          : [{ data: MOCK_U8_METADATA }, stubbedWallet];
+        expect(createTransaction).toHaveBeenCalledWith(...params);
+
+        assertAddTagCalls(expectedTags);
+      });
+    };
+
+    withAndWithoutArConnect(assertTest);
   });
 
   xdescribe('When 1 cached batch of newer metadata exists', () => {
@@ -187,39 +217,47 @@ describe('newMetadataTransaction', () => {
   });
 
   describe('When 2 aggregated cached batches of older metadata exist', () => {
-    it('creates a transaction with the expected metadata and tags', async () => {
-      const currentBatchFields = {
-        firstEpisodeDate: ep1date,
-        lastEpisodeDate: ep3date,
-        metadataBatch: 1,
-      };
-      const expectedMetadata = newMetadata({ episodes: allEpisodes.slice(0, 1) });
-      const expectedTags = [
-        ['subscribeUrl', 'https://example.com/foo'],
-        ['title', 'newTitle'],
-        ['description', 'newDescription'],
-        ['language', 'en-us'],
-        ['category', 'podcat1'],
-        ['category', 'podcat2'],
-        ['keyword', 'podkey1'],
-        ['keyword', 'podkey2'],
-        ['firstEpisodeDate', ep4date],
-        ['lastEpisodeDate', ep4date],
-        ['metadataBatch', '2'],
-      ];
-      const result = await newMetadataTransaction(
-        stubbedWallet,
-        expectedMetadata,
-        cachedMetadata(currentBatchFields),
-      );
-      expect(result).toEqual(mockResult);
+    const assertTest = (modifiers = { useArConnect: false }) => {
+      it('creates a transaction with the expected metadata and tags', async () => {
+        const currentBatchFields = {
+          firstEpisodeDate: ep1date,
+          lastEpisodeDate: ep3date,
+          metadataBatch: 1,
+        };
+        const expectedMetadata = newMetadata({ episodes: allEpisodes.slice(0, 1) });
+        const expectedTags = [
+          ['subscribeUrl', 'https://example.com/foo'],
+          ['title', 'newTitle'],
+          ['description', 'newDescription'],
+          ['language', 'en-us'],
+          ['category', 'podcat1'],
+          ['category', 'podcat2'],
+          ['keyword', 'podkey1'],
+          ['keyword', 'podkey2'],
+          ['firstEpisodeDate', ep4date],
+          ['lastEpisodeDate', ep4date],
+          ['metadataBatch', '2'],
+        ];
+        const result = await newMetadataTransaction(
+          stubbedWallet,
+          expectedMetadata,
+          cachedMetadata(currentBatchFields),
+        );
+        expect(result).toEqual(mockResult);
 
-      expect(strToU8).toHaveBeenCalledWith(JSON.stringify(expectedMetadata));
-      expect(compressSync).toHaveBeenCalled();
-      expect(createTransaction).toHaveBeenCalledWith({ data: MOCK_U8_METADATA }, stubbedWallet);
+        expect(strToU8).toHaveBeenCalledWith(JSON.stringify(expectedMetadata));
+        expect(compressSync).toHaveBeenCalled();
 
-      assertAddTagCalls(expectedTags);
-    });
+        const params = modifiers.useArConnect
+          ? [{ data: MOCK_U8_METADATA }]
+          : [{ data: MOCK_U8_METADATA }, stubbedWallet];
+        expect(createTransaction).toHaveBeenCalledWith(...params);
+
+        assertAddTagCalls(expectedTags);
+      });
+    };
+
+    withAndWithoutArConnect(assertTest);
   });
 
   describe('Error handling', () => {
