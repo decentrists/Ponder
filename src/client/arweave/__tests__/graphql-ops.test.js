@@ -1,8 +1,11 @@
+import dedent from 'dedent';
 import { strToU8, compressSync } from 'fflate';
 import { getPodcastFeed } from '../graphql-ops';
 // eslint-disable-next-line import/named
 import { transactions, api } from '../client';
 import { toTag } from '../utils';
+
+// const module = require('../graphql-ops');
 
 jest.mock('../client');
 
@@ -104,110 +107,156 @@ function getDataResult(firstEpisodeIndex, numEpisodes) {
 
 const originalTagPrefix = process.env.REACT_APP_TAG_PREFIX;
 beforeAll(() => {
-  process.env.REACT_APP_TAG_PREFIX = 'bestPrefix';
+  process.env.REACT_APP_TAG_PREFIX = 'testPonder';
 });
 
 afterAll(() => {
   process.env.REACT_APP_TAG_PREFIX = originalTagPrefix;
 });
 
-describe('Successful fetch', () => {
-  describe('With 1 metadata batch', () => {
-    it('returns the expected merged metadata and tags', async () => {
-      api.post.mockResolvedValueOnce(gqlResponse(0, ep1date, ep4date));
-      api.post.mockResolvedValueOnce(emptyGqlResponse());
-      transactions.getData.mockResolvedValueOnce(getDataResult(0, 4));
+describe('getPodcastFeed', () => {
+  describe('Successful fetch', () => {
+    describe('With 1 metadata batch', () => {
+      beforeEach(() => {
+        api.post.mockResolvedValueOnce(gqlResponse(0, ep1date, ep4date));
+        api.post.mockResolvedValueOnce(emptyGqlResponse());
+        transactions.getData.mockResolvedValueOnce(getDataResult(0, 4));
+        expect(transactions.getData).not.toHaveBeenCalled();
+      });
+
+      it('returns the expected merged metadata and tags', async () => {
+        await expect(getPodcastFeed(FEED_URL)).resolves
+          .toEqual(mergedBatchesResult(0, ep1date, ep4date));
+
+        expect(api.post).toHaveBeenCalledTimes(2);
+        expect(transactions.getData).toHaveBeenCalledTimes(1);
+        expect(transactions.getData).toHaveBeenCalledWith('mockId', { decode: true });
+      });
+
+      it('posts the expected GraphQL queries', async () => {
+        const expectedGqlQuery = metadataBatch => ({
+          query: dedent`
+            query GetPodcast($tags: [TagFilter!]!) {
+              transactions(tags: $tags, first: 100, sort: HEIGHT_DESC) {
+                edges {
+                  node {
+                    id
+                    tags {
+                      name
+                      value
+                    }
+                    bundledIn {
+                      id
+                    }
+                  }
+                }
+              }
+            }
+          `,
+          variables: {
+            tags: [
+              {
+                name: 'testPonder-subscribeUrl',
+                values: ['https://server.dummy/rss'],
+              },
+              {
+                name: 'testPonder-metadataBatch',
+                values: [metadataBatch],
+              },
+            ],
+          },
+        });
+
+        await getPodcastFeed(FEED_URL);
+
+        expect(api.post.mock.calls).toEqual([
+          ['/graphql', expectedGqlQuery('0')],
+          ['/graphql', expectedGqlQuery('1')],
+        ]);
+      });
+    });
+
+    describe('With 2 metadata batches', () => {
+      it('returns the expected merged metadata and tags', async () => {
+        api.post.mockResolvedValueOnce(gqlResponse(0, ep1date, ep2date));
+        transactions.getData.mockResolvedValueOnce(getDataResult(2, 2));
+
+        api.post.mockResolvedValueOnce(gqlResponse(1, ep3date, ep4date));
+        transactions.getData.mockResolvedValueOnce(getDataResult(0, 2));
+
+        api.post.mockResolvedValueOnce(emptyGqlResponse());
+
+        await expect(getPodcastFeed(FEED_URL)).resolves
+          .toEqual(mergedBatchesResult(1, ep1date, ep4date));
+
+        expect(api.post).toHaveBeenCalledTimes(3);
+        expect(transactions.getData).toHaveBeenCalledTimes(2);
+        expect(transactions.getData).toHaveBeenCalledWith('mockId', { decode: true });
+      });
+    });
+
+    describe('With 3 metadata batches', () => {
+      it('returns the expected merged metadata and tags', async () => {
+        // oldest episode
+        api.post.mockResolvedValueOnce(gqlResponse(0, ep1date, ep1date));
+        transactions.getData.mockResolvedValueOnce(getDataResult(3, 1));
+
+        // oldest 2 episodes (including 1 duplicate)
+        api.post.mockResolvedValueOnce(gqlResponse(1, ep1date, ep2date));
+        transactions.getData.mockResolvedValueOnce(getDataResult(2, 2));
+
+        // newest 2 episodes
+        api.post.mockResolvedValueOnce(gqlResponse(2, ep3date, ep4date));
+        transactions.getData.mockResolvedValueOnce(getDataResult(0, 2));
+
+        api.post.mockResolvedValueOnce(emptyGqlResponse());
+
+        await expect(getPodcastFeed(FEED_URL)).resolves
+          .toEqual(mergedBatchesResult(2, ep1date, ep4date));
+
+        expect(api.post).toHaveBeenCalledTimes(4);
+        expect(transactions.getData).toHaveBeenCalledTimes(3);
+        expect(transactions.getData).toHaveBeenCalledWith('mockId', { decode: true });
+      });
+    });
+  });
+
+  describe('Error handling', () => {
+    describe('With 3 metadata batches, where the middle one is corrupted', () => {
+      it('returns the expected merged metadata and tags', async () => {
+        const mockError = new Error('getData Error');
+
+        api.post.mockResolvedValueOnce(gqlResponse(0, ep1date, ep2date));
+        transactions.getData.mockResolvedValueOnce(getDataResult(2, 2));
+
+        api.post.mockResolvedValueOnce(gqlResponse(1, ep1date, ep2date));
+        transactions.getData.mockRejectedValueOnce(mockError);
+
+        api.post.mockResolvedValueOnce(gqlResponse(2, ep3date, ep4date));
+        transactions.getData.mockResolvedValueOnce(getDataResult(0, 2));
+
+        api.post.mockResolvedValueOnce(emptyGqlResponse());
+
+        await expect(getPodcastFeed(FEED_URL)).resolves
+          .toEqual(mergedBatchesResult(2, ep1date, ep4date));
+
+        expect(api.post).toHaveBeenCalledTimes(4);
+        expect(transactions.getData).toHaveBeenCalledTimes(3);
+        expect(transactions.getData).toHaveBeenCalledWith('mockId', { decode: true });
+      });
+    });
+
+    it('catches the GraphQL request error and returns {}', async () => {
+      const mockError = new Error('GraphQL Error');
+
+      api.post.mockRejectedValue(mockError);
+      transactions.getData.mockResolvedValue(getDataResult(0, 4));
+
+      await expect(getPodcastFeed(FEED_URL)).resolves
+        .toMatchObject({ errorMessage: expect.stringMatching(/GraphQL/) });
+
+      expect(api.post).toHaveBeenCalledTimes(1);
       expect(transactions.getData).not.toHaveBeenCalled();
-
-      await expect(getPodcastFeed(FEED_URL)).resolves
-        .toEqual(mergedBatchesResult(0, ep1date, ep4date));
-
-      expect(api.post).toHaveBeenCalledTimes(2);
-      expect(transactions.getData).toHaveBeenCalledTimes(1);
-      expect(transactions.getData).toHaveBeenCalledWith('mockId', { decode: true });
     });
-  });
-
-  describe('With 2 metadata batches', () => {
-    it('returns the expected merged metadata and tags', async () => {
-      api.post.mockResolvedValueOnce(gqlResponse(0, ep1date, ep2date));
-      transactions.getData.mockResolvedValueOnce(getDataResult(2, 2));
-
-      api.post.mockResolvedValueOnce(gqlResponse(1, ep3date, ep4date));
-      transactions.getData.mockResolvedValueOnce(getDataResult(0, 2));
-
-      api.post.mockResolvedValueOnce(emptyGqlResponse());
-
-      await expect(getPodcastFeed(FEED_URL)).resolves
-        .toEqual(mergedBatchesResult(1, ep1date, ep4date));
-
-      expect(api.post).toHaveBeenCalledTimes(3);
-      expect(transactions.getData).toHaveBeenCalledTimes(2);
-      expect(transactions.getData).toHaveBeenCalledWith('mockId', { decode: true });
-    });
-  });
-
-  describe('With 3 metadata batches', () => {
-    it('returns the expected merged metadata and tags', async () => {
-      // oldest episode
-      api.post.mockResolvedValueOnce(gqlResponse(0, ep1date, ep1date));
-      transactions.getData.mockResolvedValueOnce(getDataResult(3, 1));
-
-      // oldest 2 episodes (including 1 duplicate)
-      api.post.mockResolvedValueOnce(gqlResponse(1, ep1date, ep2date));
-      transactions.getData.mockResolvedValueOnce(getDataResult(2, 2));
-
-      // newest 2 episodes
-      api.post.mockResolvedValueOnce(gqlResponse(2, ep3date, ep4date));
-      transactions.getData.mockResolvedValueOnce(getDataResult(0, 2));
-
-      api.post.mockResolvedValueOnce(emptyGqlResponse());
-
-      await expect(getPodcastFeed(FEED_URL)).resolves
-        .toEqual(mergedBatchesResult(2, ep1date, ep4date));
-
-      expect(api.post).toHaveBeenCalledTimes(4);
-      expect(transactions.getData).toHaveBeenCalledTimes(3);
-      expect(transactions.getData).toHaveBeenCalledWith('mockId', { decode: true });
-    });
-  });
-});
-
-describe('Error handling', () => {
-  describe('With 3 metadata batches, where the middle one is corrupted', () => {
-    it('returns the expected merged metadata and tags', async () => {
-      const mockError = new Error('getData Error');
-
-      api.post.mockResolvedValueOnce(gqlResponse(0, ep1date, ep2date));
-      transactions.getData.mockResolvedValueOnce(getDataResult(2, 2));
-
-      api.post.mockResolvedValueOnce(gqlResponse(1, ep1date, ep2date));
-      transactions.getData.mockRejectedValueOnce(mockError);
-
-      api.post.mockResolvedValueOnce(gqlResponse(2, ep3date, ep4date));
-      transactions.getData.mockResolvedValueOnce(getDataResult(0, 2));
-
-      api.post.mockResolvedValueOnce(emptyGqlResponse());
-
-      await expect(getPodcastFeed(FEED_URL)).resolves
-        .toEqual(mergedBatchesResult(2, ep1date, ep4date));
-
-      expect(api.post).toHaveBeenCalledTimes(4);
-      expect(transactions.getData).toHaveBeenCalledTimes(3);
-      expect(transactions.getData).toHaveBeenCalledWith('mockId', { decode: true });
-    });
-  });
-
-  it('catches the GraphQL request error and returns {}', async () => {
-    const mockError = new Error('GraphQL Error');
-
-    api.post.mockRejectedValue(mockError);
-    transactions.getData.mockResolvedValue(getDataResult(0, 4));
-
-    await expect(getPodcastFeed(FEED_URL)).resolves
-      .toMatchObject({ errorMessage: expect.stringMatching(/GraphQL/) });
-
-    expect(api.post).toHaveBeenCalledTimes(1);
-    expect(transactions.getData).not.toHaveBeenCalled();
   });
 });

@@ -6,6 +6,7 @@ import {
   Transaction as GraphQLTransaction,
   TransactionEdge,
 } from 'arlocal/bin/graphql/types.d';
+import dedent from 'dedent';
 import { strFromU8, decompressSync } from 'fflate';
 // TODO: arbundles is currently unused, but we might need it in the future.
 // import { Bundle, DataItem } from 'arbundles';
@@ -220,7 +221,6 @@ async function getPodcastFeedForGqlQuery(gqlQuery: GraphQLQuery)
       metadata = strFromU8(decompressSync(getDataResult));
       metadata = JSON.parse(metadata);
       metadata = podcastFromDTO(metadata, true);
-      console.debug('metadata', metadata);
     }
   }
   catch (ex) {
@@ -255,7 +255,7 @@ function gqlQueryForTags(tagsToFilter: TagsToFilter, queryFields: QueryField[] =
   const tags = toTagFilter(tagsToFilter);
 
   return {
-    query: `
+    query: dedent`
       query GetPodcast($tags: [TagFilter!]!) {
         transactions(tags: $tags, first: ${MAX_GRAPHQL_NODES}, sort: HEIGHT_DESC) {
           edges {
@@ -277,7 +277,7 @@ function gqlQueryForTags(tagsToFilter: TagsToFilter, queryFields: QueryField[] =
  */
 function gqlQueryForIds(ids: string[], queryFields: QueryField[]) : GraphQLQuery {
   return {
-    query: `
+    query: dedent`
       query GetPodcast($ids: [ID!]!) {
         transactions(ids: $ids, first: ${MAX_GRAPHQL_NODES}, sort: HEIGHT_DESC) {
           edges {
