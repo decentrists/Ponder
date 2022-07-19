@@ -35,11 +35,27 @@ const OPTIONAL_ARWEAVE_PLURAL_TAGS = [
   'episodesKeywords',
 ] as const;
 
+const OPTIONAL_ARWEAVE_SINGULAR_TAGS = [
+  'category',
+  'keyword',
+  'episodesKeyword',
+] as const;
+
 export const ALLOWED_ARWEAVE_TAGS = [
+  ...MANDATORY_ARWEAVE_TAGS,
+  ...OPTIONAL_ARWEAVE_STRING_TAGS,
+  ...OPTIONAL_ARWEAVE_SINGULAR_TAGS,
+] as const;
+
+export const ALLOWED_ARWEAVE_TAGS_PLURAL = [
   ...MANDATORY_ARWEAVE_TAGS,
   ...OPTIONAL_ARWEAVE_STRING_TAGS,
   ...OPTIONAL_ARWEAVE_PLURAL_TAGS,
 ] as const;
+
+export type MandatoryTags = typeof MANDATORY_ARWEAVE_TAGS[number];
+export type AllowedTags = typeof ALLOWED_ARWEAVE_TAGS[number];
+export type ArweaveTag = [AllowedTags, string | undefined];
 
 export interface Podcast extends PodcastTags {
   lastMutatedAt?: number; /** @see unixTimestamp() */

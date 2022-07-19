@@ -1,5 +1,5 @@
 import { strToU8, compressSync } from 'fflate';
-import { newMetadataTransaction } from '../create-transaction';
+import { newTransactionFromMetadata } from '../create-transaction';
 import { toTag } from '../utils';
 // eslint-disable-next-line import/named
 import { addTag, createTransaction } from '../client';
@@ -60,9 +60,9 @@ const BASE_CACHED_METADATA = {
   imageUrl: 'https://cached.imgurl/img.png?ver=0',
   imageTitle: 'cachedImageTitle',
   unknownField: 'cachedUnknownField',
-  categories: ['cached cat'], // ignored by newMetadataTransaction
-  keywords: ['cached key'], // ignored by newMetadataTransaction
-  episodes: [], // ignored by newMetadataTransaction
+  categories: ['cached cat'], // ignored by newTransactionFromMetadata
+  keywords: ['cached key'], // ignored by newTransactionFromMetadata
+  episodes: [], // ignored by newTransactionFromMetadata
 };
 
 const BASE_NEW_METADATA = {
@@ -101,7 +101,7 @@ afterAll(() => {
   jest.useRealTimers();
 });
 
-describe('newMetadataTransaction', () => {
+describe('newTransactionFromMetadata', () => {
   beforeEach(() => {
     expect(createTransaction).not.toHaveBeenCalled();
     expect(addTag).not.toHaveBeenCalled();
@@ -141,16 +141,16 @@ describe('newMetadataTransaction', () => {
           ['title', 'newTitle'],
           ['description', 'newDescription'],
           ['language', 'en-us'],
+          ['firstEpisodeDate', ep1date],
+          ['lastEpisodeDate', ep4date],
+          ['metadataBatch', '0'],
           ['category', 'podcat1'],
           ['category', 'podcat2'],
           ['keyword', 'podkey1'],
           ['keyword', 'podkey2'],
-          ['firstEpisodeDate', ep1date],
-          ['lastEpisodeDate', ep4date],
-          ['metadataBatch', '0'],
         ];
 
-        const result = await newMetadataTransaction(stubbedWallet, expectedMetadata, {});
+        const result = await newTransactionFromMetadata(stubbedWallet, expectedMetadata, {});
         expect(result).toEqual(mockResult);
 
         expect(strToU8).toHaveBeenCalledWith(JSON.stringify(expectedMetadata));
@@ -182,15 +182,15 @@ describe('newMetadataTransaction', () => {
           ['title', 'newTitle'],
           ['description', 'newDescription'],
           ['language', 'en-us'],
+          ['firstEpisodeDate', ep3date],
+          ['lastEpisodeDate', ep4date],
+          ['metadataBatch', '1'],
           ['category', 'podcat1'],
           ['category', 'podcat2'],
           ['keyword', 'podkey1'],
           ['keyword', 'podkey2'],
-          ['firstEpisodeDate', ep3date],
-          ['lastEpisodeDate', ep4date],
-          ['metadataBatch', '1'],
         ];
-        const result = await newMetadataTransaction(
+        const result = await newTransactionFromMetadata(
           stubbedWallet,
           expectedMetadata,
           cachedMetadata(currentBatchFields),
@@ -230,15 +230,15 @@ describe('newMetadataTransaction', () => {
           ['title', 'newTitle'],
           ['description', 'newDescription'],
           ['language', 'en-us'],
+          ['firstEpisodeDate', ep4date],
+          ['lastEpisodeDate', ep4date],
+          ['metadataBatch', '2'],
           ['category', 'podcat1'],
           ['category', 'podcat2'],
           ['keyword', 'podkey1'],
           ['keyword', 'podkey2'],
-          ['firstEpisodeDate', ep4date],
-          ['lastEpisodeDate', ep4date],
-          ['metadataBatch', '2'],
         ];
-        const result = await newMetadataTransaction(
+        const result = await newTransactionFromMetadata(
           stubbedWallet,
           expectedMetadata,
           cachedMetadata(currentBatchFields),
@@ -262,7 +262,7 @@ describe('newMetadataTransaction', () => {
 
   describe('Error handling', () => {
     const assertThrow = async (erroneousMetadata, errorRegex) => {
-      await expect(newMetadataTransaction(stubbedWallet, erroneousMetadata, {}))
+      await expect(newTransactionFromMetadata(stubbedWallet, erroneousMetadata, {}))
         .rejects.toThrow(errorRegex);
 
       expect(createTransaction).not.toHaveBeenCalled();

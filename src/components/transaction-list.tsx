@@ -10,7 +10,7 @@ import {
   statusToString,
 } from '../client/arweave/utils';
 import style from './shared-elements.module.scss';
-import { episodesCount, findMetadata } from '../utils';
+import { findMetadata } from '../utils';
 import { ArSyncTx, Podcast } from '../client/interfaces';
 import { ReactComponent as WhalephantIcon } from '../assets/ponder-logo.svg';
 
@@ -76,7 +76,7 @@ const TransactionList : React.FC<Props> = ({ subscriptions, txs, removeArSyncTxs
           {
             [...txs].reverse().map(tx => {
               const podcastImageUrl = findImageUrl(tx.subscribeUrl);
-              const numEpisodes = episodesCount(tx.metadata);
+              const { numEpisodes } = tx;
 
               // TODO: add viewblock.io tx url
               return (
