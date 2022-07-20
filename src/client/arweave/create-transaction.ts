@@ -1,10 +1,9 @@
 import { JWKInterface } from 'arweave/node/lib/wallet';
 import Transaction from 'arweave/node/lib/transaction';
-import { strToU8, compressSync } from 'fflate';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { DispatchResult } from 'arconnect';
 import client from './client';
-import { toTag, usingArConnect } from './utils';
+import { compressMetadata, toTag, usingArConnect } from './utils';
 import {
   unixTimestamp,
   toISOString,
@@ -14,34 +13,85 @@ import {
   isValidInteger,
 } from '../../utils';
 import {
+  ArweaveTag,
   Episode,
-  Podcast,
-  MANDATORY_ARWEAVE_TAGS,
+  MandatoryTags,
   OPTIONAL_ARWEAVE_STRING_TAGS,
+  Podcast,
 } from '../interfaces';
 import { WalletDeferredToArConnect } from './wallet';
 
-type MandatoryTags = typeof MANDATORY_ARWEAVE_TAGS[number];
+const MAX_TAGS = 120; // Arweave max = 128, but mind leaving some space for extra meta tags
+const MAX_TAG_NAME_SIZE = 1024; // Arweave max = 1024 bytes
+const MAX_TAG_VALUE_SIZE = 3072; // Arweave max = 3072 bytes
 
-/** TODO: validate tags. A tag object is valid iff:
-  there are <= 128 tags
-  each key is <= 1024 bytes
-  each value is <= 3072 bytes
-  only contains a key and value
-  both the key and value are non-empty strings
+/**
+ * @param tag Tuple of two strings representing the tag name and value
+ * @returns The given `tag` as string tuple, trimmed to fit Arweave's size limitations.
+ *   Returns `null` if the tag name or value is empty or if the name is not a string.
  */
+const validateAndTrimTag = (tag: ArweaveTag) : ArweaveTag | null => {
+  const [name, val] = tag;
+  if (!name || !val || typeof name !== 'string') return null;
+
+  const validName = name.length <= MAX_TAG_NAME_SIZE ? name : name.substring(0, MAX_TAG_NAME_SIZE);
+  let validVal = `${val}`;
+  if (validVal.length > MAX_TAG_VALUE_SIZE) validVal = validVal.substring(0, MAX_TAG_VALUE_SIZE);
+  return [validName, validVal] as ArweaveTag;
+};
+
+export function formatTags(newMetadata: Partial<Podcast>, cachedMetadata: Partial<Podcast> = {})
+  : ArweaveTag[] {
+  const mandatoryPodcastTags : [MandatoryTags, string | undefined][] = [
+    ['subscribeUrl', newMetadata.subscribeUrl || cachedMetadata.subscribeUrl],
+    ['title', newMetadata.title || cachedMetadata.title],
+    ['description', newMetadata.description || cachedMetadata.description],
+  ];
+
+  const getMandatoryTagsValues = (key: MandatoryTags) => mandatoryPodcastTags
+    .find(element => element[0] === key)![1];
+
+  mandatoryPodcastTags.forEach(([name, value]) => {
+    if (!value) {
+      throw new Error('Could not upload metadata for '
+        + `${getMandatoryTagsValues('title') || getMandatoryTagsValues('subscribeUrl')}: `
+        + `${name} is missing`);
+    }
+  });
+
+  const podcastTags : ArweaveTag[] = [...mandatoryPodcastTags];
+  OPTIONAL_ARWEAVE_STRING_TAGS.forEach(tagName => {
+    const val = newMetadata[tagName as keyof Podcast] as string;
+    if (val) podcastTags.push([tagName, `${val}`]);
+  });
+  const episodeBatchTags : ArweaveTag[] = isNotEmpty(newMetadata.episodes) ? episodeTags(
+    newMetadata.episodes,
+    cachedMetadata,
+    newMetadata.metadataBatch,
+  ) : [];
+  const pluralTags : ArweaveTag[] = [];
+  // Add new categories and keywords in string => string format
+  (newMetadata.categories || []).forEach(cat => pluralTags.push(['category', cat]));
+  (newMetadata.keywords || []).forEach(key => pluralTags.push(['keyword', key]));
+  (newMetadata.episodesKeywords || []).forEach(key => pluralTags.push(['episodesKeyword', key]));
+  const validTags : ArweaveTag[] = [
+    ...podcastTags,
+    ...episodeBatchTags,
+    ...pluralTags,
+  ].map(validateAndTrimTag).filter(x => x) as ArweaveTag[];
+
+  // pluralTags are cut off if tags exceed MAX_TAGS
+  return validTags.length <= MAX_TAGS ? validTags : validTags.slice(0, MAX_TAGS);
+}
+
 async function newTransaction(
   wallet: JWKInterface | WalletDeferredToArConnect,
-  newMetadata: Partial<Podcast>,
-  tags: [string, string][] = [],
-)
-  : Promise<Transaction> {
+  compressedMetadata: Uint8Array,
+  tags: ArweaveTag[] = [],
+) : Promise<Transaction> {
   try {
-    const u8data = strToU8(JSON.stringify(newMetadata));
-    const gzippedData = compressSync(u8data, { level: 6, mem: 4 });
-
-    const trx = usingArConnect() ? await client.createTransaction({ data: gzippedData })
-      : await client.createTransaction({ data: gzippedData }, wallet as JWKInterface);
+    const trx = usingArConnect() ? await client.createTransaction({ data: compressedMetadata })
+      : await client.createTransaction({ data: compressedMetadata }, wallet as JWKInterface);
 
     trx.addTag('App-Name', process.env.REACT_APP_TAG_PREFIX as string);
     trx.addTag('App-Version', process.env.REACT_APP_VERSION as string);
@@ -53,7 +103,7 @@ async function newTransaction(
     return trx;
   }
   catch (ex) {
-    console.error(ex);
+    console.error('Creating transaction failed:', ex);
     throw new Error('Creating transaction failed; please try reloading your wallet.');
   }
 }
@@ -80,7 +130,7 @@ export async function signAndPostTransaction(
     postResponse = await client.transactions.post(trx);
   }
   catch (ex) {
-    console.error(ex);
+    console.error('Signing/posting transaction failed:', ex);
     if (!postResponse) {
       throw new Error('Signing transaction failed; please try reloading your wallet.');
     }
@@ -108,8 +158,8 @@ export async function dispatchTransaction(trx: Transaction) : Promise<DispatchRe
     response = await window.arweaveWallet.dispatch(trx);
   }
   catch (ex) {
-    console.error(`Dispatching transaction failed: ${ex}. Transaction:`, trx);
-    throw new Error(`Dispatching transaction failed: ${ex}`);
+    console.error(`Dispatching transaction using ArConnect failed: ${ex}. Transaction:`, trx);
+    throw new Error(`Dispatching transaction using ArConnect failed: ${ex}`);
   }
 
   return response;
@@ -122,46 +172,31 @@ export async function dispatchTransaction(trx: Transaction) : Promise<DispatchRe
  * @returns a new Arweave Transaction object
  * @throws if `newMetadata` is incomplete or if newTransaction() throws
  */
-export async function newMetadataTransaction(
+export async function newTransactionFromMetadata(
   wallet: JWKInterface | WalletDeferredToArConnect,
   newMetadata: Partial<Podcast>,
-  cachedMetadata : Partial<Podcast> = {},
+  cachedMetadata: Partial<Podcast> = {},
 ) : Promise<Transaction> {
-  const mandatoryPodcastTags : [MandatoryTags, string | undefined][] = [
-    ['subscribeUrl', newMetadata.subscribeUrl || cachedMetadata.subscribeUrl],
-    ['title', newMetadata.title || cachedMetadata.title],
-    ['description', newMetadata.description || cachedMetadata.description],
-  ];
+  const newCompressedMetadata : Uint8Array = compressMetadata(newMetadata);
+  const tags : ArweaveTag[] = formatTags(newMetadata, cachedMetadata);
+  return newTransactionFromCompressedMetadata(wallet, newCompressedMetadata, tags);
+}
 
-  const getMandatoryTagsValues = (key: MandatoryTags) => mandatoryPodcastTags
-    .find(element => element[0] === key)![1];
-
-  mandatoryPodcastTags.forEach(([name, value]) => {
-    if (!value) {
-      throw new Error('Could not upload metadata for '
-        + `${getMandatoryTagsValues('title') || getMandatoryTagsValues('subscribeUrl')}: `
-        + `${name} is missing`);
-    }
-  });
-
-  const podcastTags = [...mandatoryPodcastTags] as [string, string][];
-  OPTIONAL_ARWEAVE_STRING_TAGS.forEach(tagName => {
-    const val = newMetadata[tagName as keyof Podcast] as string;
-    if (val) podcastTags.push([tagName, val]);
-  });
-
-  // Add new categories and keywords in string => string format
-  (newMetadata.categories || []).forEach(cat => podcastTags.push(['category', cat]));
-  (newMetadata.keywords || []).forEach(key => podcastTags.push(['keyword', key]));
-  (newMetadata.episodesKeywords || []).forEach(key => podcastTags.push(['episodesKeyword', key]));
-
-  const episodeBatchTags = episodeTags(
-    newMetadata.episodes,
-    cachedMetadata,
-    newMetadata.metadataBatch,
-  );
-
-  return newTransaction(wallet, newMetadata, podcastTags.concat(episodeBatchTags));
+/**
+ * `newTransactionFromMetadata()` always calls this function. ArSync can be called directly.
+ * @param wallet
+ * @param compressedMetadata
+ * @param tags
+ * @returns a new Arweave Transaction object
+ * @throws if typecheck of parameters fails or if newTransaction() throws
+ */
+export async function newTransactionFromCompressedMetadata(
+  wallet: JWKInterface | WalletDeferredToArConnect,
+  compressedMetadata: Uint8Array,
+  tags: ArweaveTag[],
+) : Promise<Transaction> {
+  // TODO: Add some simple type checks
+  return newTransaction(wallet, compressedMetadata, tags);
 }
 
 /**
@@ -171,10 +206,10 @@ export async function newMetadataTransaction(
  * @returns The metadata transaction tags for the given list of newEpisodes
  */
 function episodeTags(
-  newEpisodes : Episode[] = [],
-  cachedMetadata : Partial<Podcast> = {},
-  metadataBatchNumber : number | null = null,
-) : [string, string][] {
+  newEpisodes: Episode[] = [],
+  cachedMetadata: Partial<Podcast> = {},
+  metadataBatchNumber: number | null = null,
+) : ArweaveTag[] {
   if (!newEpisodes.length) { return []; }
 
   const firstEpisodeDate = newEpisodes[newEpisodes.length - 1].publishedAt;
@@ -197,7 +232,7 @@ function episodeTags(
  *   An integer denoting the batch number for the [firstNewEpisodeDate, lastNewEpisodeDate] interval
  */
 export function getMetadataBatchNumber(
-  cachedMetadata : Partial<Podcast>,
+  cachedMetadata: Partial<Podcast>,
   firstNewEpisodeDate: Date,
   lastNewEpisodeDate: Date,
 ) : number {
@@ -217,8 +252,7 @@ export function getMetadataBatchNumber(
   //   return cachedMetadata.firstBatch.count - 1;
   // }
 
-  if (cachedMetadata.lastEpisodeDate
-    && cachedMetadata.lastEpisodeDate > lastNewEpisodeDate) {
+  if (cachedMetadata.lastEpisodeDate && cachedMetadata.lastEpisodeDate > lastNewEpisodeDate) {
     // return queryMiddleMetadataBatchNumber(cachedMetadata,firstNewEpisodeDate,lastNewEpisodeDate);
     throw new Error('Supplementing existing metadata is not implemented yet.');
   }

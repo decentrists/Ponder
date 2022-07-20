@@ -7,7 +7,6 @@ import {
   TransactionEdge,
 } from 'arlocal/bin/graphql/types.d';
 import dedent from 'dedent';
-import { strFromU8, decompressSync } from 'fflate';
 // TODO: arbundles is currently unused, but we might need it in the future.
 // import { Bundle, DataItem } from 'arbundles';
 import client from './client';
@@ -20,14 +19,15 @@ import {
   concatMessages,
   valueToLowerCase,
 } from '../../utils';
-import { toTag, fromTag } from './utils';
+import { toTag, fromTag, decompressMetadata } from './utils';
 import { mergeBatchMetadata, mergeBatchTags } from './sync/diff-merge-logic';
 import {
-  PodcastFeedError,
-  Podcast,
-  PodcastTags,
-  ALLOWED_ARWEAVE_TAGS,
+  ALLOWED_ARWEAVE_TAGS_PLURALIZED,
+  AllowedTagsPluralized,
   BundledTxIdMapping,
+  Podcast,
+  PodcastFeedError,
+  PodcastTags,
 } from '../interfaces';
 
 /** Type signature accepted by the Arweave API's '/graphql' endpoint */
@@ -35,7 +35,6 @@ type GraphQLQuery = {
   query: string,
   variables: QueryTransactionsArgs,
 };
-type AllowedArweaveTags = typeof ALLOWED_ARWEAVE_TAGS[number];
 type TagsToFilter = {
   [key: string]: string | string[];
 };
@@ -173,7 +172,9 @@ async function getPodcastFeedForGqlQuery(gqlQuery: GraphQLQuery)
   let tags : Partial<PodcastTags> = {};
   if (isNotEmpty(tx.tags)) {
     tags = tx.tags
-      .filter(tag => ALLOWED_ARWEAVE_TAGS.includes(fromTag(tag.name) as AllowedArweaveTags))
+      .filter(tag => ALLOWED_ARWEAVE_TAGS_PLURALIZED.includes(
+        fromTag(tag.name) as AllowedTagsPluralized,
+      ))
       .map(tag => ({
         ...tag,
         name: fromTag(tag.name),
@@ -218,8 +219,7 @@ async function getPodcastFeedForGqlQuery(gqlQuery: GraphQLQuery)
       console.warn(errorMessage);
     }
     else {
-      metadata = strFromU8(decompressSync(getDataResult));
-      metadata = JSON.parse(metadata);
+      metadata = decompressMetadata(getDataResult);
       metadata = podcastFromDTO(metadata, true);
     }
   }

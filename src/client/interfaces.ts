@@ -35,11 +35,28 @@ const OPTIONAL_ARWEAVE_PLURAL_TAGS = [
   'episodesKeywords',
 ] as const;
 
+const OPTIONAL_ARWEAVE_SINGULAR_TAGS = [
+  'category',
+  'keyword',
+  'episodesKeyword',
+] as const;
+
 export const ALLOWED_ARWEAVE_TAGS = [
+  ...MANDATORY_ARWEAVE_TAGS,
+  ...OPTIONAL_ARWEAVE_STRING_TAGS,
+  ...OPTIONAL_ARWEAVE_SINGULAR_TAGS,
+] as const;
+
+export const ALLOWED_ARWEAVE_TAGS_PLURALIZED = [
   ...MANDATORY_ARWEAVE_TAGS,
   ...OPTIONAL_ARWEAVE_STRING_TAGS,
   ...OPTIONAL_ARWEAVE_PLURAL_TAGS,
 ] as const;
+
+export type MandatoryTags = typeof MANDATORY_ARWEAVE_TAGS[number];
+export type AllowedTags = typeof ALLOWED_ARWEAVE_TAGS[number];
+export type AllowedTagsPluralized = typeof ALLOWED_ARWEAVE_TAGS_PLURALIZED[number];
+export type ArweaveTag = [AllowedTags, string | undefined];
 
 export interface Podcast extends PodcastTags {
   lastMutatedAt?: number; /** @see unixTimestamp() */
@@ -126,6 +143,10 @@ export type BundledTxIdMapping = {
   [key: string]: string;
 };
 
+/**
+ * @typedef {enum} ArSyncTxStatus
+ *   An enum comprising all supported stages of an ArSyncTx object, used to track and update status.
+ */
 export enum ArSyncTxStatus {
   ERRORED,
   INITIALIZED,
@@ -134,6 +155,12 @@ export enum ArSyncTxStatus {
   REJECTED, // If tx confirmation fails
 }
 
+/**
+ * @typedef {ArSyncTx} ArSyncTx
+ *   Main data structure used to track an Arweave transaction through its various stages.
+ *   All ArSyncTx objects with a status other than `INITIALIZED` are cached in IndexedDB, until the
+ *   user chooses to clear any of them.
+ */
 export interface ArSyncTx {
   id: string, // uuid, not to be confused with `(resultObj as Transaction).id`
   subscribeUrl: string, // TODO: pending T244, change to 'podcastId'

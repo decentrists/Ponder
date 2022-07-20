@@ -4,14 +4,14 @@ import { ArSyncTxStatus } from '../../../interfaces';
 import { addTag } from '../../client';
 import {
   dispatchTransaction,
-  newMetadataTransaction,
+  newTransactionFromCompressedMetadata,
   signAndPostTransaction,
 } from '../../create-transaction';
 
 jest.mock('../../create-transaction', () => ({
   ...jest.requireActual('../../create-transaction'),
   dispatchTransaction: jest.fn(),
-  newMetadataTransaction: jest.fn(),
+  newTransactionFromCompressedMetadata: jest.fn(),
   signAndPostTransaction: jest.fn(),
 }));
 jest.mock('../../client');
@@ -77,7 +77,8 @@ const mockError2 = new Error('mock error 2');
 const NON_EMPTY_STRING = expect.stringMatching(/.+/);
 
 /**
- * NOTE: newMetadataTransaction() is mocked here, as it's tested in create-transaction.test.js.
+ * NOTE: newTransactionFromCompressedMetadata() is mocked here, as it's already tested in
+ *       create-transaction.test.js.
  */
 describe('initArSyncTxs', () => {
   const subscriptions = [podcast1, podcast2];
@@ -117,13 +118,13 @@ describe('initArSyncTxs', () => {
       ];
 
       it('returns 1 initialized tx', async () => {
-        newMetadataTransaction.mockResolvedValueOnce(mockTransaction);
+        newTransactionFromCompressedMetadata.mockResolvedValueOnce(mockTransaction);
         const result = await initArSyncTxs(subscriptions, metadataToSync, wallet);
         expect(result).toStrictEqual([
           {
             id: NON_EMPTY_STRING,
             subscribeUrl: 'https://example.com/podcast2',
-            title: 'podcast2 cachedTitle',
+            title: 'podcast2 newTitle',
             resultObj: mockTransaction,
             metadata: {
               ...metadataToSync[1],
@@ -154,14 +155,14 @@ describe('initArSyncTxs', () => {
 
       describe('When both podcasts to sync return a Transaction', () => {
         it('returns 2 initialized txs', async () => {
-          newMetadataTransaction.mockResolvedValueOnce(mockTransaction);
-          newMetadataTransaction.mockResolvedValueOnce(mockTransaction2);
+          newTransactionFromCompressedMetadata.mockResolvedValueOnce(mockTransaction);
+          newTransactionFromCompressedMetadata.mockResolvedValueOnce(mockTransaction2);
           const result = await initArSyncTxs(subscriptions, metadataToSync, wallet);
           expect(result).toStrictEqual([
             {
               id: NON_EMPTY_STRING,
               subscribeUrl: 'https://example.com/podcast1',
-              title: 'cachedTitle',
+              title: 'newTitle',
               resultObj: mockTransaction,
               metadata: metadataToSync[0],
               numEpisodes: 0,
@@ -170,7 +171,7 @@ describe('initArSyncTxs', () => {
             {
               id: NON_EMPTY_STRING,
               subscribeUrl: 'https://example.com/podcast2',
-              title: 'podcast2 cachedTitle',
+              title: 'podcast2 newTitle',
               resultObj: mockTransaction2,
               metadata: {
                 ...metadataToSync[1],
@@ -187,14 +188,14 @@ describe('initArSyncTxs', () => {
 
       describe('When 1 podcast to sync throws an error', () => {
         it('returns 1 initialized tx and 1 errored tx', async () => {
-          newMetadataTransaction.mockRejectedValueOnce(mockError);
-          newMetadataTransaction.mockResolvedValueOnce(mockTransaction);
+          newTransactionFromCompressedMetadata.mockRejectedValueOnce(mockError);
+          newTransactionFromCompressedMetadata.mockResolvedValueOnce(mockTransaction);
           const result = await initArSyncTxs(subscriptions, metadataToSync, wallet);
           expect(result).toStrictEqual([
             {
               id: NON_EMPTY_STRING,
               subscribeUrl: 'https://example.com/podcast1',
-              title: 'cachedTitle',
+              title: 'newTitle',
               resultObj: mockError,
               metadata: metadataToSync[0],
               numEpisodes: 0,
@@ -203,7 +204,7 @@ describe('initArSyncTxs', () => {
             {
               id: NON_EMPTY_STRING,
               subscribeUrl: 'https://example.com/podcast2',
-              title: 'podcast2 cachedTitle',
+              title: 'podcast2 newTitle',
               resultObj: mockTransaction,
               metadata: {
                 ...metadataToSync[1],
@@ -220,14 +221,14 @@ describe('initArSyncTxs', () => {
 
       describe('When both podcasts to sync throw an error', () => {
         it('returns 2 errored txs', async () => {
-          newMetadataTransaction.mockRejectedValueOnce(mockError);
-          newMetadataTransaction.mockRejectedValueOnce(mockError2);
+          newTransactionFromCompressedMetadata.mockRejectedValueOnce(mockError);
+          newTransactionFromCompressedMetadata.mockRejectedValueOnce(mockError2);
           const result = await initArSyncTxs(subscriptions, metadataToSync, wallet);
           expect(result).toStrictEqual([
             {
               id: NON_EMPTY_STRING,
               subscribeUrl: 'https://example.com/podcast1',
-              title: 'cachedTitle',
+              title: 'newTitle',
               resultObj: mockError,
               metadata: metadataToSync[0],
               numEpisodes: 0,
@@ -236,7 +237,7 @@ describe('initArSyncTxs', () => {
             {
               id: NON_EMPTY_STRING,
               subscribeUrl: 'https://example.com/podcast2',
-              title: 'podcast2 cachedTitle',
+              title: 'podcast2 newTitle',
               resultObj: mockError2,
               metadata: {
                 ...metadataToSync[1],

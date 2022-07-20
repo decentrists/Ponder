@@ -1,8 +1,16 @@
+import {
+  compressSync,
+  decompressSync,
+  strFromU8,
+  strToU8,
+} from 'fflate';
 import { isNotEmpty } from '../../utils';
 import {
   ArSyncTx,
   ArSyncTxStatus,
+  ArweaveTag,
   DispatchResultDTO,
+  Podcast,
   TransactionDTO,
 } from '../interfaces';
 
@@ -30,6 +38,28 @@ export function toTag(name: string) {
 export function fromTag(tagName: string) {
   const a = tagName.replace(new RegExp(`^${process.env.REACT_APP_TAG_PREFIX}-`), '');
   return PLURAL_TAG_MAP[a as keyof typeof PLURAL_TAG_MAP] || a;
+}
+
+/**
+ * @param tags
+ * @returns The size of the given Arweave tags in bytes
+ */
+export function calculateTagsSize(tags: ArweaveTag[]) : number {
+  const tagPrefixesSize = tags.length * (`${process.env.REACT_APP_TAG_PREFIX}-`.length);
+  const tagsSize = tags.flat().reduce((acc: number, str: string | undefined) => (
+    acc + (str ? str.length : 0)), 0);
+  return tagPrefixesSize + tagsSize;
+}
+
+export function compressMetadata(metadata: Partial<Podcast>) : Uint8Array {
+  const u8data = strToU8(JSON.stringify(metadata));
+  const gzippedData = compressSync(u8data, { level: 6, mem: 4 });
+  return gzippedData;
+}
+
+export function decompressMetadata(getDataResult: Uint8Array) {
+  const unzipped : string = strFromU8(decompressSync(getDataResult));
+  return JSON.parse(unzipped);
 }
 
 /** Helper function in order to retain numeric ArSyncTxStatus enums */
@@ -88,7 +118,6 @@ export const getBundleTxId = (tx: ArSyncTx) : string => (isNotEmpty(tx.dispatchR
 
 /** Defaults to true, if process.env.REACT_APP_USE_ARCONNECT != false */
 export function usingArConnect() : boolean {
-  if (usingArLocal()) return false;
   return (process.env.REACT_APP_USE_ARCONNECT as string) !== 'false';
 }
 

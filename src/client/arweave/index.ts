@@ -7,7 +7,8 @@ import { getBundleTxId, getTxId, isBundled } from './utils';
 export { getPodcastFeed } from './graphql-ops';
 export { createNewDevWallet, getWalletAddress } from './wallet';
 export {
-  newMetadataTransaction,
+  newTransactionFromCompressedMetadata,
+  newTransactionFromMetadata,
   signAndPostTransaction,
   dispatchTransaction,
 } from './create-transaction';
