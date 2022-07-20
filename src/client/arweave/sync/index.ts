@@ -1,3 +1,23 @@
+/**
+ * @module ArSync Main module for ArSync
+ *
+ * Current version: v1.3
+ * Changelog: {@link https://github.com/decentrists/Ponder/pulls?q=is%3Apr+ArSync}
+ *
+ * ArSync comprises all necessary logic for creating, fetching and tracking Ponder's transactions on
+ * Arweave.
+ * At present, these transactions comprise incremental (podcast) metadata. Future updates will
+ * expand this with more types of transactions.
+ *
+ * A modular API is not available yet, but the code is to be maintained with this prospect in mind.
+ *
+ * Main intrinsic interfaces/types (see {@link ../../interfaces.ts}):
+ * @see {ArSyncTx}
+ *   Main data structure used to track an Arweave transaction through its various stages.
+ * @typedef {enum} ArSyncTxStatus
+ *   An enum comprising all supported stages of an ArSyncTx object. Used to track and update status.
+ */
+
 import { v4 as uuid } from 'uuid';
 import Transaction from 'arweave/node/lib/transaction';
 import { JWKInterface } from 'arweave/node/lib/wallet';

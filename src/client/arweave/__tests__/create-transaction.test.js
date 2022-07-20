@@ -101,7 +101,11 @@ afterAll(() => {
   jest.useRealTimers();
 });
 
-describe('newTransactionFromMetadata', () => {
+/**
+ * newTransactionFromCompressedMetadata() is implicitly tested through newTransactionFromMetadata()
+ * TODO: assert call to newTransactionFromCompressedMetadata()
+ */
+describe('newTransactionFromMetadata, newTransactionFromCompressedMetadata', () => {
   beforeEach(() => {
     expect(createTransaction).not.toHaveBeenCalled();
     expect(addTag).not.toHaveBeenCalled();

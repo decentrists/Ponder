@@ -22,11 +22,12 @@ import {
 import { toTag, fromTag, decompressMetadata } from './utils';
 import { mergeBatchMetadata, mergeBatchTags } from './sync/diff-merge-logic';
 import {
-  PodcastFeedError,
-  Podcast,
-  PodcastTags,
-  ALLOWED_ARWEAVE_TAGS_PLURAL,
+  ALLOWED_ARWEAVE_TAGS_PLURALIZED,
+  AllowedTagsPluralized,
   BundledTxIdMapping,
+  Podcast,
+  PodcastFeedError,
+  PodcastTags,
 } from '../interfaces';
 
 /** Type signature accepted by the Arweave API's '/graphql' endpoint */
@@ -34,7 +35,6 @@ type GraphQLQuery = {
   query: string,
   variables: QueryTransactionsArgs,
 };
-type AllowedTagsPluralized = typeof ALLOWED_ARWEAVE_TAGS_PLURAL[number];
 type TagsToFilter = {
   [key: string]: string | string[];
 };
@@ -172,7 +172,7 @@ async function getPodcastFeedForGqlQuery(gqlQuery: GraphQLQuery)
   let tags : Partial<PodcastTags> = {};
   if (isNotEmpty(tx.tags)) {
     tags = tx.tags
-      .filter(tag => ALLOWED_ARWEAVE_TAGS_PLURAL.includes(
+      .filter(tag => ALLOWED_ARWEAVE_TAGS_PLURALIZED.includes(
         fromTag(tag.name) as AllowedTagsPluralized,
       ))
       .map(tag => ({

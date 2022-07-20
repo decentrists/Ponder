@@ -26,20 +26,21 @@ const MAX_TAG_NAME_SIZE = 1024; // Arweave max = 1024 bytes
 const MAX_TAG_VALUE_SIZE = 3072; // Arweave max = 3072 bytes
 
 /**
- * @param tag
- * @returns The given `tag`, trimmed to fit Arweave's size limitations. Returns `null` if the tag
- *   name or value is empty.
+ * @param tag Tuple of two strings representing the tag name and value
+ * @returns The given `tag` as string tuple, trimmed to fit Arweave's size limitations.
+ *   Returns `null` if the tag name or value is empty or if the name is not a string.
  */
 const validateAndTrimTag = (tag: ArweaveTag) : ArweaveTag | null => {
   const [name, val] = tag;
-  if (!name || !val) return null;
+  if (!name || !val || typeof name !== 'string') return null;
 
   const validName = name.length <= MAX_TAG_NAME_SIZE ? name : name.substring(0, MAX_TAG_NAME_SIZE);
-  const validVal = val.length <= MAX_TAG_VALUE_SIZE ? val : val.substring(0, MAX_TAG_VALUE_SIZE);
+  let validVal = `${val}`;
+  if (validVal.length > MAX_TAG_VALUE_SIZE) validVal = validVal.substring(0, MAX_TAG_VALUE_SIZE);
   return [validName, validVal] as ArweaveTag;
 };
 
-export function formatTags(newMetadata: Partial<Podcast>, cachedMetadata : Partial<Podcast> = {})
+export function formatTags(newMetadata: Partial<Podcast>, cachedMetadata: Partial<Podcast> = {})
   : ArweaveTag[] {
   const mandatoryPodcastTags : [MandatoryTags, string | undefined][] = [
     ['subscribeUrl', newMetadata.subscribeUrl || cachedMetadata.subscribeUrl],
@@ -85,13 +86,12 @@ export function formatTags(newMetadata: Partial<Podcast>, cachedMetadata : Parti
 
 async function newTransaction(
   wallet: JWKInterface | WalletDeferredToArConnect,
-  newCompressedMetadata: Uint8Array,
+  compressedMetadata: Uint8Array,
   tags: ArweaveTag[] = [],
-)
-  : Promise<Transaction> {
+) : Promise<Transaction> {
   try {
-    const trx = usingArConnect() ? await client.createTransaction({ data: newCompressedMetadata })
-      : await client.createTransaction({ data: newCompressedMetadata }, wallet as JWKInterface);
+    const trx = usingArConnect() ? await client.createTransaction({ data: compressedMetadata })
+      : await client.createTransaction({ data: compressedMetadata }, wallet as JWKInterface);
 
     trx.addTag('App-Name', process.env.REACT_APP_TAG_PREFIX as string);
     trx.addTag('App-Version', process.env.REACT_APP_VERSION as string);
@@ -103,7 +103,7 @@ async function newTransaction(
     return trx;
   }
   catch (ex) {
-    console.error(ex);
+    console.error('Creating transaction failed:', ex);
     throw new Error('Creating transaction failed; please try reloading your wallet.');
   }
 }
@@ -130,7 +130,7 @@ export async function signAndPostTransaction(
     postResponse = await client.transactions.post(trx);
   }
   catch (ex) {
-    console.error(ex);
+    console.error('Signing/posting transaction failed:', ex);
     if (!postResponse) {
       throw new Error('Signing transaction failed; please try reloading your wallet.');
     }
@@ -158,8 +158,8 @@ export async function dispatchTransaction(trx: Transaction) : Promise<DispatchRe
     response = await window.arweaveWallet.dispatch(trx);
   }
   catch (ex) {
-    console.error(`Dispatching transaction failed: ${ex}. Transaction:`, trx);
-    throw new Error(`Dispatching transaction failed: ${ex}`);
+    console.error(`Dispatching transaction using ArConnect failed: ${ex}. Transaction:`, trx);
+    throw new Error(`Dispatching transaction using ArConnect failed: ${ex}`);
   }
 
   return response;
@@ -179,22 +179,24 @@ export async function newTransactionFromMetadata(
 ) : Promise<Transaction> {
   const newCompressedMetadata : Uint8Array = compressMetadata(newMetadata);
   const tags : ArweaveTag[] = formatTags(newMetadata, cachedMetadata);
-  return newTransaction(wallet, newCompressedMetadata, tags);
+  return newTransactionFromCompressedMetadata(wallet, newCompressedMetadata, tags);
 }
 
 /**
+ * `newTransactionFromMetadata()` always calls this function. ArSync can be called directly.
  * @param wallet
- * @param newCompressedMetadata
+ * @param compressedMetadata
  * @param tags
  * @returns a new Arweave Transaction object
- * @throws if `newMetadata` is incomplete or if newTransaction() throws
+ * @throws if typecheck of parameters fails or if newTransaction() throws
  */
 export async function newTransactionFromCompressedMetadata(
   wallet: JWKInterface | WalletDeferredToArConnect,
-  newCompressedMetadata: Uint8Array,
+  compressedMetadata: Uint8Array,
   tags: ArweaveTag[],
 ) : Promise<Transaction> {
-  return newTransaction(wallet, newCompressedMetadata, tags);
+  // TODO: Add some simple type checks
+  return newTransaction(wallet, compressedMetadata, tags);
 }
 
 /**
@@ -204,9 +206,9 @@ export async function newTransactionFromCompressedMetadata(
  * @returns The metadata transaction tags for the given list of newEpisodes
  */
 function episodeTags(
-  newEpisodes : Episode[] = [],
-  cachedMetadata : Partial<Podcast> = {},
-  metadataBatchNumber : number | null = null,
+  newEpisodes: Episode[] = [],
+  cachedMetadata: Partial<Podcast> = {},
+  metadataBatchNumber: number | null = null,
 ) : ArweaveTag[] {
   if (!newEpisodes.length) { return []; }
 
@@ -230,7 +232,7 @@ function episodeTags(
  *   An integer denoting the batch number for the [firstNewEpisodeDate, lastNewEpisodeDate] interval
  */
 export function getMetadataBatchNumber(
-  cachedMetadata : Partial<Podcast>,
+  cachedMetadata: Partial<Podcast>,
   firstNewEpisodeDate: Date,
   lastNewEpisodeDate: Date,
 ) : number {
@@ -250,8 +252,7 @@ export function getMetadataBatchNumber(
   //   return cachedMetadata.firstBatch.count - 1;
   // }
 
-  if (cachedMetadata.lastEpisodeDate
-    && cachedMetadata.lastEpisodeDate > lastNewEpisodeDate) {
+  if (cachedMetadata.lastEpisodeDate && cachedMetadata.lastEpisodeDate > lastNewEpisodeDate) {
     // return queryMiddleMetadataBatchNumber(cachedMetadata,firstNewEpisodeDate,lastNewEpisodeDate);
     throw new Error('Supplementing existing metadata is not implemented yet.');
   }
